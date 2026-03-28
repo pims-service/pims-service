@@ -1,0 +1,12 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+db.sqlite3
+.env
+.pytest_cache/
+.flake8
+Dockerfile
+.dockerignore
