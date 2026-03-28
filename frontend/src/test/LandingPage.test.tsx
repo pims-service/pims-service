@@ -19,6 +19,6 @@ describe('LandingPage', () => {
         <LandingPage />
       </BrowserRouter>
     );
-    expect(screen.getByText(/Psychology of Achievement/i)).toBeDefined();
+    expect(screen.getByRole('heading', { name: /Discover the Psychology of Achievement/i })).toBeDefined();
   });
 });
