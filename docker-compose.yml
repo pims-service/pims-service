@@ -32,6 +32,7 @@ services:
     container_name: psych_backend
     volumes:
       - ./backend:/app
+      - static_volume:/app/static
     environment:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
       DEBUG: ${DEBUG}
@@ -45,7 +46,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: python manage.py runserver 0.0.0.0:8000
+    command: gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3
 
   frontend:
     build:
@@ -64,3 +65,4 @@ services:
 
 volumes:
   postgres_data:
+  static_volume:
