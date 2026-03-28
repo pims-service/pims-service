@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.flakes/
+lib/
+lib64/
+parts/
+sdist/
+var/
+venv/
+.venv/
+images/
+share/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.renpy
+.python-version
+db.sqlite3
+.env
+
+# Node
+node_modules/
+dist/
+dist-ssr
+*.local
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+*.pem
+
+# Project Specific
+psych_experiment_platform/backend/static/
+psych_experiment_platform/backend/media/
