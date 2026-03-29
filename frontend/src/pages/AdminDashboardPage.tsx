@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import api from '../services/api';
-import { Users, FileText, Download, TrendingUp, Search, Filter } from 'lucide-react';
+import React, { useState } from 'react';
+import { API_URL } from '../services/api';
+import { Users, FileText, Download, TrendingUp, Search } from 'lucide-react';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const AdminDashboardPage: React.FC = () => {
-  const [participants, setParticipants] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const chartData = {
     labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
@@ -35,7 +33,7 @@ const AdminDashboardPage: React.FC = () => {
   };
 
   const handleExport = async () => {
-    window.open('http://localhost:8000/api/admin/tools/export/csv/', '_blank');
+    window.open(`${API_URL}/admin/tools/export/csv/`, '_blank');
   };
 
   return (
