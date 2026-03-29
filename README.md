@@ -13,17 +13,34 @@ A full-stack platform designed for phased psychological experiments with 2,000+ 
 - `frontend/`: React components, pages, hooks, services.
 - `docs/`: SPSS export templates and project documentation.
 
-## Setup Instructions
+## Setup Instructions (Recommended: Docker)
 
-### Backend Setup
+The entire stack (Backend, Frontend, Postgres, Redis) is containerized for easy deployment and development.
+
+1.  **Clone the repository**.
+2.  **Configure Environment**: Copy `.env.example` to `.env` in the root directory and update credentials.
+3.  **Start the Platform**:
+    ```bash
+    docker compose up --build
+    ```
+4.  **Access the Services**:
+    - **Frontend**: [http://localhost:5173](http://localhost:5173)
+    - **Backend API**: [http://localhost:8000/api](http://localhost:8000/api)
+    - **Admin Console**: [http://localhost:8000/admin](http://localhost:8000/admin) (Use credentials from `.env`)
+
+### Manual Setup (Legacy/Development)
+
+If you prefer to run services individually without Docker:
+
+#### Backend Setup
 1. Navigate to `backend/`.
 2. Create/Activate virtual environment: `python -m venv venv && source venv/bin/activate`.
-3. Install dependencies: `pip install -r requirements.txt` (Note: Generate this if needed).
+3. Install dependencies: `pip install -r requirements.txt`.
 4. Configure `.env` in the root folder (see template).
 5. Run migrations: `python manage.py migrate`.
 6. Start server: `python manage.py runserver`.
 
-### Frontend Setup
+#### Frontend Setup
 1. Navigate to `frontend/`.
 2. Install dependencies: `npm install`.
 3. Start development server: `npm run dev`.
