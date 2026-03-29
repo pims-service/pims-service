@@ -8,8 +8,12 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copy project
+# Copy project files
 COPY . .
+
+# Healthcheck to verify the dev server is running
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD wget --quiet --tries=1 --spider http://localhost:5173 || exit 1
 
 # Build for production if necessary
 # RUN npm run build
