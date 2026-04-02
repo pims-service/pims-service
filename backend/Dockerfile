@@ -22,6 +22,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . /app/
 
+# Make entrypoint executable
+RUN chmod +x /app/entrypoint.sh
+
 # Environment variables for collectstatic
 ENV DJANGO_SECRET_KEY=collectstatic-dummy-key
 ENV DEBUG=False
@@ -32,5 +35,5 @@ RUN python manage.py collectstatic --noinput
 # Port for Django
 EXPOSE 8000
 
-# Default command: use Gunicorn for production
-CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+# Default command: use entrypoint (runs migrations + superuser + gunicorn)
+CMD ["/app/entrypoint.sh"]

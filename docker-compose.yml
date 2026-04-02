@@ -35,11 +35,14 @@ services:
       - ./backend:/app
       - static_volume:/app/static
     environment:
-      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
-      DEBUG: ${DEBUG}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-django-insecure-dev-key-123456789}
+      DEBUG: ${DEBUG:-True}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+      DATABASE_URL: ${DATABASE_URL:-postgres://psych_user:psych_pass@db:5432/psych_db}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@pims.local}
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-admin}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-admin}
     ports:
       - "8000:8000"
     depends_on:
@@ -47,7 +50,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3
+    command: ["/app/entrypoint.sh"]
 
   frontend:
     build:
