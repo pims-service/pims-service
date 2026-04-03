@@ -11,7 +11,8 @@ class User(AbstractUser):
     traits = models.JSONField(default=dict, blank=True)
     registration_date = models.DateTimeField(auto_now_add=True)
 
-    REQUIRED_FIELDS = ['email']
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
 
     def __str__(self):
-        return self.username
+        return self.email
