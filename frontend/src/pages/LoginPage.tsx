@@ -14,10 +14,24 @@ const LoginPage: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      const { data } = await api.post('/token/', formData);
+      const { data } = await api.post('/login/', formData);
       localStorage.setItem('access_token', data.access);
       localStorage.setItem('refresh_token', data.refresh);
-      navigate('/dashboard');
+      
+      // Store user metadata for immediate UI updates
+      if (data.user) {
+        localStorage.setItem('user_role', data.user.role);
+        localStorage.setItem('user_full_name', data.user.full_name);
+        
+        // Dynamic Role-Based Redirection
+        if (data.user.role === 'Admin') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err: any) {
       setError('Invalid username or password');
     } finally {
