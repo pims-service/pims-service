@@ -68,6 +68,7 @@ INSTALLED_APPS = [
 
     # Local apps
     'users',
+    'user',
     'groups',
     'phases',
     'activities',
