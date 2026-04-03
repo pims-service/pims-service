@@ -20,11 +20,11 @@ class ExportDataCSVView(APIView):
         submissions = Submission.objects.all().select_related('user', 'user__group', 'activity')
         for sub in submissions:
             writer.writerow([
-                sub.user.id,
+                sub.user.pk,
                 sub.user.username,
                 sub.user.email,
                 sub.user.group.name if sub.user.group else 'None',
-                sub.user.registration_date.strftime('%Y-%m-%d %H:%M:%S'),
+                sub.user.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 sub.activity.title,
                 sub.content.replace('\n', ' '), # SPSS friendly: no newlines in text fields
                 sub.submission_date.strftime('%Y-%m-%d %H:%M:%S')

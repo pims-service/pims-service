@@ -22,7 +22,7 @@ def test_admin_schedule_notification(admin_client, test_user):
     from django.utils import timezone
     url = reverse('admin_schedule')
     data = {
-        "user": test_user.id,
+        "user": test_user.pk,
         "n_type": "whatsapp",
         "message": "Hello via WhatsApp",
         "scheduled_time": timezone.now().isoformat()
