@@ -1,0 +1,4 @@
+WARNING 2026-04-03 17:02:11,222 log 11 132514363818752 Not Found: /api/
+WARNING 2026-04-03 17:16:09,295 log 12 127809237914368 Unauthorized: /api/groups/
+WARNING 2026-04-03 17:16:14,119 log 12 127809237914368 Bad Request: /api/users/register/
+WARNING 2026-04-03 17:16:14,186 log 12 127809237914368 Bad Request: /api/users/register/

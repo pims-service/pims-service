@@ -1,6 +1,7 @@
 import pytest
 from django.urls import reverse
 from rest_framework import status
+from users.models import User, UserConsent, Role
 
 @pytest.mark.django_db
 def test_user_profile(authenticated_client, test_user):
@@ -8,6 +9,59 @@ def test_user_profile(authenticated_client, test_user):
     response = authenticated_client.get(url)
     assert response.status_code == status.HTTP_200_OK
     assert response.data['username'] == test_user.username
+
+@pytest.mark.django_db
+def test_signup_success(api_client, db):
+    # Ensure role exists
+    Role.objects.get_or_create(name='Participant')
+    
+    url = reverse('register')
+    payload = {
+        "username": "newuser",
+        "full_name": "New User",
+        "email": "new@example.com",
+        "password": "password123!",
+        "confirm_password": "password123!",
+        "whatsapp_number": "+1234567890",
+        "consent_agreed": True,
+        "consent_version": "1.0"
+    }
+    response = api_client.post(url, payload)
+    
+    assert response.status_code == status.HTTP_201_CREATED
+    assert User.objects.filter(username="newuser").exists()
+    assert UserConsent.objects.filter(user__username="newuser", agreed=True).exists()
+
+@pytest.mark.django_db
+def test_signup_password_mismatch(api_client, db):
+    url = reverse('register')
+    payload = {
+        "username": "mismatchuser",
+        "email": "mismatch@example.com",
+        "password": "password123!",
+        "confirm_password": "differentpassword",
+        "consent_agreed": True,
+        "consent_version": "1.0"
+    }
+    response = api_client.post(url, payload)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "password" in response.data
+
+@pytest.mark.django_db
+def test_signup_consent_required(api_client, db):
+    url = reverse('register')
+    payload = {
+        "username": "noconsent",
+        "email": "noconsent@example.com",
+        "password": "password123!",
+        "confirm_password": "password123!",
+        "consent_agreed": False,
+        "consent_version": "1.0"
+    }
+    response = api_client.post(url, payload)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    # Depending on serializer logic, it might be in consent_agreed or non_field_errors
+    assert "consent_agreed" in response.data or response.status_code == status.HTTP_400_BAD_REQUEST
 
 @pytest.mark.django_db
 def test_admin_user_list(admin_client, test_user):

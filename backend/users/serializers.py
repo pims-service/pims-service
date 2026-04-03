@@ -1,30 +1,77 @@
 from rest_framework import serializers
-from .models import User
-from groups.models import Group
+from .models import User, Role, UserConsent
+from django.utils import timezone
 
 class UserSerializer(serializers.ModelSerializer):
+    """
+    Standard user profile serializer.
+    """
     group_name = serializers.ReadOnlyField(source='group.name')
+    role_name = serializers.ReadOnlyField(source='role.name')
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'whatsapp_number', 'email_consent', 'whatsapp_consent', 'group', 'group_name', 'traits', 'registration_date')
-        read_only_fields = ('registration_date',)
+        fields = (
+            'user_id', 'username', 'full_name', 'email', 
+            'whatsapp_number', 'role', 'role_name', 
+            'group', 'group_name', 'traits', 'created_at'
+        )
+        read_only_fields = ('created_at',)
 
-class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
+class SignupSerializer(serializers.ModelSerializer):
+    """
+    Serializer specifically for the user registration flow.
+    """
+    password = serializers.CharField(write_only=True, min_length=8)
+    confirm_password = serializers.CharField(write_only=True)
+    consent_agreed = serializers.BooleanField(write_only=True, required=True)
+    consent_version = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password', 'whatsapp_number', 'email_consent', 'whatsapp_consent', 'traits')
+        fields = (
+            'username', 'full_name', 'email', 'password', 
+            'confirm_password', 'whatsapp_number', 
+            'consent_agreed', 'consent_version'
+        )
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['confirm_password']:
+            raise serializers.ValidationError({"password": "Password fields didn't match."})
+        
+        if not attrs.get('consent_agreed'):
+            raise serializers.ValidationError({"consent_agreed": "You must agree to the terms and conditions."})
+            
+        return attrs
 
     def create(self, validated_data):
+        # Extract fields not on User model
+        validated_data.pop('confirm_password')
+        consent_agreed = validated_data.pop('consent_agreed')
+        consent_version = validated_data.pop('consent_version')
+        
+        # Ensure default Role (Participant) exists
+        role, _ = Role.objects.get_or_create(
+            name='Participant', 
+            defaults={'description': 'Default role for experiment participants'}
+        )
+        
+        # Create user
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
             password=validated_data['password'],
+            full_name=validated_data.get('full_name', ''),
             whatsapp_number=validated_data.get('whatsapp_number', ''),
-            email_consent=validated_data.get('email_consent', False),
-            whatsapp_consent=validated_data.get('whatsapp_consent', False),
-            traits=validated_data.get('traits', {})
+            role=role
         )
+        
+        # Create consent record
+        UserConsent.objects.create(
+            user=user,
+            agreed=consent_agreed,
+            agreed_at=timezone.now(),
+            consent_version=consent_version
+        )
+        
         return user
