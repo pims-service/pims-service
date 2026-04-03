@@ -76,9 +76,27 @@ jobs:
           done
           echo "Backend is operational."
 
+      - name: Verify Nginx is Running
+        timeout-minutes: 2
+        run: |
+          for i in $(seq 1 12); do
+            if [ "$(docker inspect -f {{.State.Status}} psych_nginx)" == "running" ]; then
+              echo "Nginx container is running."
+              break
+            fi
+            echo "Waiting for nginx..."
+            sleep 5
+          done
+          docker inspect -f {{.State.Status}} psych_nginx | grep -q running || { echo "Nginx failed to start"; docker compose logs nginx; exit 1; }
+
+      - name: Verify Nginx Routing
+        run: |
+          curl -sf --retry 5 --retry-delay 3 http://localhost/api/docs/ -o /dev/null && echo "Backend routing via nginx: OK" || echo "Backend routing via nginx: FAILED"
+
       - name: Container Status & Logs on Failure
         if: failure()
         run: |
           docker compose ps
           docker compose logs backend
           docker compose logs celery_worker
+          docker compose logs nginx
