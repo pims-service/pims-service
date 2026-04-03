@@ -64,6 +64,29 @@ def test_signup_consent_required(api_client, db):
     assert "consent_agreed" in response.data or response.status_code == status.HTTP_400_BAD_REQUEST
 
 @pytest.mark.django_db
+def test_signup_duplicate_email(api_client, db):
+    Role.objects.get_or_create(name='Participant')
+
+    url = reverse('register')
+    payload = {
+        "username": "firstuser",
+        "full_name": "First User",
+        "email": "duplicate@example.com",
+        "password": "password123!",
+        "confirm_password": "password123!",
+        "consent_agreed": True,
+        "consent_version": "1.0"
+    }
+    response = api_client.post(url, payload)
+    assert response.status_code == status.HTTP_201_CREATED
+
+    payload["username"] = "seconduser"
+    response = api_client.post(url, payload)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "email" in response.data
+
+
+@pytest.mark.django_db
 def test_admin_user_list(admin_client, test_user):
     url = reverse('admin_user_list')
     response = admin_client.get(url)

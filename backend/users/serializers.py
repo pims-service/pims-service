@@ -35,6 +35,11 @@ class SignupSerializer(serializers.ModelSerializer):
             'consent_agreed', 'consent_version'
         )
 
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
     def validate(self, attrs):
         if attrs['password'] != attrs['confirm_password']:
             raise serializers.ValidationError({"password": "Password fields didn't match."})
