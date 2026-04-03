@@ -101,6 +101,8 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': env.db('DATABASE_URL', default='postgres://psych_user:psych_pass@db:5432/psych_db')
 }
+# Connection pooling for better performance in production-like containers
+DATABASES['default']['CONN_MAX_AGE'] = 600
 
 # Caches
 # https://docs.djangoproject.com/en/6.0/ref/settings/#caches
