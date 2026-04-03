@@ -48,11 +48,37 @@ jobs:
       - name: Run Tests
         run: npm run test
 
-  docker-build:
+  docker-functional-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up .env
+      
+      - name: Create .env from example
         run: cp .env.example .env
-      - name: Build Docker images
-        run: docker compose build
+        
+      - name: Ensure entrypoint is executable (CI)
+        run: chmod +x backend/entrypoint.sh
+        
+      - name: Build and Start Containers
+        run: docker compose up -d --build
+        
+      - name: Wait for Backend Readiness
+        timeout-minutes: 5
+        run: |
+          until [ "$(docker inspect -f {{.State.Health.Status}} psych_backend)" == "healthy" ] || [ "$(docker inspect -f {{.State.Status}} psych_backend)" == "running" ]; do
+            echo "Waiting for backend to be healthy/running..."
+            sleep 10
+            if [ "$(docker inspect -f {{.State.Status}} psych_backend)" == "exited" ]; then
+              echo "Backend container has exited unexpectedly!"
+              docker compose logs backend
+              exit 1
+            fi
+          done
+          echo "Backend is operational."
+
+      - name: Container Status & Logs on Failure
+        if: failure()
+        run: |
+          docker compose ps
+          docker compose logs backend
+          docker compose logs celery_worker

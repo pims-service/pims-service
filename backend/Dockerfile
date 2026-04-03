@@ -22,8 +22,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . /app/
 
-# Make entrypoint executable
-RUN chmod +x /app/entrypoint.sh
+# Make entrypoint executable and ensure LF line endings
+RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Environment variables for collectstatic
 ENV DJANGO_SECRET_KEY=collectstatic-dummy-key
