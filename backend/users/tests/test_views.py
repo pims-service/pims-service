@@ -2,6 +2,7 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 from users.models import User, UserConsent, Role
+from groups.models import Group
 
 @pytest.mark.django_db
 def test_user_profile(authenticated_client, test_user):
@@ -12,9 +13,10 @@ def test_user_profile(authenticated_client, test_user):
 
 @pytest.mark.django_db
 def test_signup_success(api_client, db):
-    # Ensure role exists
     Role.objects.get_or_create(name='Participant')
-    
+    for i in range(1, 9):
+        Group.objects.create(name=f'Group {i}')
+
     url = reverse('register')
     payload = {
         "username": "newuser",
@@ -27,10 +29,14 @@ def test_signup_success(api_client, db):
         "consent_version": "1.0"
     }
     response = api_client.post(url, payload)
-    
+
     assert response.status_code == status.HTTP_201_CREATED
     assert User.objects.filter(username="newuser").exists()
     assert UserConsent.objects.filter(user__username="newuser", agreed=True).exists()
+    user = User.objects.get(username="newuser")
+    assert user.group is not None
+    assert response.data['group'] == user.group.pk
+    assert response.data['group_name'] == user.group.name
 
 @pytest.mark.django_db
 def test_signup_password_mismatch(api_client, db):
@@ -92,3 +98,27 @@ def test_admin_user_list(admin_client, test_user):
     response = admin_client.get(url)
     assert response.status_code == status.HTTP_200_OK
     assert len(response.data) >= 1
+
+
+@pytest.mark.django_db
+def test_signup_group_distribution(api_client, db):
+    """16 signups across 8 groups should yield exactly 2 per group."""
+    Role.objects.get_or_create(name='Participant')
+    groups = [Group.objects.create(name=f'Group {i}') for i in range(1, 9)]
+
+    url = reverse('register')
+    for i in range(16):
+        payload = {
+            "username": f"user{i}",
+            "email": f"user{i}@example.com",
+            "password": "password123!",
+            "confirm_password": "password123!",
+            "full_name": f"User {i}",
+            "consent_agreed": True,
+            "consent_version": "1.0",
+        }
+        response = api_client.post(url, payload)
+        assert response.status_code == status.HTTP_201_CREATED
+
+    for group in groups:
+        assert group.participants.count() == 2
