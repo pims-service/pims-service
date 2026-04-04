@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.db.models import Count
 from django.utils import timezone
 
@@ -96,3 +97,18 @@ class SignupSerializer(serializers.ModelSerializer):
         )
         
         return user
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        
+        # Add extra user information to the response
+        data['user'] = {
+            'id': self.user.pk,
+            'username': self.user.username,
+            'email': self.user.email,
+            'full_name': self.user.full_name,
+            'role': self.user.role.name if self.user.role else 'Participant'
+        }
+        
+        return data
