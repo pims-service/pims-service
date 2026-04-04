@@ -1,6 +1,9 @@
 from rest_framework import serializers
-from .models import User, Role, UserConsent
+from django.db.models import Count
 from django.utils import timezone
+
+from groups.models import Group
+from .models import User, Role, UserConsent
 
 class UserSerializer(serializers.ModelSerializer):
     """
@@ -27,12 +30,16 @@ class SignupSerializer(serializers.ModelSerializer):
     consent_agreed = serializers.BooleanField(write_only=True, required=True)
     consent_version = serializers.CharField(write_only=True, required=True)
 
+    group = serializers.PrimaryKeyRelatedField(read_only=True)
+    group_name = serializers.ReadOnlyField(source='group.name')
+
     class Meta:
         model = User
         fields = (
             'username', 'full_name', 'email', 'password', 
             'confirm_password', 'whatsapp_number', 
-            'consent_agreed', 'consent_version'
+            'consent_agreed', 'consent_version',
+            'group', 'group_name',
         )
 
     def validate_email(self, value):
@@ -61,6 +68,14 @@ class SignupSerializer(serializers.ModelSerializer):
             defaults={'description': 'Default role for experiment participants'}
         )
         
+        # Assign group with fewest participants for uniform distribution
+        group = (
+            Group.objects
+            .annotate(member_count=Count('participants'))
+            .order_by('member_count', 'pk')
+            .first()
+        )
+
         # Create user
         user = User.objects.create_user(
             username=validated_data['username'],
@@ -68,7 +83,8 @@ class SignupSerializer(serializers.ModelSerializer):
             password=validated_data['password'],
             full_name=validated_data.get('full_name', ''),
             whatsapp_number=validated_data.get('whatsapp_number', ''),
-            role=role
+            role=role,
+            group=group,
         )
         
         # Create consent record
