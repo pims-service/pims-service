@@ -1,45 +1,86 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Brain, Zap, Shield, Users } from 'lucide-react';
+import { ArrowRight, Brain, Zap, Shield, Users, Globe, Beaker } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
   return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border-indigo-500/30 text-indigo-400 mb-8 animate-bounce">
-        <Zap size={16} /> Now live: Phase 1 Enrollment Open
-      </div>
-      
-      <h1 className="text-6xl font-extrabold mb-6 leading-tight">
-        Discover the <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Psychology of Achievement</span>
-      </h1>
-      <p className="text-xl text-slate-400 max-w-2xl mb-12">
-        Join over 2,000 participants in a phased psychological experiment designed to unlock human potential through daily activities and behavioral analysis.
-      </p>
-      
-      <div className="flex gap-4">
-        <Link to="/register" className="btn-premium flex items-center gap-2">
-          Start Experiment <ArrowRight size={20} />
-        </Link>
-        <Link to="/login" className="glass px-8 py-3 font-semibold hover:bg-white/5 transition-all">
-          Already a participant?
-        </Link>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-24 max-w-6xl">
-        <div className="glass p-8 text-left">
-          <Brain className="text-indigo-400 mb-4" size={32} />
-          <h3 className="text-xl font-bold mb-2">Scientific Approach</h3>
-          <p className="text-slate-400">Our experiment is designed by clinical psychologists to ensure accurate behavioral tracking.</p>
+    <div className="max-w-6xl mx-auto px-4 py-16 sm:py-24 space-y-24">
+      {/* Hero Section */}
+      <div className="flex flex-col items-center text-center space-y-8">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200 text-zinc-600 text-sm font-medium animate-in fade-in slide-in-from-bottom-4 duration-1000">
+          <Zap size={14} className="text-zinc-900" />
+          <span>Phase 1 Enrollment Now Open</span>
         </div>
-        <div className="glass p-8 text-left">
-          <Shield className="text-indigo-400 mb-4" size={32} />
-          <h3 className="text-xl font-bold mb-2">Secure & Private</h3>
-          <p className="text-slate-400">Your data is encrypted and anonymized, complying with international research standards.</p>
+        
+        <h1 className="text-5xl sm:text-7xl font-bold tracking-tight text-zinc-900 max-w-4xl leading-[1.1]">
+          The Science of <span className="text-zinc-500">Human Achievement</span>
+        </h1>
+        
+        <p className="text-lg sm:text-xl text-zinc-600 max-w-2xl leading-relaxed">
+          Join a global cohort in a structured psychological study exploring the intersection of behavior, habit formation, and long-term potential.
+        </p>
+        
+        <div className="flex flex-col sm:flex-row gap-4 pt-4">
+          <Link to="/register" className="btn-minimal px-8 py-3 text-base flex items-center justify-center gap-2 group">
+            Begin Application
+            <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
+          </Link>
+          <Link to="/login" className="px-8 py-3 text-base font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-all flex items-center justify-center">
+            Existing Participant
+          </Link>
         </div>
-        <div className="glass p-8 text-left">
-          <Users className="text-indigo-400 mb-4" size={32} />
-          <h3 className="text-xl font-bold mb-2">Global Community</h3>
-          <p className="text-slate-400">Join a network of thousands of participants sharing the same growth journey.</p>
+      </div>
+
+      {/* Features Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="p-8 rounded-2xl border border-zinc-200 bg-white shadow-sm hover:shadow-md transition-shadow space-y-4">
+          <div className="w-12 h-12 rounded-lg bg-zinc-900 flex items-center justify-center text-white">
+            <Brain size={24} />
+          </div>
+          <h3 className="text-xl font-bold text-zinc-900">Methodical Research</h3>
+          <p className="text-zinc-600 leading-relaxed">
+            Our protocols are built on peer-reviewed behavioral models to ensure scientific integrity and meaningful outcomes.
+          </p>
+        </div>
+
+        <div className="p-8 rounded-2xl border border-zinc-200 bg-white shadow-sm hover:shadow-md transition-shadow space-y-4">
+          <div className="w-12 h-12 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-900">
+            <Shield size={24} />
+          </div>
+          <h3 className="text-xl font-bold text-zinc-900">Privacy First</h3>
+          <p className="text-zinc-600 leading-relaxed">
+            Encrypted data storage and anonymized reporting ensure your identity remains protected throughout the study.
+          </p>
+        </div>
+
+        <div className="p-8 rounded-2xl border border-zinc-200 bg-white shadow-sm hover:shadow-md transition-shadow space-y-4">
+          <div className="w-12 h-12 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-900">
+            <Users size={24} />
+          </div>
+          <h3 className="text-xl font-bold text-zinc-900">Collective Insights</h3>
+          <p className="text-zinc-600 leading-relaxed">
+            Benefit from aggregate data patterns shared with the community to understand broader human behavioral trends.
+          </p>
+        </div>
+      </div>
+
+      {/* Stats Section */}
+      <div className="border-y border-zinc-200 py-12 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+        <div>
+          <div className="text-3xl font-bold text-zinc-900">2.4k+</div>
+          <div className="text-sm text-zinc-500 uppercase tracking-wider font-semibold mt-1">Participants</div>
+        </div>
+        <div>
+          <div className="text-3xl font-bold text-zinc-900">12k</div>
+          <div className="text-sm text-zinc-500 uppercase tracking-wider font-semibold mt-1">Data Points</div>
+        </div>
+        <div>
+          <div className="text-3xl font-bold text-zinc-900">98%</div>
+          <div className="text-sm text-zinc-500 uppercase tracking-wider font-semibold mt-1">Retention</div>
+        </div>
+        <div>
+          <div className="text-3xl font-bold text-zinc-900">14</div>
+          <div className="text-sm text-zinc-500 uppercase tracking-wider font-semibold mt-1">Countries</div>
         </div>
       </div>
     </div>
