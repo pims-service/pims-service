@@ -1,35 +1,40 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-brand-primary: #18181b;
+  --color-brand-secondary: #71717a;
+  --color-background: #ffffff;
+  --color-surface: #fafafa;
+  --color-border: #e4e4e7;
+  --color-text-main: #09090b;
+  --color-text-muted: #71717a;
+}
 
 :root {
-  --primary: #6366f1;
-  --secondary: #ec4899;
-  --background: #0f172a;
-  --surface: #1e293b;
-  --text: #f8fafc;
+  background-color: var(--color-background);
+  color: var(--color-text-main);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--text);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  margin: 0;
+  min-height: 100vh;
 }
 
-.glass {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 1rem;
+/* Minimalist Button Utility */
+.btn-minimal {
+  @apply px-4 py-2 rounded-md font-medium transition-all duration-200;
+  @apply bg-zinc-900 text-white hover:bg-zinc-800 active:scale-[0.98];
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
-.btn-premium {
-  @apply px-6 py-3 rounded-xl font-semibold transition-all duration-300;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+.input-minimal {
+  @apply w-full px-3 py-2 rounded-md border border-zinc-200 bg-white;
+  @apply focus:outline-none focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900;
+  @apply transition-all duration-200 placeholder:text-zinc-400;
 }
 
-.btn-premium:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+.card-minimal {
+  @apply bg-white border border-zinc-200 rounded-xl shadow-sm;
 }

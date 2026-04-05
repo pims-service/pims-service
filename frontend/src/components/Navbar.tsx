@@ -14,38 +14,44 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="glass mx-4 mt-4 px-6 py-4 flex items-center justify-between sticky top-4 z-50">
-      <Link to="/" className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-pink-400">
-        PsychPlatform
-      </Link>
-      
-      <div className="flex items-center gap-6">
-        {isAuthenticated ? (
-          <>
-            <Link to="/dashboard" className="flex items-center gap-2 hover:text-indigo-400 transition-colors">
-              <LayoutDashboard size={20} /> Dashboard
-            </Link>
-            {isAdmin && (
-              <Link to="/admin" className="flex items-center gap-2 hover:text-indigo-400 transition-colors">
-                <Settings size={20} /> Admin
+    <nav className="border-b border-zinc-200 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+      <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+        <Link to="/" className="text-xl font-bold text-zinc-900 tracking-tight">
+          PsychPlatform
+        </Link>
+        
+        <div className="flex items-center gap-8">
+          {isAuthenticated ? (
+            <>
+              <Link to="/dashboard" className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors flex items-center gap-2">
+                <LayoutDashboard size={18} /> Dashboard
               </Link>
-            )}
-            <Link to="/profile" className="flex items-center gap-2 hover:text-indigo-400 transition-colors">
-              <User size={20} /> Profile
-            </Link>
-            <button 
-              onClick={handleLogout}
-              className="flex items-center gap-2 text-rose-400 hover:text-rose-300 transition-colors"
-            >
-              <LogOut size={20} /> Logout
-            </button>
-          </>
-        ) : (
-          <>
-            <Link to="/login" className="hover:text-indigo-400 transition-colors">Login</Link>
-            <Link to="/register" className="btn-premium">Sign Up</Link>
-          </>
-        )}
+              {isAdmin && (
+                <Link to="/admin" className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors flex items-center gap-2">
+                  <Settings size={18} /> Admin
+                </Link>
+              )}
+              <Link to="/profile" className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors flex items-center gap-2">
+                <User size={18} /> Profile
+              </Link>
+              <button 
+                onClick={handleLogout}
+                className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors flex items-center gap-2"
+              >
+                <LogOut size={18} /> Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors">
+                Log in
+              </Link>
+              <Link to="/register" className="btn-minimal !py-1.5 !px-4 text-sm">
+                Sign up
+              </Link>
+            </>
+          )}
+        </div>
       </div>
     </nav>
   );
