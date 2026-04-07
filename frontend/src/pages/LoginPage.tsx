@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import { Mail, Lock, Loader2, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
@@ -16,7 +16,7 @@ const LoginPage: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/login/`, formData);
+      const response = await api.post('/login/', formData);
       const data = response.data;
       
       localStorage.setItem('access_token', data.access);
@@ -35,12 +35,20 @@ const LoginPage: React.FC = () => {
         navigate('/dashboard');
       }
     } catch (err: any) {
-      setError('Invalid username or password. Please try again.');
+      if (err.response?.status === 401) {
+        setError('Invalid username or password. Please try again.');
+      } else if (err.response?.status === 500) {
+        setError('Server error (500). Please contact administration.');
+      } else if (err.response?.data?.detail) {
+        setError(err.response.data.detail);
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
+      console.error('Login Error:', err.response?.data || err.message);
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <div className="min-h-[80vh] flex items-center justify-center p-4 bg-zinc-50/50">
       <div className="card-minimal max-w-md w-full p-8 space-y-8">
@@ -88,7 +96,7 @@ const LoginPage: React.FC = () => {
                 <label className="text-sm font-medium text-zinc-700" htmlFor="password">
                   Password
                 </label>
-                <Link to="/forgot-password" size="sm" className="text-xs text-zinc-500 hover:text-zinc-900 transition-colors">
+                <Link to="/forgot-password" title="sm" className="text-xs text-zinc-500 hover:text-zinc-900 transition-colors">
                   Forgot password?
                 </Link>
               </div>

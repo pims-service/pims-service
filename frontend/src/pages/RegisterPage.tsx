@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import { User, Mail, Lock, Phone, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const RegisterPage: React.FC = () => {
@@ -40,7 +40,7 @@ const RegisterPage: React.FC = () => {
     setErrors({});
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/register/`, formData);
+      const response = await api.post('/register/', formData);
       if (response.status === 201) {
         setSuccess(true);
         setTimeout(() => {
@@ -49,6 +49,7 @@ const RegisterPage: React.FC = () => {
       }
     } catch (err: any) {
       if (err.response?.data) {
+        console.error('Registration Error:', err.response.data);
         setErrors(err.response.data);
       } else {
         setErrors({ non_field_errors: ['An unexpected error occurred. Please try again.'] });
@@ -80,10 +81,19 @@ const RegisterPage: React.FC = () => {
           <p className="text-zinc-500">Enter your details below to get started</p>
         </div>
 
-        {errors.non_field_errors && (
-          <div className="p-3 rounded-md bg-red-50 border border-red-100 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700">{errors.non_field_errors[0]}</p>
+        {Object.keys(errors).length > 0 && (
+          <div className="p-4 rounded-lg bg-red-50 border border-red-200 space-y-2">
+            <div className="flex items-center gap-2 text-red-800 font-semibold mb-1">
+              <AlertCircle className="w-5 h-5" />
+              <span>Registration Failed</span>
+            </div>
+            <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
+              {Object.entries(errors).map(([field, messages]) => (
+                <li key={field}>
+                  <span className="capitalize font-medium">{field.replace('_', ' ')}:</span> {messages[0]}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
@@ -181,10 +191,11 @@ const RegisterPage: React.FC = () => {
                   type="password"
                   required
                   placeholder="••••••••"
-                  className={`input-minimal ${errors.confirm_password ? 'border-red-300 ring-red-100' : ''}`}
+                  className={`input-minimal ${errors.password ? 'border-red-300 ring-red-100' : ''}`}
                   value={formData.confirm_password}
                   onChange={handleChange}
                 />
+                {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password[0]}</p>}
               </div>
             </div>
           </div>

@@ -32,6 +32,10 @@ class User(AbstractUser):
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def id(self):
+        return self.user_id
     
     # Original consents (migrated/supported for now)
     email_consent = models.BooleanField(default=False)
