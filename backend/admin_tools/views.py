@@ -4,7 +4,6 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser
 from users.models import User
 from activities.models import Submission
-from questionnaires.models import QuestionnaireResponse
 
 class ExportDataCSVView(APIView):
     permission_classes = [IsAdminUser]

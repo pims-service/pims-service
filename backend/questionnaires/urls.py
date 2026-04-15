@@ -1,7 +1,8 @@
 from django.urls import path
-from .views import QuestionnaireDetailView, ResponseCreateView
+from .views import QuestionnaireListView, QuestionnaireDetailView, ResponseSetCreateView
 
 urlpatterns = [
-    path('<int:pk>/', QuestionnaireDetailView.as_view(), name='questionnaire_detail'),
-    path('submit/', ResponseCreateView.as_view(), name='response_create'),
+    path('', QuestionnaireListView.as_view(), name='questionnaire_list'),
+    path('<uuid:pk>/', QuestionnaireDetailView.as_view(), name='questionnaire_detail'),
+    path('response-sets/', ResponseSetCreateView.as_view(), name='response_set_create'),
 ]
