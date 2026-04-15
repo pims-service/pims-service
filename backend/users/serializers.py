@@ -69,15 +69,7 @@ class SignupSerializer(serializers.ModelSerializer):
             defaults={'description': 'Default role for experiment participants'}
         )
         
-        # Assign group with fewest participants for uniform distribution
-        group = (
-            Group.objects
-            .annotate(member_count=Count('participants'))
-            .order_by('member_count', 'pk')
-            .first()
-        )
-
-        # Create user
+        # Create user (Group assignment is now deferred to baseline completion)
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
@@ -85,7 +77,6 @@ class SignupSerializer(serializers.ModelSerializer):
             full_name=validated_data.get('full_name', ''),
             whatsapp_number=validated_data.get('whatsapp_number', ''),
             role=role,
-            group=group,
         )
         
         # Create consent record
