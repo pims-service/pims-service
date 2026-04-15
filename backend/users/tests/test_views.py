@@ -34,9 +34,10 @@ def test_signup_success(api_client, db):
     assert User.objects.filter(username="newuser").exists()
     assert UserConsent.objects.filter(user__username="newuser", agreed=True).exists()
     user = User.objects.get(username="newuser")
-    assert user.group is not None
-    assert response.data['group'] == user.group.pk
-    assert response.data['group_name'] == user.group.name
+    # NEW: Verify deferred assignment (Group should be None)
+    assert user.group is None
+    assert response.data.get('group') is None
+    assert response.data.get('group_name') is None
 
 @pytest.mark.django_db
 def test_signup_password_mismatch(api_client, db):
@@ -121,4 +122,5 @@ def test_signup_group_distribution(api_client, db):
         assert response.status_code == status.HTTP_201_CREATED
 
     for group in groups:
-        assert group.participants.count() == 2
+        # NEW: Verify deferred assignment (Groups should remain empty after signup)
+        assert group.participants.count() == 0
