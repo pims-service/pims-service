@@ -98,5 +98,7 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
             # 4. Trigger Group Assignment if Baseline
             if instance.questionnaire.is_baseline:
                 assign_user_to_group(instance.user)
+                instance.user.has_completed_baseline = True
+                instance.user.save(update_fields=['has_completed_baseline'])
 
         return instance
