@@ -37,6 +37,9 @@ class User(AbstractUser):
     def id(self):
         return self.user_id
     
+    # Onboarding state
+    has_completed_baseline = models.BooleanField(default=False)
+
     # Original consents (migrated/supported for now)
     email_consent = models.BooleanField(default=False)
     whatsapp_consent = models.BooleanField(default=False)

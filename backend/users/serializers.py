@@ -18,9 +18,10 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             'user_id', 'username', 'full_name', 'email', 
             'whatsapp_number', 'role', 'role_name', 
-            'group', 'group_name', 'traits', 'created_at'
+            'group', 'group_name', 'traits', 'created_at',
+            'has_completed_baseline',
         )
-        read_only_fields = ('created_at',)
+        read_only_fields = ('created_at', 'has_completed_baseline',)
 
 class SignupSerializer(serializers.ModelSerializer):
     """
