@@ -13,7 +13,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.67.1",
     "autoprefixer": "^10.4.20",
-    "axios": "^1.8.1",
+    "axios": "^1.15.0",
     "chart.js": "^4.4.8",
     "framer-motion": "^12.4.10",
     "lucide-react": "^0.477.0",
