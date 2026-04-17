@@ -1,5 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { groupsApi } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Users, 
+  ArrowLeft, 
+  RotateCw, 
+  AlertTriangle, 
+  CheckCircle2, 
+  User, 
+  ChevronRight,
+  Info,
+  X,
+  Power,
+  PowerOff
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { getGroups, getGroupDetail, groupsApi } from '../services/api';
+
+interface Participant {
+  user_id: number;
+  full_name: string;
+  username: string;
+}
 
 export interface Group {
     group_id: number;
@@ -7,122 +28,269 @@ export interface Group {
     description: string;
     capacity: number;
     is_active: boolean;
-    participant_count: number;
+    member_count: number;
+    participants?: Participant[];
     created_at: string;
 }
 
 const GroupsManagementPage: React.FC = () => {
-    const [groups, setGroups] = useState<Group[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-    useEffect(() => {
-        fetchGroups();
-    }, []);
+  const fetchData = async () => {
+    setRefreshing(true);
+    try {
+      const response = await getGroups();
+      setGroups(response.data);
+      setError(null);
+    } catch (err) {
+      setError('Failed to fetch group distribution data.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
-    const fetchGroups = async () => {
-        try {
-            setLoading(true);
-            const response = await groupsApi.adminList();
-            setGroups(response.data);
-            setError(null);
-        } catch (err) {
-            setError('Failed to load groups. Please ensure you have admin permissions.');
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-    const handleToggleActive = async (groupId: number) => {
-        try {
-            await groupsApi.toggleActive(groupId);
-            fetchGroups(); // Refresh list
-        } catch (err) {
-            setError('Failed to update group status.');
-            console.error(err);
-        }
-    };
+  const handleGroupClick = async (group: Group) => {
+    setDrawerOpen(true);
+    setSelectedGroup({ ...group, participants: undefined }); // Clear old participants
+    try {
+      const response = await getGroupDetail(group.group_id);
+      setSelectedGroup(response.data);
+    } catch (err) {
+      console.error('Failed to fetch group details', err);
+      // Fallback to basic info if detail fetch fails
+      setSelectedGroup(group);
+    }
+  };
 
-    if (loading) return (
-        <div className="flex justify-center items-center h-screen">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-        </div>
-    );
+  const handleToggleActive = async (e: React.MouseEvent, group_id: number) => {
+    e.stopPropagation(); // prevent opening drawer
+    try {
+        await groupsApi.toggleActive(group_id);
+        fetchData(); // Refresh list
+    } catch (err) {
+        console.error('Failed to update group status', err);
+        setError('Failed to update group status.');
+    }
+  };
 
+  const calculateAverage = () => {
+    if (groups.length === 0) return 0;
+    const total = groups.reduce((acc, g) => acc + g.member_count, 0);
+    return total / groups.length;
+  };
+
+  const avgCount = calculateAverage();
+
+  // Imbalance threshold (20% below average)
+  const getGroupStatus = (group: Group) => {
+    if (!group.is_active) return { label: 'Deactivated', color: 'text-gray-400', bg: 'bg-gray-500/10', border: 'border-gray-500/20' };
+    if (group.member_count === 0) return { label: 'Empty', color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20' };
+    if (group.member_count >= group.capacity) return { label: 'At Capacity', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' };
+    if (group.member_count < avgCount * 0.8) return { label: 'Low Participation', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' };
+    return { label: 'Balanced', color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20' };
+  };
+
+  if (loading) {
     return (
-        <div className="p-8 max-w-7xl mx-auto">
-            <header className="mb-8 flex justify-between items-center">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+        <RotateCw className="w-8 h-8 text-indigo-500 animate-spin" />
+        <p className="text-slate-400 animate-pulse">Loading distribution data...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
+      {/* Header */}
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <button 
+            onClick={() => navigate('/admin')}
+            className="flex items-center gap-2 text-sm text-slate-500 hover:text-indigo-400 transition-colors mb-2"
+          >
+            <ArrowLeft size={16} /> Back to Analytics
+          </button>
+          <h1 className="text-4xl font-bold tracking-tight">Group Management</h1>
+          <p className="text-slate-400">Monitor participant distribution and ensure experimental balance.</p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs text-slate-400">
+            <Info size={14} className="text-indigo-400" />
+            Target Average: <span className="text-white font-mono">{avgCount.toFixed(1)}</span>
+          </div>
+          <button 
+            onClick={fetchData} 
+            disabled={refreshing}
+            className="glass px-4 py-2 flex items-center gap-2 hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50"
+          >
+            <RotateCw size={18} className={refreshing ? 'animate-spin' : ''} />
+            {refreshing ? 'Refreshing...' : 'Refresh Data'}
+          </button>
+        </div>
+      </header>
+
+      {error ? (
+        <div className="glass p-12 text-center space-y-4 border-red-500/20">
+          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto" />
+          <p className="text-red-400">{error}</p>
+          <button onClick={fetchData} className="btn-premium px-6">Try Again</button>
+        </div>
+      ) : groups.length === 0 ? (
+        <div className="glass p-20 text-center space-y-4">
+          <Users className="w-16 h-16 text-slate-700 mx-auto" />
+          <h3 className="text-xl font-bold">No Groups Seeded</h3>
+          <p className="text-slate-500 max-w-md mx-auto">
+            Experimental groups haven't been initialized in the system yet. Please check the backend configuration.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {groups.map((group, index) => {
+            const status = getGroupStatus(group);
+            return (
+              <motion.div
+                key={group.group_id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                onClick={() => handleGroupClick(group)}
+                className={`glass group p-6 cursor-pointer hover:border-indigo-500/50 hover:shadow-lg hover:shadow-indigo-500/5 transition-all relative overflow-hidden ${!group.is_active ? 'opacity-60 grayscale' : ''}`}
+              >
+                {/* Visual Cue Background */}
+                <div className={`absolute top-0 right-0 w-24 h-24 ${status.bg} blur-3xl -mr-12 -mt-12 transition-colors`} />
+                
+                <div className="space-y-4 relative z-10">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-bold text-lg group-hover:text-indigo-400 transition-colors uppercase tracking-wider">
+                      {group.name}
+                    </h3>
+                    <div className={`px-2 py-1 rounded text-[10px] font-bold ${status.bg} ${status.color} border ${status.border}`}>
+                      {status.label}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-mono font-bold">{group.member_count}</span>
+                        <span className="text-slate-600 font-mono text-sm">/ {group.capacity}</span>
+                    </div>
+                    <div className="text-xs text-slate-500 uppercase tracking-tighter">Participants</div>
+                  </div>
+
+                  <p className="text-sm text-slate-400 line-clamp-2 h-10 italic">
+                    {group.description || 'No description provided.'}
+                  </p>
+
+                  <div className="pt-4 flex items-center justify-between text-xs text-slate-500 border-t border-slate-800">
+                    <button
+                        onClick={(e) => handleToggleActive(e, group.group_id)}
+                        className={`flex items-center gap-1 transition-colors ${group.is_active ? 'hover:text-amber-400' : 'hover:text-green-400'}`}
+                        title={group.is_active ? 'Deactivate Group' : 'Activate Group'}
+                    >
+                      {group.is_active ? <Power size={12} className="text-green-500" /> : <PowerOff size={12} className="text-slate-700" />}
+                      {group.is_active ? 'Active' : 'Inactive'}
+                    </button>
+                    <span className="flex items-center gap-1 group-hover:text-indigo-400 transition-colors">
+                      View List <ChevronRight size={14} />
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Participant Drill-down Drawer */}
+      <AnimatePresence>
+        {drawerOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDrawerOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            />
+            
+            {/* Drawer */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 h-full w-full max-w-md bg-slate-950 border-l border-slate-800 shadow-2xl z-50 overflow-hidden flex flex-col"
+            >
+              <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Group Management</h1>
-                    <p className="text-gray-600">Monitor and control participant group distribution and status.</p>
+                  <h2 className="text-2xl font-bold">{selectedGroup?.name}</h2>
+                  <p className="text-sm text-slate-400">{selectedGroup?.member_count} Participants</p>
                 </div>
                 <button 
-                    onClick={fetchGroups}
-                    className="btn-premium px-4 py-2"
+                  onClick={() => setDrawerOpen(false)}
+                  className="p-2 hover:bg-slate-800 rounded-full transition-colors"
                 >
-                    Refresh Data
+                  <X />
                 </button>
-            </header>
+              </div>
 
-            {error && (
-                <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-8">
-                    <p className="text-red-700">{error}</p>
-                </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {groups.map((group) => (
-                    <div key={group.group_id} className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden transition-all hover:shadow-xl">
-                        <div className="p-6">
-                            <div className="flex justify-between items-start mb-4">
-                                <h3 className="text-xl font-bold text-gray-800">{group.name}</h3>
-                                <div className={`px-3 py-1 rounded-full text-xs font-semibold ${group.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                                    {group.is_active ? 'Active' : 'Inactive'}
-                                </div>
-                            </div>
-                            
-                            <p className="text-gray-600 text-sm mb-6 line-clamp-2 h-10">
-                                {group.description || 'No description provided for this group.'}
-                            </p>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <div className="flex justify-between text-sm mb-1">
-                                        <span className="text-gray-500 font-medium">Capacity Usage</span>
-                                        <span className={`font-bold ${group.participant_count >= group.capacity ? 'text-red-600' : 'text-indigo-600'}`}>
-                                            {group.participant_count} / {group.capacity}
-                                        </span>
-                                    </div>
-                                    <div className="w-full bg-gray-100 rounded-full h-2">
-                                        <div 
-                                            className={`h-2 rounded-full transition-all duration-500 ${
-                                                (group.participant_count / group.capacity) > 0.9 ? 'bg-red-500' : 'bg-indigo-600'
-                                            }`}
-                                            style={{ width: `${Math.min((group.participant_count / group.capacity) * 100, 100)}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
-                            </div>
+              <div className="flex-grow overflow-y-auto p-6">
+                {!selectedGroup?.participants ? (
+                  <div className="flex flex-col items-center justify-center h-full space-y-4">
+                    <RotateCw className="w-8 h-8 text-indigo-500 animate-spin" />
+                    <p className="text-slate-500">Loading participants...</p>
+                  </div>
+                ) : selectedGroup.participants.length === 0 ? (
+                  <div className="text-center py-20">
+                    <Users className="w-12 h-12 text-slate-800 mx-auto mb-4" />
+                    <p className="text-slate-500 italic">No participants assigned to this group yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Participant Roster</h4>
+                    {selectedGroup.participants.map((user) => (
+                      <div key={user.user_id} className="flex items-center gap-4 p-4 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-slate-700 transition-all">
+                        <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20">
+                          <User size={18} />
                         </div>
-                        
-                        <div className="bg-gray-50 p-4 border-t border-gray-100 flex justify-end">
-                            <button
-                                onClick={() => handleToggleActive(group.group_id)}
-                                className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
-                                    group.is_active 
-                                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' 
-                                    : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
-                                }`}
-                            >
-                                {group.is_active ? 'Deactivate Group' : 'Activate Group'}
-                            </button>
+                        <div className="flex-grow min-w-0">
+                          <p className="font-bold truncate">{user.full_name || 'Anonymous'}</p>
+                          <p className="text-xs text-slate-500 font-mono">ID: {user.user_id} • @{user.username}</p>
                         </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 border-t border-slate-800 bg-slate-900/30">
+                <button 
+                  onClick={() => setDrawerOpen(false)}
+                  className="w-full btn-premium py-2.5"
+                >
+                  Close View
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 };
 
 export default GroupsManagementPage;

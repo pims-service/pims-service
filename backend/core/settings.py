@@ -216,6 +216,8 @@ SIMPLE_JWT = {
     'USER_ID_FIELD': 'user_id',
 }
 
+
+
 # CORS Settings
 CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[])
 

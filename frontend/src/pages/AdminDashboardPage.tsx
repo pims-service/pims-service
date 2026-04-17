@@ -38,11 +38,19 @@ const AdminDashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-10">
-      <header className="flex justify-between items-center">
-        <h1 className="text-4xl font-bold">Admin Console</h1>
-        <button onClick={handleExport} className="btn-premium flex items-center gap-2">
-          <Download size={20} /> Export All Data (SPSS)
-        </button>
+      <header className="flex justify-between items-center text-white">
+        <div>
+          <h1 className="text-4xl font-bold">Admin Console</h1>
+          <p className="text-slate-400 mt-1">Real-time experimental analytics and management.</p>
+        </div>
+        <div className="flex gap-3">
+          <Link to="/admin/groups" className="btn-premium flex items-center gap-2 bg-slate-800 border-slate-700 hover:bg-slate-700">
+            <BarChart2 size={20} /> Manage Groups
+          </Link>
+          <button onClick={handleExport} className="btn-premium flex items-center gap-2">
+            <Download size={20} /> Export All Data (SPSS)
+          </button>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

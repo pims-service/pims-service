@@ -43,7 +43,13 @@ api.interceptors.response.use(
 export const groupsApi = {
   list: () => api.get('/groups/'),
   adminList: () => api.get('/groups/admin/'),
+  getDetail: (groupId: number) => api.get(`/groups/admin/${groupId}/`),
   toggleActive: (groupId: number) => api.post(`/groups/admin/${groupId}/toggle_active/`),
 };
 
+// Aliases for compatibility with upstream UI components
+export const getGroups = groupsApi.adminList;
+export const getGroupDetail = groupsApi.getDetail;
+
 export default api;
+

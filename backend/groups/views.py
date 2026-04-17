@@ -16,7 +16,7 @@ class GroupListView(generics.ListAPIView):
 class GroupAdminViewSet(viewsets.ModelViewSet):
     """
     Administrative interface for managing groups.
-    Only accessible by staff/admin users.
+    Only accessible by staff/admin users (except for retrieve).
     """
     queryset = Group.objects.annotate(
         member_count=Count('participants')

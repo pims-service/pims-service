@@ -12,3 +12,5 @@ urlpatterns = [
     # Administrative endpoints
     path('', include(router.urls)),
 ]
+
+

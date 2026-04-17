@@ -4,35 +4,44 @@ import api from '../services/api';
 import { Mail, Lock, Loader2, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
-  const [formData, setFormData] = useState({ username: '', password: '' });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+  });
+
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const successMessage = location.state?.message;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError(null);
+
     try {
       const response = await api.post('/login/', formData);
       const data = response.data;
       
+      // Persist tokens
       localStorage.setItem('access_token', data.access);
       localStorage.setItem('refresh_token', data.refresh);
       
       if (data.user) {
+        // Persist user info for UI/Logic
         localStorage.setItem('user_role', data.user.role);
-        localStorage.setItem('user_full_name', data.user.full_name);
+        localStorage.setItem('user_full_name', data.user.full_name || data.user.username);
         
+        // Redirection based on role
         if (data.user.role === 'Admin') {
           navigate('/admin');
         } else {
           navigate('/dashboard');
         }
-      } else {
-        navigate('/dashboard');
+        
+        // Force a reload to ensure App.tsx checkAuth() returns fresh status
+        window.location.reload();
       }
     } catch (err: any) {
       if (err.response?.status === 401) {
@@ -49,6 +58,7 @@ const LoginPage: React.FC = () => {
       setLoading(false);
     }
   };
+
   return (
     <div className="min-h-[80vh] flex items-center justify-center p-4 bg-zinc-50/50">
       <div className="card-minimal max-w-md w-full p-8 space-y-8">
@@ -81,6 +91,7 @@ const LoginPage: React.FC = () => {
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                 <input
                   id="username"
+                  name="username"
                   type="text"
                   required
                   placeholder="johndoe"
@@ -96,7 +107,7 @@ const LoginPage: React.FC = () => {
                 <label className="text-sm font-medium text-zinc-700" htmlFor="password">
                   Password
                 </label>
-                <Link to="/forgot-password" title="sm" className="text-xs text-zinc-500 hover:text-zinc-900 transition-colors">
+                <Link to="/forgot-password" title="Coming Soon" className="text-xs text-zinc-500 hover:text-zinc-900 transition-colors">
                   Forgot password?
                 </Link>
               </div>
@@ -104,6 +115,7 @@ const LoginPage: React.FC = () => {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                 <input
                   id="password"
+                  name="password"
                   type="password"
                   required
                   placeholder="••••••••"
@@ -131,7 +143,7 @@ const LoginPage: React.FC = () => {
           </button>
         </form>
 
-        <p className="text-center text-sm text-zinc-500">
+        <p className="text-center text-sm text-zinc-500 pt-2 border-t border-zinc-100">
           Don't have an account?{' '}
           <Link to="/register" className="text-zinc-900 font-medium hover:underline underline-offset-4">
             Create one

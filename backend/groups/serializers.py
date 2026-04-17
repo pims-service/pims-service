@@ -2,18 +2,18 @@ from rest_framework import serializers
 from .models import Group
 from django.db.models import Count
 
-class UserMinimalSerializer(serializers.Serializer):
-    """
-    Minimal user representation for nested group data.
-    """
-    user_id = serializers.IntegerField(read_only=True)
-    username = serializers.CharField(read_only=True)
-    full_name = serializers.CharField(read_only=True)
-    email = serializers.EmailField(read_only=True)
+class ParticipantSerializer(serializers.ModelSerializer):
+    class Meta:
+        from users.models import User
+        model = User
+        fields = ['user_id', 'full_name', 'username']
+        extra_kwargs = {
+            'full_name': {'allow_blank': True, 'required': False},
+        }
 
 class GroupSerializer(serializers.ModelSerializer):
     member_count = serializers.IntegerField(read_only=True, default=0)
-    participants = UserMinimalSerializer(many=True, read_only=True)
+    participants = ParticipantSerializer(many=True, read_only=True)
 
     class Meta:
         model = Group
