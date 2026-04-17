@@ -3,11 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { questionnairesApi } from '../services/api';
 import LikertSlider from '../components/Questionnaire/LikertSlider';
-import { 
-  Loader2, 
-  ArrowLeft, 
-  ArrowRight, 
-  CheckCircle2, 
+import {
+  Loader2,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
   AlertCircle
 } from 'lucide-react';
 
@@ -21,6 +21,7 @@ const QuestionnairePage: React.FC = () => {
   const [responses, setResponses] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [completed, setCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -74,7 +75,7 @@ const QuestionnairePage: React.FC = () => {
       const payload = questions.map((q: any) => {
         const response = responses[q.id];
         const base = { question_id: q.id };
-        
+
         if (q.type === 'TEXT') {
           return { ...base, text_value: response || "" };
         } else if (q.type === 'SCALE' || q.type === 'CHOICE') {
@@ -89,13 +90,62 @@ const QuestionnairePage: React.FC = () => {
       });
 
       await questionnairesApi.submitResponseSet(responseSetId, payload);
-      navigate('/dashboard', { state: { message: 'Questionnaire completed successfully!' } });
+
+      // Update Onboarding State
+      localStorage.setItem('has_completed_baseline', 'true');
+
+      setCompleted(true);
+
+      // Short delay for success experience before redirect
+      setTimeout(() => {
+        navigate('/dashboard', {
+          state: { message: 'Baseline assessment finalized and group assigned.' },
+          replace: true
+        });
+      }, 3000);
     } catch (err: any) {
       setError('Failed to submit questionnaire. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (completed) {
+    return (
+      <div className="max-w-md mx-auto py-24 px-4 text-center space-y-8">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', damping: 12 }}
+          className="w-24 h-24 bg-zinc-900 rounded-full flex items-center justify-center mx-auto shadow-xl"
+        >
+          <CheckCircle2 className="w-12 h-12 text-white" />
+        </motion.div>
+
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="space-y-4"
+        >
+          <h2 className="text-3xl font-serif font-bold">Assessment Finalized</h2>
+          <p className="text-zinc-500 max-w-xs mx-auto">
+            Your initial profile is complete. We are now synchronizing your results and preparing your dashboard.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="flex items-center justify-center gap-2 text-zinc-400 text-sm font-medium"
+        >
+          <Loader2 className="w-4 h-4 animate-spin" />
+          Synchronizing environment...
+        </motion.div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -126,7 +176,7 @@ const QuestionnairePage: React.FC = () => {
           <span className="font-serif italic text-zinc-900">{questionnaire?.title}</span>
         </div>
         <div className="h-1 w-full bg-zinc-100 rounded-full overflow-hidden">
-          <motion.div 
+          <motion.div
             className="h-full bg-zinc-900"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
@@ -158,11 +208,10 @@ const QuestionnairePage: React.FC = () => {
                     <button
                       key={option.id}
                       onClick={() => handleResponseChange(currentQuestion.id, option.id)}
-                      className={`group p-6 rounded-xl border-2 text-left transition-all duration-200 flex items-center justify-between ${
-                        responses[currentQuestion.id] === option.id 
-                          ? 'border-zinc-900 bg-zinc-900 text-white shadow-lg' 
+                      className={`group p-6 rounded-xl border-2 text-left transition-all duration-200 flex items-center justify-between ${responses[currentQuestion.id] === option.id
+                          ? 'border-zinc-900 bg-zinc-900 text-white shadow-lg'
                           : 'border-zinc-100 hover:border-zinc-300 bg-zinc-50/50'
-                      }`}
+                        }`}
                     >
                       <span className="font-medium">{option.label}</span>
                       <CheckCircle2 className={`w-6 h-6 transition-opacity ${responses[currentQuestion.id] === option.id ? 'opacity-100' : 'opacity-0'}`} />
@@ -172,7 +221,7 @@ const QuestionnairePage: React.FC = () => {
               )}
 
               {currentQuestion.type === 'SCALE' && (
-                <LikertSlider 
+                <LikertSlider
                   options={currentQuestion.options}
                   value={responses[currentQuestion.id]}
                   onChange={(val) => handleResponseChange(currentQuestion.id, val)}

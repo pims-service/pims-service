@@ -100,7 +100,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'username': self.user.username,
             'email': self.user.email,
             'full_name': self.user.full_name,
-            'role': self.user.role.name if self.user.role else 'Participant'
+            'role': self.user.role.name if self.user.role else 'Participant',
+            'has_completed_baseline': self.user.has_completed_baseline
         }
         
         return data
