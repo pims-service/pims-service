@@ -22,7 +22,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-django pytest-factoryboy djangorestframework-simplejwt django-cors-headers django-environ whitenoise drf-spectacular
+          pip install pytest pytest-django
       - name: Run Tests
         run: pytest
         env:

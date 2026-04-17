@@ -15,7 +15,7 @@ def test_user_profile(authenticated_client, test_user):
 def test_signup_success(api_client, db):
     Role.objects.get_or_create(name='Participant')
     for i in range(1, 9):
-        Group.objects.create(name=f'Group {i}')
+        Group.objects.get_or_create(name=f'Signup_Group_{i}')
 
     url = reverse('register')
     payload = {
@@ -105,7 +105,7 @@ def test_admin_user_list(admin_client, test_user):
 def test_signup_group_distribution(api_client, db):
     """16 signups across 8 groups should yield exactly 2 per group."""
     Role.objects.get_or_create(name='Participant')
-    groups = [Group.objects.create(name=f'Group {i}') for i in range(1, 9)]
+    groups = [Group.objects.get_or_create(name=f'Signup_Dist_{i}')[0] for i in range(1, 9)]
 
     url = reverse('register')
     for i in range(16):

@@ -27,6 +27,7 @@ class Question(models.Model):
         ('SCALE', 'Likert Scale / Discrete Scale'),
         ('TEXT', 'Open Text'),
     )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE, related_name='questions')
     content = models.TextField()
     type = models.CharField(max_length=10, choices=QUESTION_TYPES)
@@ -43,6 +44,7 @@ class Option(models.Model):
     """
     Predefined options for CHOICE and SCALE questions.
     """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='options')
     label = models.CharField(max_length=200)
     numeric_value = models.IntegerField(help_text="Numeric value for statistical analysis (SPSS compatible)")
@@ -62,6 +64,7 @@ class ResponseSet(models.Model):
         ('DRAFT', 'In Progress'),
         ('COMPLETED', 'Completed'),
     )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='response_sets')
     questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE, related_name='attempts')
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='DRAFT')
@@ -75,6 +78,7 @@ class Response(models.Model):
     """
     A single answer within a response set.
     """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     response_set = models.ForeignKey(ResponseSet, on_delete=models.CASCADE, related_name='responses')
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     selected_option = models.ForeignKey(Option, on_delete=models.SET_NULL, null=True, blank=True)
