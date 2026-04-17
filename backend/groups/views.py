@@ -1,30 +1,47 @@
+from rest_framework import viewsets, permissions, status, generics
+from rest_framework.decorators import action
+from rest_framework.response import Response as DRFResponse
 from django.db.models import Count
-from rest_framework import generics, permissions
 from .models import Group
-from .serializers import GroupSerializer, GroupDetailSerializer
+from .serializers import GroupSerializer
 
-
-class GroupListView(generics.ListCreateAPIView):
+class GroupListView(generics.ListAPIView):
+    """Publicly accessible list of active groups."""
+    queryset = Group.objects.filter(is_active=True).annotate(
+        member_count=Count('participants')
+    )
     serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = (permissions.IsAuthenticated,)
 
-    def get_queryset(self):
-        return Group.objects.annotate(member_count=Count('participants'))
-
-    def get_permissions(self):
-        if self.request.method == 'POST':
-            return [permissions.IsAdminUser()]
-        return super().get_permissions()
-
-
-class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = GroupDetailSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        return Group.objects.annotate(member_count=Count('participants'))
+class GroupAdminViewSet(viewsets.ModelViewSet):
+    """
+    Administrative interface for managing groups.
+    Only accessible by staff/admin users.
+    """
+    queryset = Group.objects.annotate(
+        member_count=Count('participants')
+    ).order_by('name')
+    serializer_class = GroupSerializer
+    lookup_field = 'group_id'
 
     def get_permissions(self):
-        if self.request.method in ('PATCH', 'PUT', 'DELETE'):
-            return [permissions.IsAdminUser()]
-        return super().get_permissions()
+        """
+        Custom permissions:
+        - Authenticated users can retrieve details.
+        - Only admins can perform other actions (create, update, delete, toggle_active).
+        """
+        if self.action == 'retrieve':
+            return [permissions.IsAuthenticated()]
+        return [permissions.IsAdminUser()]
+
+    @action(detail=True, methods=['post'])
+    def toggle_active(self, request, group_id=None):
+        group = self.get_object()
+        group.is_active = not group.is_active
+        group.save(update_fields=['is_active'])
+        
+        status_text = 'active' if group.is_active else 'inactive'
+        return DRFResponse({
+            'status': status_text,
+            'is_active': group.is_active
+        })

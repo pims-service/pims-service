@@ -40,4 +40,10 @@ api.interceptors.response.use(
   }
 );
 
+export const groupsApi = {
+  list: () => api.get('/groups/'),
+  adminList: () => api.get('/groups/admin/'),
+  toggleActive: (groupId: number) => api.post(`/groups/admin/${groupId}/toggle_active/`),
+};
+
 export default api;

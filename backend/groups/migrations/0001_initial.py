@@ -33,6 +33,8 @@ class Migration(migrations.Migration):
                 ('group_id', models.AutoField(primary_key=True, serialize=False)),
                 ('name', models.CharField(max_length=100, unique=True)),
                 ('description', models.TextField(blank=True)),
+                ('capacity', models.PositiveIntegerField(default=50)),
+                ('is_active', models.BooleanField(default=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
             ],
         ),

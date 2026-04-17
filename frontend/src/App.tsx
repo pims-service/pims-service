@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage';
 import ActivityPage from './pages/ActivityPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import ProfilePage from './pages/ProfilePage';
+import GroupsManagementPage from './pages/GroupsManagementPage';
 
 const App: React.FC = () => {
   // Helper to get fresh auth status
@@ -47,6 +48,10 @@ const App: React.FC = () => {
             <Route 
               path="/admin" 
               element={checkAuth() ? <AdminDashboardPage /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/admin/groups" 
+              element={checkAuth() ? <GroupsManagementPage /> : <Navigate to="/login" />} 
             />
             
             {/* Fallback */}
