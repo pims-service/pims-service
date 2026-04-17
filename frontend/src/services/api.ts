@@ -40,4 +40,8 @@ api.interceptors.response.use(
   }
 );
 
+export const getGroups = () => api.get('/groups/');
+export const getGroupDetail = (id: number) => api.get(`/groups/${id}/`);
+
 export default api;
+

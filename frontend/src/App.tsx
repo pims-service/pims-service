@@ -7,6 +7,7 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ActivityPage from './pages/ActivityPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import GroupsManagementPage from './pages/GroupsManagementPage';
 import ProfilePage from './pages/ProfilePage';
 
 const App: React.FC = () => {
@@ -37,11 +38,16 @@ const App: React.FC = () => {
               path="/admin" 
               element={isAuthenticated ? <AdminDashboardPage /> : <Navigate to="/login" />} 
             />
+            <Route 
+              path="/admin/groups" 
+              element={isAuthenticated ? <GroupsManagementPage /> : <Navigate to="/login" />} 
+            />
           </Routes>
         </main>
       </div>
     </Router>
   );
 };
+
 
 export default App;
