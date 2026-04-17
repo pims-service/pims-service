@@ -5,6 +5,7 @@ import django.contrib.auth.validators
 import django.db.models.deletion
 import django.utils.timezone
 from django.db import migrations, models
+from django.conf import settings
 
 
 class Migration(migrations.Migration):
@@ -18,9 +19,16 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='User',
+            name='Role',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(max_length=50, unique=True)),
+                ('description', models.TextField(blank=True)),
+            ],
+        ),
+        migrations.CreateModel(
+            name='User',
+            fields=[
                 ('password', models.CharField(max_length=128, verbose_name='password')),
                 ('last_login', models.DateTimeField(blank=True, null=True, verbose_name='last login')),
                 ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
@@ -32,11 +40,16 @@ class Migration(migrations.Migration):
                 ('date_joined', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined')),
                 ('email', models.EmailField(max_length=254, unique=True)),
                 ('whatsapp_number', models.CharField(blank=True, max_length=20)),
+                ('user_id', models.AutoField(primary_key=True, serialize=False)),
+                ('full_name', models.CharField(blank=True, max_length=255)),
+                ('traits', models.JSONField(blank=True, default=dict)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
+                ('has_completed_baseline', models.BooleanField(default=False)),
                 ('email_consent', models.BooleanField(default=False)),
                 ('whatsapp_consent', models.BooleanField(default=False)),
-                ('traits', models.JSONField(blank=True, default=dict)),
-                ('registration_date', models.DateTimeField(auto_now_add=True)),
                 ('group', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='participants', to='groups.group')),
+                ('role', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='users', to='users.role')),
                 ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.group', verbose_name='groups')),
                 ('user_permissions', models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.permission', verbose_name='user permissions')),
             ],
@@ -47,6 +60,16 @@ class Migration(migrations.Migration):
             },
             managers=[
                 ('objects', django.contrib.auth.models.UserManager()),
+            ],
+        ),
+        migrations.CreateModel(
+            name='UserConsent',
+            fields=[
+                ('consent_id', models.AutoField(primary_key=True, serialize=False)),
+                ('agreed', models.BooleanField(default=False)),
+                ('agreed_at', models.DateTimeField(default=django.utils.timezone.now)),
+                ('consent_version', models.CharField(max_length=10)),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='consents', to=settings.AUTH_USER_MODEL)),
             ],
         ),
     ]

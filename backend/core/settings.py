@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'drf_spectacular',
+    'django_filters',
 
     # Local apps
     'users',
@@ -114,6 +115,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': env.db('DATABASE_URL', default='postgres://psych_user:psych_pass@db:5432/psych_db')
 }
+DATABASES['default']['TEST'] = {'NAME': 'test_psych_clean_db'}
 # Connection pooling for better performance in production-like containers
 DATABASES['default']['CONN_MAX_AGE'] = 600
 
@@ -196,6 +198,9 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }

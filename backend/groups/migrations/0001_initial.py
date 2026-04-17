@@ -3,6 +3,22 @@
 from django.db import migrations, models
 
 
+def seed_groups(apps, schema_editor):
+    Group = apps.get_model('groups', 'Group')
+    names = [
+        'Group 1',
+        'Group 2',
+        'Group 3',
+        'Group 4',
+        'Group 5',
+        'Group 6',
+        'Group 7',
+        'Group 8',
+    ]
+    for name in names:
+        Group.objects.get_or_create(name=name)
+
+
 class Migration(migrations.Migration):
 
     initial = True
@@ -14,10 +30,11 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Group',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('group_id', models.AutoField(primary_key=True, serialize=False)),
                 ('name', models.CharField(max_length=100, unique=True)),
                 ('description', models.TextField(blank=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
             ],
         ),
+        migrations.RunPython(seed_groups, migrations.RunPython.noop),
     ]
