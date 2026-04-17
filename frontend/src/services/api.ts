@@ -40,8 +40,23 @@ api.interceptors.response.use(
   }
 );
 
-export const getGroups = () => api.get('/groups/');
-export const getGroupDetail = (id: number) => api.get(`/groups/${id}/`);
+export const groupsApi = {
+  list: () => api.get('/groups/'),
+  adminList: () => api.get('/groups/admin/'),
+  getDetail: (groupId: number) => api.get(`/groups/admin/${groupId}/`),
+  toggleActive: (groupId: number) => api.post(`/groups/admin/${groupId}/toggle_active/`),
+};
+
+export const questionnairesApi = {
+  list: () => api.get('/questionnaires/'),
+  getDetail: (id: string) => api.get(`/questionnaires/${id}/`),
+  createResponseSet: (questionnaireId: string) => api.post('/questionnaires/response-sets/', { questionnaire: questionnaireId }),
+  submitResponseSet: (responseSetId: string, responsesData: any[]) => 
+    api.post(`/questionnaires/response-sets/${responseSetId}/submit/`, { responses_data: responsesData }),
+};
+
+// Aliases for compatibility with upstream UI components
+export const getGroups = groupsApi.adminList;
+export const getGroupDetail = groupsApi.getDetail;
 
 export default api;
-
