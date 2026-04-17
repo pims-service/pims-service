@@ -42,9 +42,8 @@ api.interceptors.response.use(
 
 export const groupsApi = {
   list: () => api.get('/groups/'),
-  adminList: () => api.get('/groups/admin/'),
-  getDetail: (groupId: number) => api.get(`/groups/admin/${groupId}/`),
-  toggleActive: (groupId: number) => api.post(`/groups/admin/${groupId}/toggle_active/`),
+  getDetail: (groupId: number) => api.get(`/groups/${groupId}/`),
+  toggleActive: (groupId: number) => api.post(`/groups/${groupId}/toggle_active/`),
 };
 
 export const questionnairesApi = {
@@ -56,7 +55,7 @@ export const questionnairesApi = {
 };
 
 // Aliases for compatibility with upstream UI components
-export const getGroups = groupsApi.adminList;
+export const getGroups = groupsApi.list;
 export const getGroupDetail = groupsApi.getDetail;
 
 export default api;
