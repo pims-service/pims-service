@@ -4,6 +4,7 @@ from django.db.models import Count
 from django.utils import timezone
 
 from groups.models import Group
+from groups.services import assign_user_to_group
 from .models import User, Role, UserConsent
 
 class UserSerializer(serializers.ModelSerializer):
@@ -70,7 +71,7 @@ class SignupSerializer(serializers.ModelSerializer):
             defaults={'description': 'Default role for experiment participants'}
         )
         
-        # Create user (Group assignment is now deferred to baseline completion)
+        # Create user
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
@@ -79,7 +80,10 @@ class SignupSerializer(serializers.ModelSerializer):
             whatsapp_number=validated_data.get('whatsapp_number', ''),
             role=role,
         )
-        
+
+        # Assign user to a group using the groups service
+        assign_user_to_group(user)
+
         # Create consent record
         UserConsent.objects.create(
             user=user,

@@ -34,10 +34,9 @@ def test_signup_success(api_client, db):
     assert User.objects.filter(username="newuser").exists()
     assert UserConsent.objects.filter(user__username="newuser", agreed=True).exists()
     user = User.objects.get(username="newuser")
-    # NEW: Verify deferred assignment (Group should be None)
-    assert user.group is None
-    assert response.data.get('group') is None
-    assert response.data.get('group_name') is None
+    assert user.group is not None
+    assert response.data.get('group') is not None
+    assert response.data.get('group_name') is not None
 
 @pytest.mark.django_db
 def test_signup_password_mismatch(api_client, db):
