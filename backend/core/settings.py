@@ -209,8 +209,8 @@ SIMPLE_JWT = {
     'SIGNING_KEY': SECRET_KEY,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'user_id',
-    'USER_ID_CLAIM': 'user_id',
 }
+
 
 
 # CORS Settings

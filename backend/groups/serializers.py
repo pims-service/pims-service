@@ -1,10 +1,14 @@
 from rest_framework import serializers
 from .models import Group
 
-class ParticipantSerializer(serializers.Serializer):
-    user_id = serializers.IntegerField()
-    full_name = serializers.CharField()
-    username = serializers.CharField()
+class ParticipantSerializer(serializers.ModelSerializer):
+    class Meta:
+        from users.models import User
+        model = User
+        fields = ['user_id', 'full_name', 'username']
+        extra_kwargs = {
+            'full_name': {'allow_blank': True, 'required': False},
+        }
 
 class GroupSerializer(serializers.ModelSerializer):
     member_count = serializers.IntegerField(read_only=True)
