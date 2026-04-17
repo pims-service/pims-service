@@ -10,6 +10,8 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 import GroupsManagementPage from './pages/GroupsManagementPage';
 import ProfilePage from './pages/ProfilePage';
 import QuestionnairePage from './pages/QuestionnairePage';
+import OnboardingGuard from './components/Auth/OnboardingGuard';
+import BaselineRedirect from './components/Auth/BaselineRedirect';
 
 const App: React.FC = () => {
   // Helper to get fresh auth status
@@ -21,44 +23,53 @@ const App: React.FC = () => {
         <Navbar />
         <main className="flex-grow container mx-auto px-4 py-8">
           <Routes>
-            <Route path="/" element={<LandingPage />} />
-            
-            {/* Guest Only Routes */}
-            <Route 
-              path="/login" 
-              element={checkAuth() ? <Navigate to="/dashboard" /> : <LoginPage />} 
-            />
-            <Route 
-              path="/register" 
-              element={checkAuth() ? <Navigate to="/dashboard" /> : <RegisterPage />} 
+            <Route
+              path="/"
+              element={checkAuth() ? <Navigate to="/dashboard" replace /> : <LandingPage />}
             />
 
-            {/* Protected Routes */}
-            <Route 
-              path="/dashboard" 
-              element={checkAuth() ? <DashboardPage /> : <Navigate to="/login" />} 
+            {/* Guest Only Routes */}
+            <Route
+              path="/login"
+              element={checkAuth() ? <Navigate to="/dashboard" /> : <LoginPage />}
             />
-            <Route 
-              path="/activity/:id" 
-              element={checkAuth() ? <ActivityPage /> : <Navigate to="/login" />} 
+            <Route
+              path="/register"
+              element={checkAuth() ? <Navigate to="/dashboard" /> : <RegisterPage />}
             />
-            <Route 
-              path="/profile" 
-              element={checkAuth() ? <ProfilePage /> : <Navigate to="/login" />} 
+
+            {/* Protected Routes - Wrapping with OnboardingGuard */}
+            <Route
+              path="/dashboard"
+              element={<OnboardingGuard><DashboardPage /></OnboardingGuard>}
             />
-            <Route 
-              path="/admin" 
-              element={checkAuth() ? <AdminDashboardPage /> : <Navigate to="/login" />} 
+            <Route
+              path="/activity/:id"
+              element={<OnboardingGuard><ActivityPage /></OnboardingGuard>}
             />
-            <Route 
-              path="/admin/groups" 
-              element={checkAuth() ? <GroupsManagementPage /> : <Navigate to="/login" />}
+            <Route
+              path="/profile"
+              element={<OnboardingGuard><ProfilePage /></OnboardingGuard>}
+            />
+            <Route
+              path="/admin"
+              element={<OnboardingGuard requireAdmin={true}><AdminDashboardPage /></OnboardingGuard>}
+            />
+            <Route
+              path="/admin/groups"
+              element={<OnboardingGuard requireAdmin={true}><GroupsManagementPage /></OnboardingGuard>}
             />
             <Route
               path="/questionnaire/:id"
-              element={checkAuth() ? <QuestionnairePage /> : <Navigate to="/login" />}
+              element={<OnboardingGuard><QuestionnairePage /></OnboardingGuard>}
             />
-            
+
+            {/* Dedicated Baseline Entry Point */}
+            <Route
+              path="/baseline-questionnaire"
+              element={<OnboardingGuard><BaselineRedirect /></OnboardingGuard>}
+            />
+
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" />} />
 

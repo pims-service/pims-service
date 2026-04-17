@@ -32,10 +32,13 @@ const LoginPage: React.FC = () => {
         // Persist user info for UI/Logic
         localStorage.setItem('user_role', data.user.role);
         localStorage.setItem('user_full_name', data.user.full_name || data.user.username);
+        localStorage.setItem('has_completed_baseline', String(data.user.has_completed_baseline));
         
-        // Redirection based on role
+        // Redirection based on role and onboarding status
         if (data.user.role === 'Admin') {
           navigate('/admin');
+        } else if (data.user.has_completed_baseline === false) {
+          navigate('/baseline-questionnaire');
         } else {
           navigate('/dashboard');
         }

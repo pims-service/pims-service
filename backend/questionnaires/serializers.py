@@ -18,7 +18,7 @@ class QuestionnaireSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Questionnaire
-        fields = ['id', 'title', 'description', 'is_active', 'max_completion_time', 'questions']
+        fields = ['id', 'title', 'description', 'is_active', 'is_baseline', 'max_completion_time', 'questions']
 
 class ResponseSerializer(serializers.ModelSerializer):
     class Meta:
