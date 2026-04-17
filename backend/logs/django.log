@@ -294,3 +294,12 @@ Traceback (most recent call last):
   File "/usr/local/lib/python3.11/site-packages/django/http/request.py", line 151, in get_host
     raise DisallowedHost(msg)
 django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+WARNING 2026-04-15 23:36:15,946 log 1 128888979882752 Bad Request: /api/register/
+WARNING 2026-04-15 23:36:16,027 log 1 128888979882752 Bad Request: /api/register/
+WARNING 2026-04-15 23:36:16,649 log 1 128888979882752 Bad Request: /api/register/
+WARNING 2026-04-15 23:37:03,074 log 1 132177011294976 Bad Request: /api/register/
+WARNING 2026-04-15 23:37:03,131 log 1 132177011294976 Bad Request: /api/register/
+WARNING 2026-04-15 23:37:03,640 log 1 132177011294976 Bad Request: /api/register/
+WARNING 2026-04-15 23:37:39,291 log 1 139419681755904 Bad Request: /api/register/
+WARNING 2026-04-15 23:37:39,346 log 1 139419681755904 Bad Request: /api/register/
+WARNING 2026-04-15 23:37:39,864 log 1 139419681755904 Bad Request: /api/register/

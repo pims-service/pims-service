@@ -24,3 +24,4 @@ celery==5.4.0
 pytest==8.3.5
 pytest-django==4.10.0
 pytest-factoryboy==2.7.0
+django-filter==24.3
