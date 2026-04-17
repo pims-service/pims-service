@@ -1,22 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../services/api';
-import { Calendar, CheckCircle2, Clock, ArrowRight, Bell } from 'lucide-react';
+import api, { questionnairesApi } from '../services/api';
+import { Calendar, CheckCircle2, Clock, ArrowRight, Bell, FileText } from 'lucide-react';
 
 const DashboardPage: React.FC = () => {
   const [activities, setActivities] = useState<any[]>([]);
+  const [submissions, setSubmissions] = useState<any[]>([]);
   const [phase, setPhase] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [actRes, phaseRes] = await Promise.all([
+        const [actRes, phaseRes, subRes] = await Promise.all([
           api.get('/activities/'),
-          api.get('/phases/current/')
+          api.get('/phases/current/'),
+          questionnairesApi.listResponseSets()
         ]);
         setActivities(actRes.data);
         setPhase(phaseRes.data);
+        setSubmissions(subRes.data.filter((s: any) => s.status === 'COMPLETED').slice(0, 5));
       } catch (err) {
         console.error(err);
       } finally {
@@ -75,14 +78,25 @@ const DashboardPage: React.FC = () => {
               <CheckCircle2 className="text-green-400" /> Recent Submissions
             </h2>
             <div className="divide-y divide-slate-700/50">
-              <div className="py-4 flex justify-between">
-                <span>Self-reflection Paragraph</span>
-                <span className="text-slate-500 text-sm">Yesterday, 8:30 PM</span>
-              </div>
-              <div className="py-4 flex justify-between">
-                <span>Phase 1 Initial Survey</span>
-                <span className="text-slate-500 text-sm">2 days ago</span>
-              </div>
+              {submissions.map((sub) => (
+                <div key={sub.id} className="py-4 flex items-center justify-between group">
+                  <div className="flex items-center gap-3">
+                    <FileText size={18} className="text-slate-500" />
+                    <div>
+                       <span className="block font-medium">{sub.questionnaire_title || 'Assessment Result'}</span>
+                       <span className="text-slate-500 text-xs">{new Date(sub.completed_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                  <Link to={`/results/${sub.id}`} className="flex items-center gap-1 text-indigo-400 text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                    View Insights <ArrowRight size={14} />
+                  </Link>
+                </div>
+              ))}
+              {submissions.length === 0 && (
+                <div className="py-8 text-center text-slate-500 italic text-sm">
+                  No submissions yet. Complete your baseline to see insights.
+                </div>
+              )}
             </div>
           </section>
         </div>

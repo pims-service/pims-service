@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
@@ -7,8 +7,11 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ActivityPage from './pages/ActivityPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminReportsPage from './pages/AdminReportsPage';
 import GroupsManagementPage from './pages/GroupsManagementPage';
+import AdminLayout from './components/Admin/AdminLayout';
 import ProfilePage from './pages/ProfilePage';
+import ResultsPage from './pages/ResultsPage';
 import QuestionnairePage from './pages/QuestionnairePage';
 import OnboardingGuard from './components/Auth/OnboardingGuard';
 import BaselineRedirect from './components/Auth/BaselineRedirect';
@@ -19,56 +22,40 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-white">
         <Navbar />
-        <main className="flex-grow container mx-auto px-4 py-8">
+        <main className="flex-grow flex flex-col">
           <Routes>
             <Route
               path="/"
-              element={checkAuth() ? <Navigate to="/dashboard" replace /> : <LandingPage />}
+              element={<div className="container mx-auto px-4 py-8 flex-grow">{checkAuth() ? <Navigate to="/dashboard" replace /> : <LandingPage />}</div>}
             />
 
             {/* Guest Only Routes */}
             <Route
               path="/login"
-              element={checkAuth() ? <Navigate to="/dashboard" /> : <LoginPage />}
+              element={<div className="container mx-auto px-4 py-8 flex-grow">{checkAuth() ? <Navigate to="/dashboard" /> : <LoginPage />}</div>}
             />
             <Route
               path="/register"
-              element={checkAuth() ? <Navigate to="/dashboard" /> : <RegisterPage />}
+              element={<div className="container mx-auto px-4 py-8 flex-grow">{checkAuth() ? <Navigate to="/dashboard" /> : <RegisterPage />}</div>}
             />
 
-            {/* Protected Routes - Wrapping with OnboardingGuard */}
-            <Route
-              path="/dashboard"
-              element={<OnboardingGuard><DashboardPage /></OnboardingGuard>}
-            />
-            <Route
-              path="/activity/:id"
-              element={<OnboardingGuard><ActivityPage /></OnboardingGuard>}
-            />
-            <Route
-              path="/profile"
-              element={<OnboardingGuard><ProfilePage /></OnboardingGuard>}
-            />
-            <Route
-              path="/admin"
-              element={<OnboardingGuard requireAdmin={true}><AdminDashboardPage /></OnboardingGuard>}
-            />
-            <Route
-              path="/admin/groups"
-              element={<OnboardingGuard requireAdmin={true}><GroupsManagementPage /></OnboardingGuard>}
-            />
-            <Route
-              path="/questionnaire/:id"
-              element={<OnboardingGuard><QuestionnairePage /></OnboardingGuard>}
-            />
-
-            {/* Dedicated Baseline Entry Point */}
-            <Route
-              path="/baseline-questionnaire"
-              element={<OnboardingGuard><BaselineRedirect /></OnboardingGuard>}
-            />
+            {/* Participant Routes - Wrapped in Container */}
+            <Route element={<div className="container mx-auto px-4 py-8 flex-grow"><OnboardingGuard><Outlet /></OnboardingGuard></div>}>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/activity/:id" element={<ActivityPage />} />
+              <Route path="/results/:id" element={<ResultsPage />} />
+              <Route path="/questionnaire/:id" element={<QuestionnairePage />} />
+              <Route path="/baseline-questionnaire" element={<BaselineRedirect />} />
+            </Route>
+            {/* Admin Hub - Nested Routes with Sidebar Layout */}
+            <Route element={<OnboardingGuard requireAdmin={true}><AdminLayout /></OnboardingGuard>}>
+              <Route path="/admin" element={<AdminDashboardPage />} />
+              <Route path="/admin/groups" element={<GroupsManagementPage />} />
+              <Route path="/admin/reports" element={<AdminReportsPage />} />
+            </Route>
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" />} />

@@ -50,6 +50,8 @@ export const questionnairesApi = {
   list: () => api.get('/questionnaires/'),
   getDetail: (id: string) => api.get(`/questionnaires/${id}/`),
   createResponseSet: (questionnaireId: string) => api.post('/questionnaires/response-sets/', { questionnaire: questionnaireId }),
+  getResponseSet: (id: string) => api.get(`/questionnaires/response-sets/${id}/`),
+  listResponseSets: () => api.get('/questionnaires/response-sets/'),
   submitResponseSet: (responseSetId: string, responsesData: any[]) => 
     api.post(`/questionnaires/response-sets/${responseSetId}/submit/`, { responses_data: responsesData }),
 };
