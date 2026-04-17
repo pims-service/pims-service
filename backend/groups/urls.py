@@ -9,8 +9,8 @@ urlpatterns = [
     # Public endpoints
     path('', GroupListView.as_view(), name='group-list'),
     
-    # Administrative endpoints
-    path('', include(router.urls)),
+    # Administrative endpoints (matches /api/groups/admin/*)
+    path('admin/', include(router.urls)),
 ]
 
 
