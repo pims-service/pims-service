@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
-  ArrowLeft, 
   RotateCw, 
   AlertTriangle, 
   CheckCircle2, 
@@ -29,7 +27,6 @@ interface Group {
 }
 
 const GroupsManagementPage: React.FC = () => {
-  const navigate = useNavigate();
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);
@@ -97,12 +94,6 @@ const GroupsManagementPage: React.FC = () => {
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
-          <button 
-            onClick={() => navigate('/admin')}
-            className="flex items-center gap-2 text-sm text-slate-500 hover:text-indigo-400 transition-colors mb-2"
-          >
-            <ArrowLeft size={16} /> Back to Analytics
-          </button>
           <h1 className="text-4xl font-bold tracking-tight">Group Management</h1>
           <p className="text-slate-400">Monitor participant distribution and ensure experimental balance.</p>
         </div>

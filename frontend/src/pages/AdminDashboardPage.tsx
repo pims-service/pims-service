@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { API_URL } from '../services/api';
-import { Users, FileText, Download, TrendingUp, Search } from 'lucide-react';
+import React from 'react';
+import { Users, FileText, TrendingUp, Search } from 'lucide-react';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 
@@ -32,9 +31,6 @@ const AdminDashboardPage: React.FC = () => {
     },
   };
 
-  const handleExport = async () => {
-    window.open(`${API_URL}/admin/tools/export/csv/`, '_blank');
-  };
 
   return (
     <div className="space-y-10">
@@ -42,14 +38,6 @@ const AdminDashboardPage: React.FC = () => {
         <div>
           <h1 className="text-4xl font-bold">Admin Console</h1>
           <p className="text-slate-400 mt-1">Real-time experimental analytics and management.</p>
-        </div>
-        <div className="flex gap-3">
-          <Link to="/admin/groups" className="btn-premium flex items-center gap-2 bg-slate-800 border-slate-700 hover:bg-slate-700">
-            <BarChart2 size={20} /> Manage Groups
-          </Link>
-          <button onClick={handleExport} className="btn-premium flex items-center gap-2">
-            <Download size={20} /> Export All Data (SPSS)
-          </button>
         </div>
       </header>
 
