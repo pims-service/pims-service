@@ -9,6 +9,7 @@ import ActivityPage from './pages/ActivityPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import GroupsManagementPage from './pages/GroupsManagementPage';
 import ProfilePage from './pages/ProfilePage';
+import QuestionnairePage from './pages/QuestionnairePage';
 
 const App: React.FC = () => {
   // Helper to get fresh auth status
@@ -51,7 +52,11 @@ const App: React.FC = () => {
             />
             <Route 
               path="/admin/groups" 
-              element={checkAuth() ? <GroupsManagementPage /> : <Navigate to="/login" />} 
+              element={checkAuth() ? <GroupsManagementPage /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/questionnaire/:id"
+              element={checkAuth() ? <QuestionnairePage /> : <Navigate to="/login" />}
             />
             
             {/* Fallback */}
