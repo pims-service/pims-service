@@ -5,12 +5,13 @@ import { LogOut, User, LayoutDashboard, Settings } from 'lucide-react';
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const isAuthenticated = !!localStorage.getItem('access_token');
-  const isAdmin = true; // Temporary stub
+  const userRole = localStorage.getItem('user_role');
+  const isAdmin = userRole === 'Admin';
 
   const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
+    localStorage.clear();
     navigate('/login');
+    window.location.reload();
   };
 
   return (
