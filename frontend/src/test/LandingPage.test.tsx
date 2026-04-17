@@ -10,7 +10,7 @@ describe('LandingPage', () => {
         <LandingPage />
       </BrowserRouter>
     );
-    expect(screen.getByText(/Phase 1 Enrollment Open/i)).toBeDefined();
+    expect(screen.getByText(/Phase 1 Enrollment Now Open/i)).toBeDefined();
   });
 
   it('renders main headline', () => {
@@ -19,6 +19,6 @@ describe('LandingPage', () => {
         <LandingPage />
       </BrowserRouter>
     );
-    expect(screen.getByRole('heading', { name: /Discover the Psychology of Achievement/i })).toBeDefined();
+    expect(screen.getByRole('heading', { name: /The Science of Human Achievement/i })).toBeDefined();
   });
 });

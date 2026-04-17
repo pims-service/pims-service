@@ -11,7 +11,8 @@ import GroupsManagementPage from './pages/GroupsManagementPage';
 import ProfilePage from './pages/ProfilePage';
 
 const App: React.FC = () => {
-  const isAuthenticated = !!localStorage.getItem('access_token');
+  // Helper to get fresh auth status
+  const checkAuth = () => !!localStorage.getItem('access_token');
 
   return (
     <Router>
@@ -20,28 +21,42 @@ const App: React.FC = () => {
         <main className="flex-grow container mx-auto px-4 py-8">
           <Routes>
             <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+            
+            {/* Guest Only Routes */}
+            <Route 
+              path="/login" 
+              element={checkAuth() ? <Navigate to="/dashboard" /> : <LoginPage />} 
+            />
+            <Route 
+              path="/register" 
+              element={checkAuth() ? <Navigate to="/dashboard" /> : <RegisterPage />} 
+            />
+
+            {/* Protected Routes */}
             <Route 
               path="/dashboard" 
-              element={isAuthenticated ? <DashboardPage /> : <Navigate to="/login" />} 
+              element={checkAuth() ? <DashboardPage /> : <Navigate to="/login" />} 
             />
             <Route 
               path="/activity/:id" 
-              element={isAuthenticated ? <ActivityPage /> : <Navigate to="/login" />} 
+              element={checkAuth() ? <ActivityPage /> : <Navigate to="/login" />} 
             />
             <Route 
               path="/profile" 
-              element={isAuthenticated ? <ProfilePage /> : <Navigate to="/login" />} 
+              element={checkAuth() ? <ProfilePage /> : <Navigate to="/login" />} 
             />
             <Route 
               path="/admin" 
-              element={isAuthenticated ? <AdminDashboardPage /> : <Navigate to="/login" />} 
+              element={checkAuth() ? <AdminDashboardPage /> : <Navigate to="/login" />} 
             />
             <Route 
               path="/admin/groups" 
-              element={isAuthenticated ? <GroupsManagementPage /> : <Navigate to="/login" />} 
+              element={checkAuth() ? <GroupsManagementPage /> : <Navigate to="/login" />} 
             />
+            
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" />} />
+
           </Routes>
         </main>
       </div>

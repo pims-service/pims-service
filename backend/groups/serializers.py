@@ -1,26 +1,20 @@
 from rest_framework import serializers
 from .models import Group
 
+class ParticipantSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    full_name = serializers.CharField()
+    username = serializers.CharField()
+
 class GroupSerializer(serializers.ModelSerializer):
-    member_count = serializers.IntegerField(source='participants.count', read_only=True)
+    member_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Group
-        fields = ('group_id', 'name', 'description', 'member_count', 'created_at')
+        fields = ['group_id', 'name', 'description', 'created_at', 'member_count']
 
-class ParticipantSerializer(serializers.ModelSerializer):
-    class Meta:
-        # Import inside to avoid circular dependency if needed, 
-        # but User is already used in others or we can use settings.AUTH_USER_MODEL
-        from users.models import User
-        model = User
-        fields = ('user_id', 'full_name', 'username')
-
-class GroupDetailSerializer(serializers.ModelSerializer):
+class GroupDetailSerializer(GroupSerializer):
     participants = ParticipantSerializer(many=True, read_only=True)
-    member_count = serializers.IntegerField(source='participants.count', read_only=True)
 
-    class Meta:
-        model = Group
-        fields = ('group_id', 'name', 'description', 'member_count', 'participants', 'created_at')
-
+    class Meta(GroupSerializer.Meta):
+        fields = GroupSerializer.Meta.fields + ['participants']

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
-import { User, Mail, Lock, Phone, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
+import api from '../services/api';
+import { User, Mail, Lock, Phone, ArrowRight, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ const RegisterPage: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<Record<string, string[]>>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,11 +36,11 @@ const RegisterPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setLoading(true);
     setErrors({});
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/register/`, formData);
+      const response = await api.post('/register/', formData);
       if (response.status === 201) {
         setSuccess(true);
         setTimeout(() => {
@@ -49,12 +49,13 @@ const RegisterPage: React.FC = () => {
       }
     } catch (err: any) {
       if (err.response?.data) {
+        console.error('Registration Error:', err.response.data);
         setErrors(err.response.data);
       } else {
         setErrors({ non_field_errors: ['An unexpected error occurred. Please try again.'] });
       }
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -75,15 +76,24 @@ const RegisterPage: React.FC = () => {
   return (
     <div className="min-h-[90vh] flex items-center justify-center p-4 bg-zinc-50/50">
       <div className="card-minimal max-w-md w-full p-8 space-y-8">
-        <div className="space-y-2">
+        <div className="space-y-2 text-center">
           <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Create an account</h1>
           <p className="text-zinc-500">Enter your details below to get started</p>
         </div>
 
-        {errors.non_field_errors && (
-          <div className="p-3 rounded-md bg-red-50 border border-red-100 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700">{errors.non_field_errors[0]}</p>
+        {Object.keys(errors).length > 0 && (
+          <div className="p-4 rounded-lg bg-red-50 border border-red-200 space-y-2">
+            <div className="flex items-center gap-2 text-red-800 font-semibold mb-1">
+              <AlertCircle className="w-5 h-5" />
+              <span>Registration Failed</span>
+            </div>
+            <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
+              {Object.entries(errors).map(([field, messages]) => (
+                <li key={field}>
+                  <span className="capitalize font-medium">{field.replace('_', ' ')}:</span> {messages[0]}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
@@ -104,7 +114,6 @@ const RegisterPage: React.FC = () => {
                   onChange={handleChange}
                 />
               </div>
-              {errors.username && <p className="text-xs text-red-600 mt-1">{errors.username[0]}</p>}
             </div>
 
             <div className="space-y-1.5">
@@ -119,7 +128,6 @@ const RegisterPage: React.FC = () => {
                 value={formData.full_name}
                 onChange={handleChange}
               />
-              {errors.full_name && <p className="text-xs text-red-600 mt-1">{errors.full_name[0]}</p>}
             </div>
 
             <div className="space-y-1.5">
@@ -137,7 +145,6 @@ const RegisterPage: React.FC = () => {
                   onChange={handleChange}
                 />
               </div>
-              {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email[0]}</p>}
             </div>
 
             <div className="space-y-1.5">
@@ -155,7 +162,6 @@ const RegisterPage: React.FC = () => {
                   onChange={handleChange}
                 />
               </div>
-              {errors.whatsapp_number && <p className="text-xs text-red-600 mt-1">{errors.whatsapp_number[0]}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -171,7 +177,6 @@ const RegisterPage: React.FC = () => {
                   value={formData.password}
                   onChange={handleChange}
                 />
-                {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password[0]}</p>}
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-zinc-700" htmlFor="confirm_password">Confirm</label>
@@ -181,7 +186,7 @@ const RegisterPage: React.FC = () => {
                   type="password"
                   required
                   placeholder="••••••••"
-                  className={`input-minimal ${errors.confirm_password ? 'border-red-300 ring-red-100' : ''}`}
+                  className={`input-minimal ${errors.password ? 'border-red-300 ring-red-100' : ''}`}
                   value={formData.confirm_password}
                   onChange={handleChange}
                 />
@@ -206,11 +211,11 @@ const RegisterPage: React.FC = () => {
 
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={loading}
             className="btn-minimal w-full flex items-center justify-center gap-2 group py-2.5"
           >
-            {isLoading ? (
-              <span className="w-5 h-5 border-2 border-zinc-400 border-t-white rounded-full animate-spin" />
+            {loading ? (
+              <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
             ) : (
               <>
                 Create Account
@@ -220,7 +225,7 @@ const RegisterPage: React.FC = () => {
           </button>
         </form>
 
-        <p className="text-center text-sm text-zinc-500">
+        <p className="text-center text-sm text-zinc-500 pt-2 border-t border-zinc-100">
           Already have an account?{' '}
           <Link to="/login" className="text-zinc-900 font-medium hover:underline underline-offset-4">
             Sign in

@@ -28,6 +28,22 @@ def authenticated_client(api_client, test_user):
     return api_client
 
 @pytest.fixture
+def baseline_user(db, test_group):
+    user = User.objects.create_user(
+        username="baselineuser",
+        email="baseline@example.com",
+        password="password123",
+        group=test_group,
+        has_completed_baseline=True
+    )
+    return user
+
+@pytest.fixture
+def baseline_client(api_client, baseline_user):
+    api_client.force_authenticate(user=baseline_user)
+    return api_client
+
+@pytest.fixture
 def admin_user(db):
     return User.objects.create_superuser(
         username="admin",
