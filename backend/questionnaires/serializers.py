@@ -27,10 +27,11 @@ class ResponseSerializer(serializers.ModelSerializer):
 
 class ResponseSetSerializer(serializers.ModelSerializer):
     responses = ResponseSerializer(many=True, read_only=True)
+    questionnaire_title = serializers.CharField(source='questionnaire.title', read_only=True)
 
     class Meta:
         model = ResponseSet
-        fields = ['id', 'user', 'questionnaire', 'status', 'started_at', 'completed_at', 'responses']
+        fields = ['id', 'user', 'questionnaire', 'questionnaire_title', 'status', 'started_at', 'completed_at', 'responses']
         read_only_fields = ['user', 'started_at', 'completed_at', 'status']
 
 class ResponseBulkSerializer(serializers.Serializer):

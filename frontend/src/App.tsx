@@ -9,6 +9,7 @@ import ActivityPage from './pages/ActivityPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import GroupsManagementPage from './pages/GroupsManagementPage';
 import ProfilePage from './pages/ProfilePage';
+import ResultsPage from './pages/ResultsPage';
 import QuestionnairePage from './pages/QuestionnairePage';
 import OnboardingGuard from './components/Auth/OnboardingGuard';
 import BaselineRedirect from './components/Auth/BaselineRedirect';
@@ -58,6 +59,10 @@ const App: React.FC = () => {
             <Route
               path="/admin/groups"
               element={<OnboardingGuard requireAdmin={true}><GroupsManagementPage /></OnboardingGuard>}
+            />
+            <Route
+              path="/results/:id"
+              element={<OnboardingGuard><ResultsPage /></OnboardingGuard>}
             />
             <Route
               path="/questionnaire/:id"
