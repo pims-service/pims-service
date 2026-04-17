@@ -2,10 +2,7 @@ from django.db.models import Count
 from rest_framework import generics, permissions
 from .models import Group
 from .serializers import GroupSerializer, GroupDetailSerializer
-<<<<<<< HEAD
-=======
 
->>>>>>> origin/main
 
 class GroupListView(generics.ListCreateAPIView):
     serializer_class = GroupSerializer
