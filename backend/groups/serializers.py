@@ -2,13 +2,18 @@ from rest_framework import serializers
 from .models import Group
 
 class ParticipantSerializer(serializers.ModelSerializer):
+    submission_count = serializers.SerializerMethodField()
+
     class Meta:
         from users.models import User
         model = User
-        fields = ['user_id', 'full_name', 'username']
+        fields = ['user_id', 'full_name', 'username', 'submission_count', 'has_completed_baseline']
         extra_kwargs = {
             'full_name': {'allow_blank': True, 'required': False},
         }
+
+    def get_submission_count(self, obj):
+        return obj.submissions.count()
 
 class GroupSerializer(serializers.ModelSerializer):
     member_count = serializers.IntegerField(read_only=True)

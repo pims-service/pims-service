@@ -14,7 +14,7 @@ const AdminSidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="w-64 h-[calc(100vh-64px)] bg-white border-r border-zinc-200 flex flex-col sticky top-16">
+    <aside className="w-64 h-[calc(100vh-64px)] bg-white border-r border-zinc-200 flex flex-col sticky top-0">
       <div className="p-4 py-8 space-y-1">
         {navItems.map((item) => (
           <NavLink
