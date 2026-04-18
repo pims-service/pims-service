@@ -57,7 +57,7 @@ export const questionnairesApi = {
 
   // Administrative Operations
   getAnalyticsSummary: () => api.get('/questionnaires/analytics/all/'),
-  getAdminBaselineResponses: () => api.get('/questionnaires/baselines/'),
+  getAdminBaselineResponses: (page: number = 1) => api.get(`/questionnaires/baselines/?page=${page}`),
   getAdminBaselineDetail: (id: string) => api.get(`/questionnaires/baselines/${id}/`),
   getDashboardAnalytics: () => api.get('/admin/tools/dashboard-analytics/'),
   exportAdminBaselinesCSV: (groupName?: string) => api.get('/admin/tools/export/baselines/csv/', { 

@@ -54,7 +54,7 @@ class AdminResponseSerializer(serializers.ModelSerializer):
 
 class AdminResponseSetSerializer(serializers.ModelSerializer):
     responses = AdminResponseSerializer(many=True, read_only=True)
-    full_name = serializers.CharField(source='user.get_full_name', read_only=True)
+    full_name = serializers.CharField(source='user.display_name', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
     questionnaire_title = serializers.CharField(source='questionnaire.title', read_only=True)
     group_name = serializers.SerializerMethodField()

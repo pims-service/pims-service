@@ -1,4 +1,3 @@
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -23,12 +22,18 @@ describe('AdminBaselineResultsPage', () => {
   });
 
   it('renders unique groups dynamically in the UI filter dropdown', async () => {
-    // Generate responses from users spanning two explicit groups
-    const mockData = [
-      { id: '1', full_name: 'Alpha John', username: 'ajohn', group_name: 'Control Group', completed_at: '2026-04-18' },
-      { id: '2', full_name: 'Bravo Jane', username: 'bjane', group_name: 'Variable Group', completed_at: '2026-04-18' },
-    ];
-    (questionnairesApi.getAdminBaselineResponses as any).mockResolvedValue({ data: mockData });
+    const mockResponse = {
+      data: {
+        results: [
+          { id: '1', full_name: 'Alpha John', username: 'ajohn', group_name: 'Control Group', completed_at: '2026-04-18' },
+          { id: '2', full_name: 'Bravo Jane', username: 'bjane', group_name: 'Variable Group', completed_at: '2026-04-18' },
+        ],
+        count: 2,
+        next: null,
+        previous: null
+      }
+    };
+    (questionnairesApi.getAdminBaselineResponses as any).mockResolvedValue(mockResponse);
 
     render(
       <MemoryRouter>
@@ -52,10 +57,17 @@ describe('AdminBaselineResultsPage', () => {
   });
 
   it('accurately injects the active group string to the export API payload', async () => {
-    const mockData = [
-      { id: '1', full_name: 'Delta Jack', username: 'djack', group_name: 'Analysis Group', completed_at: '2026-04-18' },
-    ];
-    (questionnairesApi.getAdminBaselineResponses as any).mockResolvedValue({ data: mockData });
+    const mockResponse = {
+      data: {
+        results: [
+          { id: '1', full_name: 'Delta Jack', username: 'djack', group_name: 'Analysis Group', completed_at: '2026-04-18' },
+        ],
+        count: 1,
+        next: null,
+        previous: null
+      }
+    };
+    (questionnairesApi.getAdminBaselineResponses as any).mockResolvedValue(mockResponse);
     (questionnairesApi.exportAdminBaselinesCSV as any).mockResolvedValue({ data: new Blob() });
 
     render(

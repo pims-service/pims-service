@@ -36,7 +36,16 @@ class User(AbstractUser):
     @property
     def id(self):
         return self.user_id
-    
+
+    @property
+    def display_name(self):
+        """Returns the full name if present, otherwise capitalizes the username."""
+        if self.full_name:
+            return self.full_name
+        # Format username: replace dots with space and capitalize (e.g. sarah.kim -> Sarah Kim)
+        name_part = self.username.replace('.', ' ').replace('_', ' ')
+        return name_part.title()
+
     # Onboarding state
     has_completed_baseline = models.BooleanField(default=False)
 

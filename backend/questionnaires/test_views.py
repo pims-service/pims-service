@@ -48,3 +48,21 @@ class TestResponseSetIsolation:
         # User B should only see 1 response set and it must be theirs
         assert len(data) == 1
         assert data[0]['id'] == str(rs_b.id)
+
+    def test_admin_baseline_list_pagination(self, admin_client, user_a, test_questionnaire):
+        """Verify the admin baselines endpoint returns paginated results."""
+        test_questionnaire.is_baseline = True
+        test_questionnaire.save()
+        
+        # Create a completed response set
+        ResponseSet.objects.create(user=user_a, questionnaire=test_questionnaire, status='COMPLETED')
+        
+        admin_client.force_authenticate(user=User.objects.create_superuser(username='admin2', email='a2@b.com', password='pw'))
+        response = admin_client.get(reverse('admin_baseline_list'))
+        
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert 'results' in data
+        assert 'count' in data
+        assert isinstance(data['results'], list)
+        assert data['count'] >= 1

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
-import { User, Mail, Lock, Phone, ArrowRight, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { User, Mail, Phone, ArrowRight, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
