@@ -9,7 +9,7 @@ const AdminLayout: React.FC = () => {
       <AdminSidebar />
       
       {/* Main Content Area */}
-      <main className="flex-grow p-10 max-w-7xl">
+      <main className="flex-grow px-10 pt-4 pb-10 max-w-7xl">
         <Outlet />
       </main>
     </div>

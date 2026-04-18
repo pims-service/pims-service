@@ -34,10 +34,10 @@ const AdminDashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-10">
-      <header className="flex justify-between items-center text-white">
+      <header className="flex justify-between items-center text-zinc-900 border-b border-zinc-200 pb-8">
         <div>
-          <h1 className="text-4xl font-bold">Admin Console</h1>
-          <p className="text-slate-400 mt-1">Real-time experimental analytics and management.</p>
+          <h1 className="text-4xl font-black tracking-tighter uppercase">Admin Console</h1>
+          <p className="text-slate-400 mt-1 font-medium italic">Real-time experimental analytics and management.</p>
         </div>
       </header>
 
@@ -70,7 +70,7 @@ const AdminDashboardPage: React.FC = () => {
             <Line data={chartData} options={options} />
           </div>
         </div>
-        
+
         <div className="glass p-8 overflow-hidden">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-bold">Recent Participants</h3>
