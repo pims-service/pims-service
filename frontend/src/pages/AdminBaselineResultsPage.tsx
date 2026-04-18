@@ -11,7 +11,9 @@ import {
   ChevronRight,
   Eye,
   Download,
-  ChevronLeft
+  ChevronLeft,
+  Loader2,
+  FileSpreadsheet
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { questionnairesApi } from '../services/api';
@@ -53,6 +55,8 @@ const AdminBaselineResultsPage: React.FC = () => {
   const [hasPrev, setHasPrev] = useState(false);
 
   const [selectedSubmission, setSelectedSubmission] = useState<BaselineSet | null>(null);
+  const [exportingId, setExportingId] = useState<string | null>(null);
+  const [exportStatus, setExportStatus] = useState<'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED' | null>(null);
 
   const fetchSubmissions = async (page: number = 1) => {
     setLoading(true);
@@ -98,6 +102,43 @@ const AdminBaselineResultsPage: React.FC = () => {
     fetchSubmissions();
   }, []);
 
+  // Polling logic for Export Task
+  useEffect(() => {
+    let pollInterval: NodeJS.Timeout;
+
+    if (exportingId && (exportStatus === 'PENDING' || exportStatus === 'PROCESSING')) {
+      pollInterval = setInterval(async () => {
+        try {
+          const response = await questionnairesApi.getAdminBaselineExportStatus(exportingId);
+          const { status, file_url } = response.data;
+          
+          setExportStatus(status);
+          
+          if (status === 'SUCCESS' && file_url) {
+            setExportingId(null);
+            setExportStatus(null);
+            const link = document.createElement('a');
+            link.href = file_url; // DRF returns absolute/relative URL. Assuming compatible with proxy.
+            link.setAttribute('download', 'baseline_export.csv');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+          } else if (status === 'FAILED') {
+            setExportingId(null);
+          }
+        } catch (err) {
+          console.error('Polling failed', err);
+          setExportingId(null);
+          setExportStatus('FAILED');
+        }
+      }, 2000);
+    }
+
+    return () => {
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [exportingId, exportStatus]);
+
   const handleViewDetail = async (id: string) => {
     try {
       const response = await questionnairesApi.getAdminBaselineDetail(id);
@@ -119,17 +160,14 @@ const AdminBaselineResultsPage: React.FC = () => {
 
   const handleExportCSV = async () => {
     try {
-      const response = await questionnairesApi.exportAdminBaselinesCSV(selectedGroup);
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', 'baseline_experiment_data_spss.csv');
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode?.removeChild(link);
+      setExportStatus('PENDING');
+      const response = await questionnairesApi.triggerAdminBaselineExport(selectedGroup);
+      setExportingId(response.data.task_id);
+      setError(null);
     } catch (err) {
       console.error('Failed to export baseline data', err);
-      setError('Failed to export CSV. Please check server logs.');
+      setError('Failed to initiate CSV export. Please check server logs.');
+      setExportStatus(null);
     }
   };
 
@@ -178,12 +216,37 @@ const AdminBaselineResultsPage: React.FC = () => {
 
           <button
             onClick={handleExportCSV}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-md hover:shadow-lg whitespace-nowrap"
+            disabled={!!exportingId}
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-md hover:shadow-lg whitespace-nowrap"
           >
-            <Download size={16} /> Export SPSS CSV
+            {exportingId ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Download size={16} /> Export SPSS CSV
+              </>
+            )}
           </button>
         </div>
       </header>
+
+      {exportStatus === 'FAILED' && (
+        <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-center gap-3 text-red-600 mb-4 animate-in fade-in slide-in-from-top-2">
+          <AlertTriangle size={18} />
+          <span className="text-xs font-bold uppercase tracking-tight">Export Failed. Please try again or contact support.</span>
+          <button onClick={() => setExportStatus(null)} className="ml-auto text-[10px] font-black underline uppercase">Dismiss</button>
+        </div>
+      )}
+
+      {exportingId && (
+        <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex items-center gap-3 text-indigo-600 mb-4 animate-in fade-in slide-in-from-top-2">
+          <FileSpreadsheet size={18} className="animate-bounce" />
+          <span className="text-xs font-bold uppercase tracking-tight">Preparing your research manifest. This may take a moment...</span>
+        </div>
+      )}
 
       {error ? (
         <div className="glass p-12 text-center space-y-4 border-red-500/20 max-w-2xl mx-auto">

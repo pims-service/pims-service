@@ -48,50 +48,40 @@ class TestDashboardAnalytics:
 
 @pytest.mark.django_db
 class TestBaselineCSVExport:
-    def test_baseline_csv_export_wide_format(self, admin_client, normal_user, baseline_qs):
-        rs = ResponseSet.objects.create(user=normal_user, questionnaire=baseline_qs, status='COMPLETED')
-        q1 = baseline_qs.questions.get(order=1)
-        q2 = baseline_qs.questions.get(order=2)
-        opt_red = q2.options.filter(label='Red').first()
-        
-        Response.objects.create(response_set=rs, question=q1, text_value='25')
-        Response.objects.create(response_set=rs, question=q2, selected_option=opt_red)
-        
-        response = admin_client.get(reverse('export_baseline_csv'))
-        
-        assert response.status_code == status.HTTP_200_OK
-        assert response['Content-Type'] == 'text/csv'
-        
-        csv_file = io.StringIO(response.content.decode('utf-8'))
-        reader = csv.reader(csv_file)
-        rows = list(reader)
-        
-        assert len(rows) == 2 # Header + 1 Participant row
-        
-        # Validate Headers (Wide Format structure)
-        headers = rows[0]
-        assert headers[:5] == ['ParticipantID', 'Username', 'Group', 'StartedAt', 'CompletedAt']
-        assert headers[5] == 'Question 1'
-        assert headers[6] == 'Question 2'
-        
-        # Validate Data Row
-        data_row = rows[1]
-        assert data_row[1] == 'participant'
-        assert data_row[5] == '25'
-        assert data_row[6] == 'Red'
-
-    def test_baseline_csv_export_group_filter(self, admin_client, normal_user, other_user, baseline_qs):
+    def test_baseline_csv_export_trigger_async(self, admin_client, normal_user, baseline_qs):
         ResponseSet.objects.create(user=normal_user, questionnaire=baseline_qs, status='COMPLETED')
-        ResponseSet.objects.create(user=other_user, questionnaire=baseline_qs, status='COMPLETED')
+        from admin_tools.models import ExportTask
         
-        # Apply group filter in query param mapped exactly to normal_user's group
-        response = admin_client.get(reverse('export_baseline_csv') + f'?group={normal_user.group.name}')
+        # Now uses POST to trigger
+        response = admin_client.post(reverse('export_baseline_csv'), data={'group': 'All'})
+        
+        assert response.status_code == status.HTTP_202_ACCEPTED
+        data = response.json()
+        assert 'task_id' in data
+        
+        # Verify task was created in DB
+        task = ExportTask.objects.get(id=data['task_id'])
+        assert task.user == admin_client.handler._force_user # verify authenticated user
+        # In eager mode (CI), it will skip directly to SUCCESS
+        assert task.status in ['PENDING', 'SUCCESS']
+
+    def test_baseline_csv_export_group_filter_async(self, admin_client, normal_user, other_user, baseline_qs):
+        from admin_tools.models import ExportTask
+        ResponseSet.objects.create(user=normal_user, questionnaire=baseline_qs, status='COMPLETED')
+        
+        # Trigger with specific group filter in POST body
+        response = admin_client.post(reverse('export_baseline_csv'), data={'group': normal_user.group.name})
+        
+        assert response.status_code == status.HTTP_202_ACCEPTED
+        task = ExportTask.objects.get(id=response.json()['task_id'])
+        assert task.filters['group'] == normal_user.group.name
+
+    def test_export_task_status_check(self, admin_client):
+        from admin_tools.models import ExportTask
+        task = ExportTask.objects.create(user=admin_client.handler._force_user, status='PROCESSING')
+        
+        url = reverse('export_task_status', kwargs={'task_id': task.id})
+        response = admin_client.get(url)
         
         assert response.status_code == status.HTTP_200_OK
-        csv_file = io.StringIO(response.content.decode('utf-8'))
-        reader = csv.reader(csv_file)
-        rows = list(reader)
-        
-        # The filter should return only the participant from the specific group
-        assert len(rows) == 2 
-        assert rows[1][1] == 'participant'
+        assert response.json()['status'] == 'PROCESSING'

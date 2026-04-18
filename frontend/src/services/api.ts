@@ -60,10 +60,10 @@ export const questionnairesApi = {
   getAdminBaselineResponses: (page: number = 1) => api.get(`/questionnaires/baselines/?page=${page}`),
   getAdminBaselineDetail: (id: string) => api.get(`/questionnaires/baselines/${id}/`),
   getDashboardAnalytics: () => api.get('/admin/tools/dashboard-analytics/'),
-  exportAdminBaselinesCSV: (groupName?: string) => api.get('/admin/tools/export/baselines/csv/', { 
-    params: groupName && groupName !== 'All' ? { group: groupName } : {},
-    responseType: 'blob' 
+  triggerAdminBaselineExport: (groupName?: string) => api.post('/admin/tools/export/baselines/csv/', { 
+    group: groupName || 'All'
   }),
+  getAdminBaselineExportStatus: (taskId: string) => api.get(`/admin/tools/export/status/${taskId}/`),
 };
 
 // Aliases for compatibility with upstream UI components
