@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     QuestionnaireListView, 
     QuestionnaireDetailView, 
-    ResponseSetCreateView,
+    ResponseSetListCreateView,
     ResponseSetSubmitView,
     AdminBaselineResponseListView,
     AdminBaselineResponseDetailView
@@ -20,7 +20,7 @@ urlpatterns = [
 
     path('', QuestionnaireListView.as_view(), name='questionnaire_list'),
     path('<uuid:pk>/', QuestionnaireDetailView.as_view(), name='questionnaire_detail'),
-    path('response-sets/', ResponseSetCreateView.as_view(), name='response_set_create'),
+    path('response-sets/', ResponseSetListCreateView.as_view(), name='response_set_list_create'),
     
     # Response Management
     path('response-sets/<uuid:pk>/submit/', ResponseSetSubmitView.as_view(), name='response_set_submit'),
