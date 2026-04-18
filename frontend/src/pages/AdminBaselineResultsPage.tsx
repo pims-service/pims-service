@@ -9,7 +9,8 @@ import {
   Calendar,
   Clock,
   ChevronRight,
-  Eye
+  Eye,
+  Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { questionnairesApi } from '../services/api';
@@ -42,6 +43,7 @@ const AdminBaselineResultsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedGroup, setSelectedGroup] = useState<string>('All');
   
   const [selectedSubmission, setSelectedSubmission] = useState<BaselineSet | null>(null);
 
@@ -72,10 +74,30 @@ const AdminBaselineResultsPage: React.FC = () => {
     }
   };
 
-  const filteredSubmissions = submissions.filter(s => 
-    s.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.username?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredSubmissions = submissions.filter(s => {
+    const matchesSearch = s.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          s.username?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesGroup = selectedGroup === 'All' ? true : (s.group_name || 'Unassigned') === selectedGroup;
+    return matchesSearch && matchesGroup;
+  });
+
+  const uniqueGroups = Array.from(new Set(submissions.map(s => s.group_name || 'Unassigned')));
+
+  const handleExportCSV = async () => {
+    try {
+      const response = await questionnairesApi.exportAdminBaselinesCSV(selectedGroup);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'baseline_experiment_data_spss.csv');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+    } catch (err) {
+      console.error('Failed to export baseline data', err);
+      setError('Failed to export CSV. Please check server logs.');
+    }
+  };
 
   if (loading) {
     return (
@@ -97,15 +119,35 @@ const AdminBaselineResultsPage: React.FC = () => {
           <p className="text-slate-500 font-medium italic">Direct oversight of initial participant screening responses.</p>
         </div>
 
-        <div className="relative group w-full md:w-80">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
-          <input 
-            type="text" 
-            placeholder="Search participants..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-white border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
-          />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
+          <div className="relative group flex-grow sm:w-80">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+            <input 
+              type="text" 
+              placeholder="Search participants..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-white border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
+            />
+          </div>
+          
+          <select 
+            value={selectedGroup}
+            onChange={(e) => setSelectedGroup(e.target.value)}
+            className="px-4 py-3 bg-white border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm font-medium text-zinc-700 cursor-pointer"
+          >
+            <option value="All">All Groups</option>
+            {uniqueGroups.sort().map(grp => (
+              <option key={grp} value={grp}>{grp}</option>
+            ))}
+          </select>
+
+          <button  
+            onClick={handleExportCSV}
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-md hover:shadow-lg whitespace-nowrap"
+          >
+            <Download size={16} /> Export SPSS CSV
+          </button>
         </div>
       </header>
 
