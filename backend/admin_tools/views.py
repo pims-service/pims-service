@@ -32,6 +32,70 @@ class ExportDataCSVView(APIView):
 
         return response
 
+class ExportBaselineDataCSVView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        from questionnaires.models import ResponseSet
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="baseline_experiment_data_spss.csv"'
+
+        writer = csv.writer(response, quoting=csv.QUOTE_ALL)
+        
+        # Get ordered questions for the baseline questionnaire to act as columns
+        from questionnaires.models import Question
+        questions = list(Question.objects.filter(questionnaire__is_baseline=True).order_by('order'))
+
+        # Header for Wide Format (SPSS/Excel Compatible, no redundancy)
+        static_headers = ['ParticipantID', 'Username', 'Group', 'StartedAt', 'CompletedAt']
+        dynamic_headers = [f"Question {i + 1}" for i in range(len(questions))]
+        writer.writerow(static_headers + dynamic_headers)
+
+        # Optimize DB query: fetch all completed ResponseSets for the baseline questionnaire
+        qs = ResponseSet.objects.filter(
+            questionnaire__is_baseline=True, 
+            status='COMPLETED'
+        )
+
+        group_name = request.query_params.get('group')
+        if group_name:
+            qs = qs.filter(user__group__name=group_name)
+
+        response_sets = qs.select_related(
+            'user', 'user__group', 'questionnaire'
+        ).prefetch_related(
+            'responses__question', 'responses__selected_option'
+        )
+
+        for rs in response_sets:
+            # Map question ID -> response for quick lookup
+            resp_dict = {ans.question_id: ans for ans in rs.responses.all()}
+            
+            row = [
+                rs.user.user_id,
+                rs.user.username,
+                rs.user.group.name if rs.user.group else 'None',
+                rs.started_at.strftime('%Y-%m-%d %H:%M:%S') if rs.started_at else '',
+                rs.completed_at.strftime('%Y-%m-%d %H:%M:%S') if rs.completed_at else '',
+            ]
+            
+            for q in questions:
+                ans = resp_dict.get(q.id)
+                if ans:
+                    if ans.selected_option:
+                        # Append the textual label per identical user instruction
+                        row.append(ans.selected_option.label)
+                    elif ans.text_value:
+                        row.append(ans.text_value.replace('\n', ' '))
+                    else:
+                        row.append('')
+                else:
+                    row.append('')
+                    
+            writer.writerow(row)
+
+        return response
+
 class AdminDashboardAnalyticsView(APIView):
     permission_classes = [IsAdminUser]
 

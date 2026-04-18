@@ -60,6 +60,10 @@ export const questionnairesApi = {
   getAdminBaselineResponses: () => api.get('/questionnaires/baselines/'),
   getAdminBaselineDetail: (id: string) => api.get(`/questionnaires/baselines/${id}/`),
   getDashboardAnalytics: () => api.get('/admin/tools/dashboard-analytics/'),
+  exportAdminBaselinesCSV: (groupName?: string) => api.get('/admin/tools/export/baselines/csv/', { 
+    params: groupName && groupName !== 'All' ? { group: groupName } : {},
+    responseType: 'blob' 
+  }),
 };
 
 // Aliases for compatibility with upstream UI components
