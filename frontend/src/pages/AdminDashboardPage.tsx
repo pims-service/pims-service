@@ -33,8 +33,8 @@ const AdminDashboardPage: React.FC = () => {
 
 
   return (
-    <div className="space-y-10">
-      <header className="flex justify-between items-center text-zinc-900 border-b border-zinc-200 pb-8">
+    <div className="space-y-10 pt-0">
+      <header className="flex justify-between items-center text-zinc-900 border-b border-zinc-200 py-4 mb-10">
         <div>
           <h1 className="text-4xl font-black tracking-tighter uppercase">Admin Console</h1>
           <p className="text-slate-400 mt-1 font-medium italic">Real-time experimental analytics and management.</p>

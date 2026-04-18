@@ -93,7 +93,7 @@ const GroupDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700">
+    <div className="space-y-10 animate-in fade-in duration-700 pt-0">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-4 flex-grow max-w-2xl">
           <div className="flex items-center gap-3 text-indigo-400 text-[10px] font-black uppercase tracking-[0.2em]">

@@ -58,7 +58,7 @@ const AdminReportsPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-700">
+    <div className="space-y-12 animate-in fade-in duration-700 pt-0">
       <header>
         <h1 className="text-4xl font-bold tracking-tight text-zinc-900">Experimental Reports</h1>
         <p className="text-slate-500 mt-2">Monitor assessment completion rates and export wide-format participant data.</p>

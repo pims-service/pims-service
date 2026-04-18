@@ -15,7 +15,7 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="border-b border-zinc-200 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+    <nav className="border-b border-zinc-200 bg-white relative z-50">
       <div className="container mx-auto px-6 h-16 flex items-center justify-between">
         <Link to="/" className="text-xl font-bold text-zinc-900 tracking-tight">
           PsychPlatform

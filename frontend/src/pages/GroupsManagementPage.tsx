@@ -75,7 +75,7 @@ const GroupsManagementPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
+    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700 pt-0">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-4xl font-bold tracking-tight">Group Management</h1>
