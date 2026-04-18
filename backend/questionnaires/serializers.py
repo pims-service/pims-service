@@ -34,6 +34,30 @@ class ResponseSetSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'questionnaire', 'questionnaire_title', 'status', 'started_at', 'completed_at', 'responses']
         read_only_fields = ['user', 'started_at', 'completed_at', 'status']
 
+class AdminResponseSerializer(serializers.ModelSerializer):
+    question_text = serializers.CharField(source='question.content', read_only=True)
+    question_type = serializers.CharField(source='question.type', read_only=True)
+    selected_option_label = serializers.CharField(source='selected_option.label', read_only=True, allow_null=True, default=None)
+
+    class Meta:
+        model = Response
+        fields = ['id', 'question', 'question_text', 'question_type', 'selected_option', 'selected_option_label', 'text_value']
+
+class AdminResponseSetSerializer(serializers.ModelSerializer):
+    responses = AdminResponseSerializer(many=True, read_only=True)
+    full_name = serializers.CharField(source='user.get_full_name', read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
+    questionnaire_title = serializers.CharField(source='questionnaire.title', read_only=True)
+
+    class Meta:
+        model = ResponseSet
+        fields = [
+            'id', 'user', 'full_name', 'username', 
+            'questionnaire', 'questionnaire_title', 
+            'status', 'started_at', 'completed_at', 
+            'responses'
+        ]
+
 class ResponseBulkSerializer(serializers.Serializer):
     """
     Serializer for individual responses within a bulk submission.
