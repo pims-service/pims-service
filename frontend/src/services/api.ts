@@ -59,6 +59,7 @@ export const questionnairesApi = {
   getAnalyticsSummary: () => api.get('/questionnaires/analytics/all/'),
   getAdminBaselineResponses: () => api.get('/questionnaires/baselines/'),
   getAdminBaselineDetail: (id: string) => api.get(`/questionnaires/baselines/${id}/`),
+  getDashboardAnalytics: () => api.get('/admin/tools/dashboard-analytics/'),
 };
 
 // Aliases for compatibility with upstream UI components

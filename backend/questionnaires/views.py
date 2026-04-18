@@ -30,6 +30,26 @@ class ResponseSetListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+class ResponseSetDetailView(generics.RetrieveAPIView):
+    """
+    Retrieve a single response set with full questionnaire context (questions + options).
+    Used by the Results page to render the post-assessment feedback.
+    """
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        return ResponseSet.objects.filter(
+            user=self.request.user
+        ).select_related('questionnaire').prefetch_related(
+            'questionnaire__questions__options',
+            'responses__selected_option'
+        )
+
+    def get_serializer_class(self):
+        from .serializers import ResponseSetDetailSerializer
+        return ResponseSetDetailSerializer
+
+
 class ResponseSetSubmitView(generics.UpdateAPIView):
     """
     Endpoint to submit all responses and mark the set as COMPLETED.
