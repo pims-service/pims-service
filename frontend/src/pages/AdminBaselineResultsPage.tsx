@@ -30,6 +30,7 @@ interface BaselineSet {
   full_name: string;
   username: string;
   questionnaire_title: string;
+  group_name: string | null;
   status: string;
   started_at: string;
   completed_at: string;
@@ -123,6 +124,7 @@ const AdminBaselineResultsPage: React.FC = () => {
                 <tr className="bg-zinc-50/50 border-b border-zinc-100">
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Participant</th>
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Completion Date</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Group</th>
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Assessment</th>
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Raw Data</th>
                 </tr>
@@ -154,6 +156,15 @@ const AdminBaselineResultsPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-8 py-6">
+                      {s.group_name ? (
+                        <span className="px-3 py-1 bg-indigo-50 rounded-full text-[10px] font-bold text-indigo-600 border border-indigo-100 inline-block uppercase tracking-widest">
+                          {s.group_name}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">Unassigned</span>
+                      )}
+                    </td>
+                    <td className="px-8 py-6">
                       <div className="px-3 py-1 bg-zinc-100 rounded-full text-[10px] font-bold text-zinc-600 border border-zinc-200 inline-block uppercase tracking-widest">
                         {s.questionnaire_title}
                       </div>
@@ -170,7 +181,7 @@ const AdminBaselineResultsPage: React.FC = () => {
                 ))}
                 {filteredSubmissions.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-8 py-20 text-center text-slate-400 italic">
+                    <td colSpan={5} className="px-8 py-20 text-center text-slate-400 italic">
                       No baseline responses match your criteria.
                     </td>
                   </tr>

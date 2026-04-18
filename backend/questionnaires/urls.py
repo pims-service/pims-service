@@ -4,6 +4,7 @@ from .views import (
     QuestionnaireListView, 
     QuestionnaireDetailView, 
     ResponseSetListCreateView,
+    ResponseSetDetailView,
     ResponseSetSubmitView,
     AdminBaselineResponseListView,
     AdminBaselineResponseDetailView
@@ -21,6 +22,7 @@ urlpatterns = [
     path('', QuestionnaireListView.as_view(), name='questionnaire_list'),
     path('<uuid:pk>/', QuestionnaireDetailView.as_view(), name='questionnaire_detail'),
     path('response-sets/', ResponseSetListCreateView.as_view(), name='response_set_list_create'),
+    path('response-sets/<uuid:pk>/', ResponseSetDetailView.as_view(), name='response_set_detail'),
     
     # Response Management
     path('response-sets/<uuid:pk>/submit/', ResponseSetSubmitView.as_view(), name='response_set_submit'),

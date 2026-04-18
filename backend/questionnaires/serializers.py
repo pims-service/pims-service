@@ -34,6 +34,15 @@ class ResponseSetSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'questionnaire', 'questionnaire_title', 'status', 'started_at', 'completed_at', 'responses']
         read_only_fields = ['user', 'started_at', 'completed_at', 'status']
 
+class ResponseSetDetailSerializer(serializers.ModelSerializer):
+    """Full detail serializer with nested questionnaire for the Results page."""
+    responses = ResponseSerializer(many=True, read_only=True)
+    questionnaire = QuestionnaireSerializer(read_only=True)
+
+    class Meta:
+        model = ResponseSet
+        fields = ['id', 'user', 'questionnaire', 'status', 'started_at', 'completed_at', 'responses']
+
 class AdminResponseSerializer(serializers.ModelSerializer):
     question_text = serializers.CharField(source='question.content', read_only=True)
     question_type = serializers.CharField(source='question.type', read_only=True)
@@ -48,15 +57,22 @@ class AdminResponseSetSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='user.get_full_name', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
     questionnaire_title = serializers.CharField(source='questionnaire.title', read_only=True)
+    group_name = serializers.SerializerMethodField()
 
     class Meta:
         model = ResponseSet
         fields = [
             'id', 'user', 'full_name', 'username', 
             'questionnaire', 'questionnaire_title', 
+            'group_name',
             'status', 'started_at', 'completed_at', 
             'responses'
         ]
+
+    def get_group_name(self, obj):
+        if hasattr(obj.user, 'group') and obj.user.group:
+            return obj.user.group.name
+        return None
 
 class ResponseBulkSerializer(serializers.Serializer):
     """

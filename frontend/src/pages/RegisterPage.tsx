@@ -50,7 +50,23 @@ const RegisterPage: React.FC = () => {
     } catch (err: any) {
       if (err.response?.data) {
         console.error('Registration Error:', err.response.data);
-        setErrors(err.response.data);
+        const data = err.response.data;
+        if (typeof data === 'string') {
+          setErrors({ non_field_errors: [data] });
+        } else if (typeof data === 'object' && !Array.isArray(data)) {
+          // Normalize: ensure each value is an array of strings
+          const normalized: Record<string, string[]> = {};
+          for (const [key, val] of Object.entries(data)) {
+            if (Array.isArray(val)) {
+              normalized[key] = val.map(String);
+            } else {
+              normalized[key] = [String(val)];
+            }
+          }
+          setErrors(normalized);
+        } else {
+          setErrors({ non_field_errors: [String(data)] });
+        }
       } else {
         setErrors({ non_field_errors: ['An unexpected error occurred. Please try again.'] });
       }
