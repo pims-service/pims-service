@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     QuestionnaireListView, 
     QuestionnaireDetailView, 
-    ResponseSetCreateView,
+    ResponseSetListCreateView,
     ResponseSetSubmitView,
     AdminBaselineResponseListView,
     AdminBaselineResponseDetailView
