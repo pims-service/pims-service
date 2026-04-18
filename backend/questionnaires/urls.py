@@ -1,9 +1,12 @@
 from django.urls import path
+# Administrative Data Routing
 from .views import (
     QuestionnaireListView, 
     QuestionnaireDetailView, 
     ResponseSetCreateView,
-    ResponseSetSubmitView
+    ResponseSetSubmitView,
+    AdminBaselineResponseListView,
+    AdminBaselineResponseDetailView
 )
 from .analytics_views import (
     QuestionnaireExportView,
@@ -11,6 +14,10 @@ from .analytics_views import (
 )
 
 urlpatterns = [
+    # Admin & Research Data (Prioritized)
+    path('baselines/', AdminBaselineResponseListView.as_view(), name='admin_baseline_list'),
+    path('baselines/<uuid:pk>/', AdminBaselineResponseDetailView.as_view(), name='admin_baseline_detail'),
+
     path('', QuestionnaireListView.as_view(), name='questionnaire_list'),
     path('<uuid:pk>/', QuestionnaireDetailView.as_view(), name='questionnaire_detail'),
     path('response-sets/', ResponseSetCreateView.as_view(), name='response_set_create'),

@@ -3,12 +3,14 @@ import { NavLink } from 'react-router-dom';
 import { 
   Users, 
   LayoutDashboard, 
-  BarChart2
+  BarChart2,
+  Database
 } from 'lucide-react';
 
 const AdminSidebar: React.FC = () => {
   const navItems = [
     { label: 'Overview', path: '/admin', icon: <LayoutDashboard size={20} /> },
+    { label: 'Baseline Raw Data', path: '/admin/baseline-data', icon: <Database size={20} /> },
     { label: 'Experimental Reports', path: '/admin/reports', icon: <BarChart2 size={20} /> },
     { label: 'Groups Management', path: '/admin/groups', icon: <Users size={20} /> },
   ];

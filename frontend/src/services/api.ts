@@ -52,8 +52,13 @@ export const questionnairesApi = {
   createResponseSet: (questionnaireId: string) => api.post('/questionnaires/response-sets/', { questionnaire: questionnaireId }),
   getResponseSet: (id: string) => api.get(`/questionnaires/response-sets/${id}/`),
   listResponseSets: () => api.get('/questionnaires/response-sets/'),
-  submitResponseSet: (responseSetId: string, responsesData: any[]) => 
+  submitResponseSet: (responseSetId: string, responsesData: any[]) =>
     api.post(`/questionnaires/response-sets/${responseSetId}/submit/`, { responses_data: responsesData }),
+
+  // Administrative Operations
+  getAnalyticsSummary: () => api.get('/questionnaires/analytics/all/'),
+  getAdminBaselineResponses: () => api.get('/questionnaires/baselines/'),
+  getAdminBaselineDetail: (id: string) => api.get(`/questionnaires/baselines/${id}/`),
 };
 
 // Aliases for compatibility with upstream UI components

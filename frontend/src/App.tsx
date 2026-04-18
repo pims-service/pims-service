@@ -10,6 +10,7 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminReportsPage from './pages/AdminReportsPage';
 import GroupsManagementPage from './pages/GroupsManagementPage';
 import GroupDetailPage from './pages/GroupDetailPage';
+import AdminBaselineResultsPage from './pages/AdminBaselineResultsPage';
 import AdminLayout from './components/Admin/AdminLayout';
 import ProfilePage from './pages/ProfilePage';
 import ResultsPage from './pages/ResultsPage';
@@ -57,6 +58,7 @@ const App: React.FC = () => {
                <Route path="/admin/groups" element={<GroupsManagementPage />} />
                <Route path="/admin/groups/:id" element={<GroupDetailPage />} />
                <Route path="/admin/reports" element={<AdminReportsPage />} />
+               <Route path="/admin/baseline-data" element={<AdminBaselineResultsPage />} />
             </Route>
 
             {/* Fallback */}
