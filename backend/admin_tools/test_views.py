@@ -62,7 +62,8 @@ class TestBaselineCSVExport:
         # Verify task was created in DB
         task = ExportTask.objects.get(id=data['task_id'])
         assert task.user == admin_client.handler._force_user # verify authenticated user
-        assert task.status == 'PENDING'
+        # In eager mode (CI), it will skip directly to SUCCESS
+        assert task.status in ['PENDING', 'SUCCESS']
 
     def test_baseline_csv_export_group_filter_async(self, admin_client, normal_user, other_user, baseline_qs):
         from admin_tools.models import ExportTask
