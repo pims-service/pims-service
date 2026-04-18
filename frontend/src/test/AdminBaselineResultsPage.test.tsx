@@ -7,7 +7,8 @@ import { questionnairesApi } from '../services/api';
 vi.mock('../services/api', () => ({
   questionnairesApi: {
     getAdminBaselineResponses: vi.fn(),
-    exportAdminBaselinesCSV: vi.fn(),
+    triggerAdminBaselineExport: vi.fn(),
+    getAdminBaselineExportStatus: vi.fn(),
   }
 }));
 
@@ -68,7 +69,12 @@ describe('AdminBaselineResultsPage', () => {
       }
     };
     (questionnairesApi.getAdminBaselineResponses as any).mockResolvedValue(mockResponse);
-    (questionnairesApi.exportAdminBaselinesCSV as any).mockResolvedValue({ data: new Blob() });
+    (questionnairesApi.triggerAdminBaselineExport as any).mockResolvedValue({ 
+      data: { task_id: 'task-123', status: 'PENDING' } 
+    });
+    (questionnairesApi.getAdminBaselineExportStatus as any).mockResolvedValue({
+      data: { status: 'SUCCESS', file_url: '/media/test.csv' }
+    });
 
     render(
       <MemoryRouter>
@@ -89,9 +95,9 @@ describe('AdminBaselineResultsPage', () => {
     const exportBtn = screen.getByText(/Export SPSS CSV/i);
     fireEvent.click(exportBtn);
 
-    // Ensure the wrapper accurately sends the queried string argument
+    // Ensure the wrapper accurately sends the queried string argument to trigger
     await waitFor(() => {
-      expect(questionnairesApi.exportAdminBaselinesCSV).toHaveBeenCalledWith('Analysis Group');
+      expect(questionnairesApi.triggerAdminBaselineExport).toHaveBeenCalledWith('Analysis Group');
     });
   });
 });
