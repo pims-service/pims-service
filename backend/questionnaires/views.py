@@ -19,9 +19,13 @@ class QuestionnaireDetailView(generics.RetrieveAPIView):
     serializer_class = QuestionnaireSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-class ResponseSetCreateView(generics.CreateAPIView):
+class ResponseSetListCreateView(generics.ListCreateAPIView):
     serializer_class = ResponseSetSerializer
     permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        # Users see their own response sets, ordered by most recent completion
+        return ResponseSet.objects.filter(user=self.request.user).select_related('questionnaire').order_by('-completed_at')
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
