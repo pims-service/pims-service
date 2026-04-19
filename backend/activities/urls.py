@@ -1,8 +1,10 @@
-from django.urls import path
-from .views import ActivityListView, SubmissionCreateView, UserSubmissionListView
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import DailyActivityViewSet
+
+router = DefaultRouter()
+router.register(r'daily', DailyActivityViewSet, basename='daily-activity')
 
 urlpatterns = [
-    path('', ActivityListView.as_view(), name='activity_list'),
-    path('submit/', SubmissionCreateView.as_view(), name='submission_create'),
-    path('submissions/', UserSubmissionListView.as_view(), name='user_submissions'),
+    path('', include(router.urls)),
 ]
