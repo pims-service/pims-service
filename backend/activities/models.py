@@ -12,7 +12,9 @@ class Activity(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
     assigned_phase = models.ForeignKey(Phase, on_delete=models.CASCADE, related_name='activities')
+    group = models.ForeignKey('groups.Group', on_delete=models.CASCADE, null=True, blank=True, related_name='group_activities')
     activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPES)
+    day_number = models.PositiveIntegerField(null=True, blank=True, help_text="Sequence number for daily tasks")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -24,9 +26,6 @@ class Submission(models.Model):
     content = models.TextField()
     submission_date = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ('user', 'activity')
 
     def __str__(self):
         return f"{self.user.username} - {self.activity.title}"

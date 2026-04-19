@@ -238,6 +238,20 @@ if 'test' in sys.argv or 'pytest' in sys.modules:
     CELERY_TASK_ALWAYS_EAGER = True
     CELERY_TASK_EAGER_PROPAGATES = True
 
+# Celery Beat Schedule
+from celery.schedules import crontab
+CELERY_BEAT_SCHEDULE = {
+    'daily-morning-reminder': {
+        'task': 'notifications.tasks.check_and_send_daily_reminders',
+        'schedule': crontab(hour=9, minute=0),
+        'args': ('morning',),
+    },
+    'daily-evening-reminder': {
+        'task': 'notifications.tasks.check_and_send_daily_reminders',
+        'schedule': crontab(hour=18, minute=0),
+        'args': ('evening',),
+    },
+}
 # Spectacular Settings
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Psychological Experiment API',
