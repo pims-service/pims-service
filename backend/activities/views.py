@@ -4,7 +4,8 @@ from rest_framework.response import Response
 from django.db import transaction
 from django.utils import timezone
 from .models import Activity, Submission
-from .serializers import ActivitySerializer, DailySubmissionSerializer
+from .serializers import ActivitySerializer, DailySubmissionSerializer, SubmissionSerializer
+from users.permissions import BaselineCompleted
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -72,3 +73,22 @@ class DailyActivityViewSet(viewsets.ModelViewSet):
                 serializer.save(user=user)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Standard ViewSet for listing activities.
+    """
+    permission_classes = [BaselineCompleted]
+    queryset = Activity.objects.all()
+    serializer_class = ActivitySerializer
+
+class SubmissionViewSet(viewsets.ModelViewSet):
+    """
+    Standard ViewSet for handling task submissions.
+    """
+    permission_classes = [BaselineCompleted]
+    queryset = Submission.objects.all()
+    serializer_class = SubmissionSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

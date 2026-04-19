@@ -32,3 +32,9 @@ class DailySubmissionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("This activity is not assigned to your group.")
             
         return data
+
+class SubmissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Submission
+        fields = ['id', 'activity', 'content', 'submission_date']
+        read_only_fields = ['submission_date']
