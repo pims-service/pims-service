@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  ClipboardList, 
-  Search, 
-  RotateCw, 
-  AlertTriangle, 
+import {
+  ClipboardList,
+  Search,
+  RotateCw,
+  AlertTriangle,
   X,
   User,
   Calendar,
   Clock,
   ChevronRight,
   Eye,
-  Download
+  Download,
+  ChevronLeft,
+  Loader2,
+  FileSpreadsheet
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { questionnairesApi } from '../services/api';
@@ -44,18 +47,52 @@ const AdminBaselineResultsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGroup, setSelectedGroup] = useState<string>('All');
-  
-  const [selectedSubmission, setSelectedSubmission] = useState<BaselineSet | null>(null);
 
-  const fetchSubmissions = async () => {
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrev, setHasPrev] = useState(false);
+
+  const [selectedSubmission, setSelectedSubmission] = useState<BaselineSet | null>(null);
+  const [exportingId, setExportingId] = useState<string | null>(null);
+  const [exportStatus, setExportStatus] = useState<'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED' | null>(null);
+
+  const fetchSubmissions = async (page: number = 1) => {
     setLoading(true);
     try {
-      const response = await questionnairesApi.getAdminBaselineResponses();
-      setSubmissions(response.data);
+      const response = await questionnairesApi.getAdminBaselineResponses(page);
+      
+      console.log('DEBUG: Baseline API Response [Raw]:', response.data);
+
+      // Resilient Data Handling: Detect format (DRF Paginated object vs Flat Array)
+      const data = response.data;
+      if (data && typeof data === 'object' && 'results' in data && Array.isArray(data.results)) {
+        // Paginated Format
+        setSubmissions(data.results);
+        setTotalCount(data.count || 0);
+        setHasNext(!!data.next);
+        setHasPrev(!!data.previous);
+        console.log(`DEBUG: Handled as Paginated. Submissions Count: ${data.results.length}, Total: ${data.count}`);
+      } else if (Array.isArray(data)) {
+        // Flat Array Format (Fallback)
+        setSubmissions(data);
+        setTotalCount(data.length);
+        setHasNext(false);
+        setHasPrev(false);
+        console.log(`DEBUG: Handled as Flat Array. Count: ${data.length}`);
+      } else {
+        // Unexpected Format
+        console.error('DEBUG: Unrecognized data format:', data);
+        setSubmissions([]);
+      }
+
+      setCurrentPage(page);
       setError(null);
     } catch (err) {
       console.error('Failed to fetch baseline responses', err);
       setError('Failed to load raw research data. Please verify administrative privileges.');
+      setSubmissions([]);
     } finally {
       setLoading(false);
     }
@@ -64,6 +101,43 @@ const AdminBaselineResultsPage: React.FC = () => {
   useEffect(() => {
     fetchSubmissions();
   }, []);
+
+  // Polling logic for Export Task
+  useEffect(() => {
+    let pollInterval: NodeJS.Timeout;
+
+    if (exportingId && (exportStatus === 'PENDING' || exportStatus === 'PROCESSING')) {
+      pollInterval = setInterval(async () => {
+        try {
+          const response = await questionnairesApi.getAdminBaselineExportStatus(exportingId);
+          const { status, file_url } = response.data;
+          
+          setExportStatus(status);
+          
+          if (status === 'SUCCESS' && file_url) {
+            setExportingId(null);
+            setExportStatus(null);
+            const link = document.createElement('a');
+            link.href = file_url; // DRF returns absolute/relative URL. Assuming compatible with proxy.
+            link.setAttribute('download', 'baseline_export.csv');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+          } else if (status === 'FAILED') {
+            setExportingId(null);
+          }
+        } catch (err) {
+          console.error('Polling failed', err);
+          setExportingId(null);
+          setExportStatus('FAILED');
+        }
+      }, 2000);
+    }
+
+    return () => {
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [exportingId, exportStatus]);
 
   const handleViewDetail = async (id: string) => {
     try {
@@ -74,28 +148,26 @@ const AdminBaselineResultsPage: React.FC = () => {
     }
   };
 
-  const filteredSubmissions = submissions.filter(s => {
+  const filteredSubmissions = (submissions || []).filter(s => {
+    if (!s) return false;
     const matchesSearch = s.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          s.username?.toLowerCase().includes(searchQuery.toLowerCase());
+      s.username?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesGroup = selectedGroup === 'All' ? true : (s.group_name || 'Unassigned') === selectedGroup;
     return matchesSearch && matchesGroup;
   });
 
-  const uniqueGroups = Array.from(new Set(submissions.map(s => s.group_name || 'Unassigned')));
+  const uniqueGroups = Array.from(new Set((submissions || []).map(s => s?.group_name || 'Unassigned')));
 
   const handleExportCSV = async () => {
     try {
-      const response = await questionnairesApi.exportAdminBaselinesCSV(selectedGroup);
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', 'baseline_experiment_data_spss.csv');
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode?.removeChild(link);
+      setExportStatus('PENDING');
+      const response = await questionnairesApi.triggerAdminBaselineExport(selectedGroup);
+      setExportingId(response.data.task_id);
+      setError(null);
     } catch (err) {
       console.error('Failed to export baseline data', err);
-      setError('Failed to export CSV. Please check server logs.');
+      setError('Failed to initiate CSV export. Please check server logs.');
+      setExportStatus(null);
     }
   };
 
@@ -122,16 +194,16 @@ const AdminBaselineResultsPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
           <div className="relative group flex-grow sm:w-80">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder="Search participants..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-4 py-3 bg-white border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
             />
           </div>
-          
-          <select 
+
+          <select
             value={selectedGroup}
             onChange={(e) => setSelectedGroup(e.target.value)}
             className="px-4 py-3 bg-white border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm font-medium text-zinc-700 cursor-pointer"
@@ -142,21 +214,46 @@ const AdminBaselineResultsPage: React.FC = () => {
             ))}
           </select>
 
-          <button  
+          <button
             onClick={handleExportCSV}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-md hover:shadow-lg whitespace-nowrap"
+            disabled={!!exportingId}
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-md hover:shadow-lg whitespace-nowrap"
           >
-            <Download size={16} /> Export SPSS CSV
+            {exportingId ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Download size={16} /> Export SPSS CSV
+              </>
+            )}
           </button>
         </div>
       </header>
+
+      {exportStatus === 'FAILED' && (
+        <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-center gap-3 text-red-600 mb-4 animate-in fade-in slide-in-from-top-2">
+          <AlertTriangle size={18} />
+          <span className="text-xs font-bold uppercase tracking-tight">Export Failed. Please try again or contact support.</span>
+          <button onClick={() => setExportStatus(null)} className="ml-auto text-[10px] font-black underline uppercase">Dismiss</button>
+        </div>
+      )}
+
+      {exportingId && (
+        <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex items-center gap-3 text-indigo-600 mb-4 animate-in fade-in slide-in-from-top-2">
+          <FileSpreadsheet size={18} className="animate-bounce" />
+          <span className="text-xs font-bold uppercase tracking-tight">Preparing your research manifest. This may take a moment...</span>
+        </div>
+      )}
 
       {error ? (
         <div className="glass p-12 text-center space-y-4 border-red-500/20 max-w-2xl mx-auto">
           <AlertTriangle className="w-12 h-12 text-red-500 mx-auto" />
           <h2 className="text-xl font-bold text-white">Access Violation</h2>
           <p className="text-slate-400">{error}</p>
-          <button onClick={fetchSubmissions} className="btn-premium px-8">Retry Connection</button>
+          <button onClick={() => fetchSubmissions(1)} className="btn-premium px-8">Retry Connection</button>
         </div>
       ) : (
         <div className="bg-white border border-zinc-200 rounded-[2.5rem] overflow-hidden shadow-sm">
@@ -212,7 +309,7 @@ const AdminBaselineResultsPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-8 py-6 text-right">
-                      <button 
+                      <button
                         onClick={() => handleViewDetail(s.id)}
                         className="p-2.5 rounded-xl bg-white border border-zinc-200 text-zinc-400 hover:text-indigo-600 hover:border-indigo-500/50 transition-all group-hover:shadow-md"
                       >
@@ -231,6 +328,34 @@ const AdminBaselineResultsPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          {totalCount > 0 && (
+            <div className="px-8 py-4 bg-zinc-50 border-t border-zinc-100 flex items-center justify-between">
+              <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                Showing <span className="text-zinc-900">{submissions.length}</span> of <span className="text-zinc-900">{totalCount}</span> results
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => fetchSubmissions(currentPage - 1)}
+                  disabled={!hasPrev || loading}
+                  className={`p-2 rounded-lg border border-zinc-200 transition-all ${!hasPrev ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white hover:text-indigo-600 hover:border-indigo-500/50 hover:shadow-sm'}`}
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <div className="px-4 py-2 rounded-lg bg-white border border-zinc-200 text-[10px] font-black uppercase tracking-widest text-zinc-900">
+                  Page {currentPage}
+                </div>
+                <button
+                  onClick={() => fetchSubmissions(currentPage + 1)}
+                  disabled={!hasNext || loading}
+                  className={`p-2 rounded-lg border border-zinc-200 transition-all ${!hasNext ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white hover:text-indigo-600 hover:border-indigo-500/50 hover:shadow-sm'}`}
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -238,14 +363,14 @@ const AdminBaselineResultsPage: React.FC = () => {
       <AnimatePresence>
         {selectedSubmission && (
           <div className="fixed inset-0 z-[100] flex items-center justify-end p-4 md:p-10 pointer-events-none">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedSubmission(null)}
               className="absolute inset-0 bg-zinc-950/20 backdrop-blur-sm pointer-events-auto"
             />
-            <motion.div 
+            <motion.div
               initial={{ x: '100%', opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0 }}
@@ -256,7 +381,7 @@ const AdminBaselineResultsPage: React.FC = () => {
                   <h3 className="text-2xl font-black text-zinc-900 uppercase">Inspection Terminal</h3>
                   <p className="text-sm text-slate-500 font-medium">Reviewing: {selectedSubmission.full_name}</p>
                 </div>
-                <button 
+                <button
                   onClick={() => setSelectedSubmission(null)}
                   className="p-3 bg-white border border-zinc-200 text-zinc-400 rounded-2xl hover:text-zinc-950 transition-colors"
                 >
@@ -266,53 +391,53 @@ const AdminBaselineResultsPage: React.FC = () => {
 
               <div className="flex-grow overflow-y-auto p-8 space-y-8 scrollbar-hide">
                 <div className="grid grid-cols-2 gap-4">
-                   <div className="p-4 rounded-3xl bg-zinc-50 border border-zinc-100">
-                      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</div>
-                      <div className="text-xs font-bold text-emerald-600 flex items-center gap-1.5 uppercase">
-                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                         {selectedSubmission.status}
-                      </div>
-                   </div>
-                   <div className="p-4 rounded-3xl bg-zinc-50 border border-zinc-100">
-                      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Submission Time</div>
-                      <div className="text-xs font-bold text-zinc-900 uppercase font-mono">
-                         {new Date(selectedSubmission.completed_at).toLocaleTimeString()}
-                      </div>
-                   </div>
+                  <div className="p-4 rounded-3xl bg-zinc-50 border border-zinc-100">
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</div>
+                    <div className="text-xs font-bold text-emerald-600 flex items-center gap-1.5 uppercase">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      {selectedSubmission.status}
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-3xl bg-zinc-50 border border-zinc-100">
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Submission Time</div>
+                    <div className="text-xs font-bold text-zinc-900 uppercase font-mono">
+                      {new Date(selectedSubmission.completed_at).toLocaleTimeString()}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-6">
                   <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Response Set Map</h4>
                   {selectedSubmission.responses?.map((resp, idx) => (
                     <div key={resp.id} className="p-6 rounded-3xl border border-zinc-100 bg-white hover:border-indigo-100 transition-colors group">
-                       <div className="flex gap-4">
-                          <div className="text-xs font-black text-slate-300 group-hover:text-indigo-200 transition-colors">
-                            {(idx + 1).toString().padStart(2, '0')}
+                      <div className="flex gap-4">
+                        <div className="text-xs font-black text-slate-300 group-hover:text-indigo-200 transition-colors">
+                          {(idx + 1).toString().padStart(2, '0')}
+                        </div>
+                        <div className="space-y-3 flex-grow">
+                          <div className="text-sm font-bold text-zinc-900 leading-snug">
+                            {resp.question_text}
                           </div>
-                          <div className="space-y-3 flex-grow">
-                             <div className="text-sm font-bold text-zinc-900 leading-snug">
-                               {resp.question_text}
-                             </div>
-                             <div className="flex items-center gap-3">
-                               <ChevronRight size={14} className="text-indigo-400" />
-                               <div className="text-sm font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-xl uppercase tracking-tight">
-                                  {resp.selected_option_label || resp.text_value || 'No response captured'}
-                               </div>
-                             </div>
+                          <div className="flex items-center gap-3">
+                            <ChevronRight size={14} className="text-indigo-400" />
+                            <div className="text-sm font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-xl uppercase tracking-tight">
+                              {resp.selected_option_label || resp.text_value || 'No response captured'}
+                            </div>
                           </div>
-                       </div>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
 
               <div className="p-8 border-t border-zinc-100 bg-zinc-50/50">
-                 <button 
+                <button
                   onClick={() => setSelectedSubmission(null)}
                   className="w-full py-4 bg-zinc-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-zinc-800 transition-all"
-                 >
-                   Clear Terminal
-                 </button>
+                >
+                  Clear Terminal
+                </button>
               </div>
             </motion.div>
           </div>

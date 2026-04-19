@@ -1,7 +1,20 @@
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, pagination
 from rest_framework.response import Response as DRFResponse
 # Researcher Data Views
 from .models import Questionnaire, ResponseSet, Response
+
+class StandardResultsSetPagination(pagination.PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+    def get_paginated_response(self, data):
+        return DRFResponse({
+            'next': self.get_next_link(),
+            'previous': self.get_previous_link(),
+            'count': self.page.paginator.count,
+            'results': data
+        })
 from .serializers import (
     QuestionnaireSerializer, 
     ResponseSetSerializer, 
@@ -73,6 +86,7 @@ class AdminBaselineResponseListView(generics.ListAPIView):
     """
     serializer_class = AdminResponseSetSerializer
     permission_classes = (permissions.IsAdminUser,)
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
         return ResponseSet.objects.filter(
