@@ -63,7 +63,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-4 bg-zinc-50/50">
+    <div className="min-h-[80vh] flex items-center justify-center p-4 bg-white">
       <div className="card-minimal max-w-md w-full p-8 space-y-8">
         <div className="space-y-2 text-center">
           <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Welcome back</h1>
@@ -71,16 +71,16 @@ const LoginPage: React.FC = () => {
         </div>
 
         {successMessage && (
-          <div className="p-3 rounded-md bg-green-50 border border-green-100 flex items-start gap-3">
-            <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-            <p className="text-sm text-green-700">{successMessage}</p>
+          <div className="p-4 rounded-lg bg-zinc-800 flex items-start gap-3">
+            <CheckCircle2 className="w-5 h-5 text-white shrink-0 mt-0.5" />
+            <p className="text-sm font-medium text-white">{successMessage}</p>
           </div>
         )}
 
         {error && (
-          <div className="p-3 rounded-md bg-red-50 border border-red-100 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700">{error}</p>
+          <div className="p-4 rounded-lg bg-zinc-50 border border-zinc-200 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-zinc-600 shrink-0 mt-0.5" />
+            <p className="text-sm font-medium text-zinc-700">{error}</p>
           </div>
         )}
 

@@ -39,7 +39,7 @@ describe('AdminDashboardPage', () => {
     );
 
     // Should indicate loading initially
-    expect(screen.getByText('Loading live analytics...')).toBeInTheDocument();
+    expect(screen.getByText('Loading analytics...')).toBeInTheDocument();
 
     // Verify UI injected text from mock API response
     await waitFor(() => {

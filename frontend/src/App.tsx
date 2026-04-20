@@ -1,22 +1,25 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import DashboardPage from './pages/DashboardPage';
-import ActivityPage from './pages/ActivityPage';
-import AdminDashboardPage from './pages/AdminDashboardPage';
-import AdminReportsPage from './pages/AdminReportsPage';
-import GroupsManagementPage from './pages/GroupsManagementPage';
-import GroupDetailPage from './pages/GroupDetailPage';
-import AdminBaselineResultsPage from './pages/AdminBaselineResultsPage';
-import AdminLayout from './components/Admin/AdminLayout';
-import ProfilePage from './pages/ProfilePage';
-import ResultsPage from './pages/ResultsPage';
-import QuestionnairePage from './pages/QuestionnairePage';
-import OnboardingGuard from './components/Auth/OnboardingGuard';
-import BaselineRedirect from './components/Auth/BaselineRedirect';
+import LoadingSpinner from './components/Common/LoadingSpinner';
+
+// Lazy Loaded Components
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const ActivityPage = lazy(() => import('./pages/ActivityPage'));
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
+const AdminReportsPage = lazy(() => import('./pages/AdminReportsPage'));
+const GroupsManagementPage = lazy(() => import('./pages/GroupsManagementPage'));
+const GroupDetailPage = lazy(() => import('./pages/GroupDetailPage'));
+const AdminBaselineResultsPage = lazy(() => import('./pages/AdminBaselineResultsPage'));
+const AdminLayout = lazy(() => import('./components/Admin/AdminLayout'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const ResultsPage = lazy(() => import('./pages/ResultsPage'));
+const QuestionnairePage = lazy(() => import('./pages/QuestionnairePage'));
+const AuthOnboardingGuard = lazy(() => import('./components/Auth/OnboardingGuard'));
+const BaselineRedirect = lazy(() => import('./components/Auth/BaselineRedirect'));
 
 const App: React.FC = () => {
   // Helper to get fresh auth status
@@ -27,49 +30,51 @@ const App: React.FC = () => {
       <div className="min-h-screen flex flex-col bg-white">
         <Navbar />
         <main className="flex-grow flex flex-col">
-          <Routes>
-            <Route
-              path="/"
-              element={<div className="container mx-auto px-4 py-8 flex-grow">{checkAuth() ? <Navigate to="/dashboard" replace /> : <LandingPage />}</div>}
-            />
+          <Suspense fallback={<LoadingSpinner />}>
+            <Routes>
+              <Route
+                path="/"
+                element={<div className="container mx-auto px-4 py-8 flex-grow">{checkAuth() ? <Navigate to="/dashboard" replace /> : <LandingPage />}</div>}
+              />
 
-            {/* Guest Only Routes */}
-            <Route
-              path="/login"
-              element={<div className="container mx-auto px-4 py-8 flex-grow">{checkAuth() ? <Navigate to="/dashboard" /> : <LoginPage />}</div>}
-            />
-            <Route
-              path="/register"
-              element={<div className="container mx-auto px-4 py-8 flex-grow">{checkAuth() ? <Navigate to="/dashboard" /> : <RegisterPage />}</div>}
-            />
+              {/* Guest Only Routes */}
+              <Route
+                path="/login"
+                element={<div className="container mx-auto px-4 py-8 flex-grow">{checkAuth() ? <Navigate to="/dashboard" /> : <LoginPage />}</div>}
+              />
+              <Route
+                path="/register"
+                element={<div className="container mx-auto px-4 py-8 flex-grow">{checkAuth() ? <Navigate to="/dashboard" /> : <RegisterPage />}</div>}
+              />
 
-            {/* Participant Routes - Wrapped in Container */}
-            <Route element={<div className="container mx-auto px-4 py-8 flex-grow"><OnboardingGuard><Outlet /></OnboardingGuard></div>}>
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/activity/:id" element={<ActivityPage />} />
-              <Route path="/results/:id" element={<ResultsPage />} />
-              <Route path="/questionnaire/:id" element={<QuestionnairePage />} />
-              <Route path="/baseline-questionnaire" element={<BaselineRedirect />} />
-            </Route>
-            {/* Admin Hub - Nested Routes with Sidebar Layout */}
-            <Route element={<OnboardingGuard requireAdmin={true}><AdminLayout /></OnboardingGuard>}>
-               <Route path="/admin" element={<AdminDashboardPage />} />
-               <Route path="/admin/groups" element={<GroupsManagementPage />} />
-               <Route path="/admin/groups/:id" element={<GroupDetailPage />} />
-               <Route path="/admin/reports" element={<AdminReportsPage />} />
-               <Route path="/admin/baseline-data" element={<AdminBaselineResultsPage />} />
-            </Route>
+              {/* Participant Routes - Wrapped in Container */}
+              <Route element={<div className="container mx-auto px-4 py-8 flex-grow"><AuthOnboardingGuard><Outlet /></AuthOnboardingGuard></div>}>
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/activity/:id" element={<ActivityPage />} />
+                <Route path="/results/:id" element={<ResultsPage />} />
+                <Route path="/questionnaire/:id" element={<QuestionnairePage />} />
+                <Route path="/baseline-questionnaire" element={<BaselineRedirect />} />
+              </Route>
+              
+              {/* Admin Hub - Nested Routes with Sidebar Layout */}
+              <Route element={<AuthOnboardingGuard requireAdmin={true}><AdminLayout /></AuthOnboardingGuard>}>
+                 <Route path="/admin" element={<AdminDashboardPage />} />
+                 <Route path="/admin/groups" element={<GroupsManagementPage />} />
+                 <Route path="/admin/groups/:id" element={<GroupDetailPage />} />
+                 <Route path="/admin/reports" element={<AdminReportsPage />} />
+                 <Route path="/admin/baseline-data" element={<AdminBaselineResultsPage />} />
+              </Route>
 
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/" />} />
+              {/* Fallback */}
+              <Route path="*" element={<Navigate to="/" />} />
 
-          </Routes>
+            </Routes>
+          </Suspense>
         </main>
       </div>
     </Router>
   );
 };
-
 
 export default App;

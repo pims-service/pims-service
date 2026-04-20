@@ -80,7 +80,7 @@ const RegisterPage: React.FC = () => {
       <div className="min-h-[80vh] flex items-center justify-center p-4">
         <div className="card-minimal max-w-md w-full p-8 text-center space-y-4">
           <div className="flex justify-center">
-            <CheckCircle2 className="w-16 h-16 text-green-500" />
+            <CheckCircle2 className="w-16 h-16 text-black" />
           </div>
           <h2 className="text-2xl font-bold text-zinc-900">Registration Successful!</h2>
           <p className="text-zinc-600">Your account has been created. Redirecting to login...</p>
@@ -90,7 +90,7 @@ const RegisterPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[90vh] flex items-center justify-center p-4 bg-zinc-50/50">
+    <div className="min-h-[90vh] flex items-center justify-center p-4 bg-white">
       <div className="card-minimal max-w-md w-full p-8 space-y-8">
         <div className="space-y-2 text-center">
           <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Create an account</h1>
@@ -98,15 +98,15 @@ const RegisterPage: React.FC = () => {
         </div>
 
         {Object.keys(errors).length > 0 && (
-          <div className="p-4 rounded-lg bg-red-50 border border-red-200 space-y-2">
-            <div className="flex items-center gap-2 text-red-800 font-semibold mb-1">
+          <div className="p-4 rounded-none bg-white border-2 border-black space-y-2">
+            <div className="flex items-center gap-2 text-black font-bold uppercase tracking-tight mb-1">
               <AlertCircle className="w-5 h-5" />
               <span>Registration Failed</span>
             </div>
-            <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
+            <ul className="list-disc list-inside text-sm text-black space-y-1">
               {Object.entries(errors).map(([field, messages]) => (
                 <li key={field}>
-                  <span className="capitalize font-medium">{field.replace('_', ' ')}:</span> {messages[0]}
+                  <span className="capitalize font-bold">{field.replace('_', ' ')}:</span> {messages[0]}
                 </li>
               ))}
             </ul>
@@ -125,7 +125,7 @@ const RegisterPage: React.FC = () => {
                   type="text"
                   required
                   placeholder="johndoe"
-                  className={`input-minimal pl-10 ${errors.username ? 'border-red-300 ring-red-100' : ''}`}
+                  className={`input-minimal ${errors.username ? 'border-black border-2 ring-0' : ''}`}
                   value={formData.username}
                   onChange={handleChange}
                 />
@@ -140,7 +140,7 @@ const RegisterPage: React.FC = () => {
                 type="text"
                 required
                 placeholder="John Doe"
-                className={`input-minimal ${errors.full_name ? 'border-red-300 ring-red-100' : ''}`}
+                className={`input-minimal ${errors.full_name ? 'border-black border-2 ring-0' : ''}`}
                 value={formData.full_name}
                 onChange={handleChange}
               />
@@ -156,7 +156,7 @@ const RegisterPage: React.FC = () => {
                   type="email"
                   required
                   placeholder="name@example.com"
-                  className={`input-minimal pl-10 ${errors.email ? 'border-red-300 ring-red-100' : ''}`}
+                  className={`input-minimal pl-10 ${errors.email ? 'border-black border-2 ring-0' : ''}`}
                   value={formData.email}
                   onChange={handleChange}
                 />
@@ -173,7 +173,7 @@ const RegisterPage: React.FC = () => {
                   type="text"
                   required
                   placeholder="+1234567890"
-                  className={`input-minimal pl-10 ${errors.whatsapp_number ? 'border-red-300 ring-red-100' : ''}`}
+                  className={`input-minimal pl-10 ${errors.whatsapp_number ? 'border-black border-2 ring-0' : ''}`}
                   value={formData.whatsapp_number}
                   onChange={handleChange}
                 />
@@ -189,7 +189,7 @@ const RegisterPage: React.FC = () => {
                   type="password"
                   required
                   placeholder="••••••••"
-                  className={`input-minimal ${errors.password ? 'border-red-300 ring-red-100' : ''}`}
+                  className={`input-minimal ${errors.password ? 'border-black border-2 ring-0' : ''}`}
                   value={formData.password}
                   onChange={handleChange}
                 />
@@ -202,7 +202,7 @@ const RegisterPage: React.FC = () => {
                   type="password"
                   required
                   placeholder="••••••••"
-                  className={`input-minimal ${errors.password ? 'border-red-300 ring-red-100' : ''}`}
+                  className={`input-minimal ${errors.password ? 'border-black border-2 ring-0' : ''}`}
                   value={formData.confirm_password}
                   onChange={handleChange}
                 />

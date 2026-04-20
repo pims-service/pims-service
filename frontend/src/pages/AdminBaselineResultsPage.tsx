@@ -63,27 +63,18 @@ const AdminBaselineResultsPage: React.FC = () => {
     try {
       const response = await questionnairesApi.getAdminBaselineResponses(page);
       
-      console.log('DEBUG: Baseline API Response [Raw]:', response.data);
-
-      // Resilient Data Handling: Detect format (DRF Paginated object vs Flat Array)
       const data = response.data;
       if (data && typeof data === 'object' && 'results' in data && Array.isArray(data.results)) {
-        // Paginated Format
         setSubmissions(data.results);
         setTotalCount(data.count || 0);
         setHasNext(!!data.next);
         setHasPrev(!!data.previous);
-        console.log(`DEBUG: Handled as Paginated. Submissions Count: ${data.results.length}, Total: ${data.count}`);
       } else if (Array.isArray(data)) {
-        // Flat Array Format (Fallback)
         setSubmissions(data);
         setTotalCount(data.length);
         setHasNext(false);
         setHasPrev(false);
-        console.log(`DEBUG: Handled as Flat Array. Count: ${data.length}`);
       } else {
-        // Unexpected Format
-        console.error('DEBUG: Unrecognized data format:', data);
         setSubmissions([]);
       }
 
@@ -118,7 +109,7 @@ const AdminBaselineResultsPage: React.FC = () => {
             setExportingId(null);
             setExportStatus(null);
             const link = document.createElement('a');
-            link.href = file_url; // DRF returns absolute/relative URL. Assuming compatible with proxy.
+            link.href = file_url;
             link.setAttribute('download', 'baseline_export.csv');
             document.body.appendChild(link);
             link.click();
@@ -174,39 +165,39 @@ const AdminBaselineResultsPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-        <RotateCw className="w-8 h-8 text-indigo-500 animate-spin" />
-        <p className="text-slate-400 font-medium animate-pulse">Retrieving raw response sets...</p>
+        <RotateCw className="w-8 h-8 text-zinc-400 animate-spin" />
+        <p className="text-zinc-500 font-medium text-sm">Loading baseline data...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 pt-0">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-zinc-200 py-4 mb-4">
+    <div className="space-y-6 animate-in fade-in duration-700 pt-0">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-zinc-200 pb-6">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-indigo-500 text-[10px] font-black uppercase tracking-[0.2em] mb-2">
+          <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium mb-1">
             <ClipboardList size={14} /> Research Data Hub
           </div>
-          <h1 className="text-4xl font-black tracking-tighter text-zinc-900 uppercase">Baseline Raw Data</h1>
-          <p className="text-slate-500 font-medium italic">Direct oversight of initial participant screening responses.</p>
+          <h1 className="text-3xl font-bold text-zinc-900">Baseline Raw Data</h1>
+          <p className="text-zinc-500 text-sm">Direct Oversight of Participant Screening</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
-          <div className="relative group flex-grow sm:w-80">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+          <div className="relative group flex-grow sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
             <input
               type="text"
               placeholder="Search participants..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-200 transition-all text-sm"
             />
           </div>
 
           <select
             value={selectedGroup}
             onChange={(e) => setSelectedGroup(e.target.value)}
-            className="px-4 py-3 bg-white border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm font-medium text-zinc-700 cursor-pointer"
+            className="px-3 py-2.5 bg-white border border-zinc-200 rounded-lg focus:outline-none text-sm text-zinc-700 cursor-pointer"
           >
             <option value="All">All Groups</option>
             {uniqueGroups.sort().map(grp => (
@@ -217,16 +208,16 @@ const AdminBaselineResultsPage: React.FC = () => {
           <button
             onClick={handleExportCSV}
             disabled={!!exportingId}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-md hover:shadow-lg whitespace-nowrap"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-zinc-800 text-white rounded-lg font-medium text-sm hover:bg-zinc-700 transition-colors disabled:opacity-40 whitespace-nowrap"
           >
             {exportingId ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
-                Generating...
+                Preparing...
               </>
             ) : (
               <>
-                <Download size={16} /> Export SPSS CSV
+                <Download size={16} /> Export CSV
               </>
             )}
           </button>
@@ -234,93 +225,93 @@ const AdminBaselineResultsPage: React.FC = () => {
       </header>
 
       {exportStatus === 'FAILED' && (
-        <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-center gap-3 text-red-600 mb-4 animate-in fade-in slide-in-from-top-2">
-          <AlertTriangle size={18} />
-          <span className="text-xs font-bold uppercase tracking-tight">Export Failed. Please try again or contact support.</span>
-          <button onClick={() => setExportStatus(null)} className="ml-auto text-[10px] font-black underline uppercase">Dismiss</button>
+        <div className="bg-white border border-zinc-200 rounded-lg p-4 flex items-center gap-3 text-zinc-700">
+          <AlertTriangle size={16} className="text-zinc-500" />
+          <span className="text-sm font-medium">Export task failed.</span>
+          <button onClick={() => setExportStatus(null)} className="ml-auto text-xs font-medium text-zinc-500 hover:text-zinc-700">Dismiss</button>
         </div>
       )}
 
       {exportingId && (
-        <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex items-center gap-3 text-indigo-600 mb-4 animate-in fade-in slide-in-from-top-2">
-          <FileSpreadsheet size={18} className="animate-bounce" />
-          <span className="text-xs font-bold uppercase tracking-tight">Preparing your research manifest. This may take a moment...</span>
+        <div className="bg-zinc-800 text-white rounded-lg p-4 flex items-center gap-3">
+          <FileSpreadsheet size={16} className="animate-bounce" />
+          <span className="text-sm font-medium">Preparing export. Please wait...</span>
         </div>
       )}
 
       {error ? (
-        <div className="glass p-12 text-center space-y-4 border-red-500/20 max-w-2xl mx-auto">
-          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto" />
-          <h2 className="text-xl font-bold text-white">Access Violation</h2>
-          <p className="text-slate-400">{error}</p>
-          <button onClick={() => fetchSubmissions(1)} className="btn-premium px-8">Retry Connection</button>
+        <div className="border border-zinc-200 rounded-xl p-12 text-center space-y-4 max-w-2xl mx-auto bg-white shadow-sm">
+          <AlertTriangle className="w-10 h-10 text-zinc-400 mx-auto" />
+          <h2 className="text-lg font-semibold text-zinc-800">Access Denied</h2>
+          <p className="text-zinc-500 text-sm">{error}</p>
+          <button onClick={() => fetchSubmissions(1)} className="px-6 py-2.5 bg-zinc-800 text-white rounded-lg font-medium text-sm hover:bg-zinc-700 transition-colors">Retry</button>
         </div>
       ) : (
-        <div className="bg-white border border-zinc-200 rounded-[2.5rem] overflow-hidden shadow-sm">
+        <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full text-left text-sm">
               <thead>
-                <tr className="bg-zinc-50/50 border-b border-zinc-100">
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Participant</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Completion Date</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Group</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Assessment</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Raw Data</th>
+                <tr className="bg-zinc-50 border-b border-zinc-200">
+                  <th className="px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Participant</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Group</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Module</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
                 {filteredSubmissions.map((s) => (
-                  <tr key={s.id} className="hover:bg-zinc-50/50 transition-colors group">
-                    <td className="px-8 py-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-black border border-indigo-100">
-                          <User size={18} />
+                  <tr key={s.id} className="hover:bg-zinc-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-zinc-100 flex items-center justify-center text-zinc-600 rounded-lg">
+                          <User size={16} />
                         </div>
                         <div>
-                          <div className="font-black text-zinc-900 uppercase tracking-tight">{s.full_name || 'Anonymous'}</div>
-                          <div className="text-xs text-slate-500 font-mono">@{s.username}</div>
+                          <div className="font-medium text-zinc-800">{s.full_name || 'Anonymous'}</div>
+                          <div className="text-xs text-zinc-400">@{s.username}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-8 py-6">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-zinc-900 font-bold text-sm">
-                          <Calendar size={14} className="text-slate-400" />
+                    <td className="px-6 py-4">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-1.5 text-zinc-700 text-sm">
+                          <Calendar size={13} className="text-zinc-400" />
                           {new Date(s.completed_at).toLocaleDateString()}
                         </div>
-                        <div className="flex items-center gap-2 text-slate-400 text-[10px] font-medium font-mono uppercase">
-                          <Clock size={12} />
+                        <div className="flex items-center gap-1.5 text-zinc-400 text-xs">
+                          <Clock size={11} />
                           {new Date(s.completed_at).toLocaleTimeString()}
                         </div>
                       </div>
                     </td>
-                    <td className="px-8 py-6">
+                    <td className="px-6 py-4">
                       {s.group_name ? (
-                        <span className="px-3 py-1 bg-indigo-50 rounded-full text-[10px] font-bold text-indigo-600 border border-indigo-100 inline-block uppercase tracking-widest">
+                        <span className="px-2 py-0.5 bg-zinc-100 text-xs font-medium text-zinc-700 rounded-md">
                           {s.group_name}
                         </span>
                       ) : (
-                        <span className="text-xs text-slate-400 italic">Unassigned</span>
+                        <span className="text-xs text-zinc-400 italic">Unassigned</span>
                       )}
                     </td>
-                    <td className="px-8 py-6">
-                      <div className="px-3 py-1 bg-zinc-100 rounded-full text-[10px] font-bold text-zinc-600 border border-zinc-200 inline-block uppercase tracking-widest">
+                    <td className="px-6 py-4">
+                      <span className="px-2 py-0.5 bg-zinc-50 text-xs font-medium text-zinc-600 border border-zinc-200 rounded-md">
                         {s.questionnaire_title}
-                      </div>
+                      </span>
                     </td>
-                    <td className="px-8 py-6 text-right">
+                    <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => handleViewDetail(s.id)}
-                        className="p-2.5 rounded-xl bg-white border border-zinc-200 text-zinc-400 hover:text-indigo-600 hover:border-indigo-500/50 transition-all group-hover:shadow-md"
+                        className="p-2 bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:border-zinc-300 transition-all rounded-lg"
                       >
-                        <Eye size={18} />
+                        <Eye size={16} />
                       </button>
                     </td>
                   </tr>
                 ))}
                 {filteredSubmissions.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-8 py-20 text-center text-slate-400 italic">
+                    <td colSpan={5} className="px-6 py-16 text-center text-zinc-400 italic text-sm">
                       No baseline responses match your criteria.
                     </td>
                   </tr>
@@ -331,27 +322,27 @@ const AdminBaselineResultsPage: React.FC = () => {
 
           {/* Pagination Controls */}
           {totalCount > 0 && (
-            <div className="px-8 py-4 bg-zinc-50 border-t border-zinc-100 flex items-center justify-between">
-              <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                Showing <span className="text-zinc-900">{submissions.length}</span> of <span className="text-zinc-900">{totalCount}</span> results
+            <div className="px-6 py-3 bg-zinc-50 border-t border-zinc-100 flex items-center justify-between">
+              <div className="text-xs text-zinc-500">
+                Showing <span className="font-medium text-zinc-700">{submissions.length}</span> of <span className="font-medium text-zinc-700">{totalCount}</span> results
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => fetchSubmissions(currentPage - 1)}
                   disabled={!hasPrev || loading}
-                  className={`p-2 rounded-lg border border-zinc-200 transition-all ${!hasPrev ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white hover:text-indigo-600 hover:border-indigo-500/50 hover:shadow-sm'}`}
+                  className={`p-1.5 border border-zinc-200 rounded-lg transition-all ${!hasPrev ? 'opacity-30 cursor-not-allowed' : 'hover:bg-zinc-100'}`}
                 >
-                  <ChevronLeft size={18} />
+                  <ChevronLeft size={16} />
                 </button>
-                <div className="px-4 py-2 rounded-lg bg-white border border-zinc-200 text-[10px] font-black uppercase tracking-widest text-zinc-900">
+                <div className="px-3 py-1.5 border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 bg-white">
                   Page {currentPage}
                 </div>
                 <button
                   onClick={() => fetchSubmissions(currentPage + 1)}
                   disabled={!hasNext || loading}
-                  className={`p-2 rounded-lg border border-zinc-200 transition-all ${!hasNext ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white hover:text-indigo-600 hover:border-indigo-500/50 hover:shadow-sm'}`}
+                  className={`p-1.5 border border-zinc-200 rounded-lg transition-all ${!hasNext ? 'opacity-30 cursor-not-allowed' : 'hover:bg-zinc-100'}`}
                 >
-                  <ChevronRight size={18} />
+                  <ChevronRight size={16} />
                 </button>
               </div>
             </div>
@@ -362,7 +353,7 @@ const AdminBaselineResultsPage: React.FC = () => {
       {/* Detail Inspection Modal */}
       <AnimatePresence>
         {selectedSubmission && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-end p-4 md:p-10 pointer-events-none">
+          <div className="fixed inset-0 z-[100] flex items-center justify-end p-4 md:p-8 pointer-events-none">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -374,54 +365,54 @@ const AdminBaselineResultsPage: React.FC = () => {
               initial={{ x: '100%', opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0 }}
-              className="relative w-full max-w-2xl bg-white h-full rounded-[2.5rem] shadow-2xl pointer-events-auto overflow-hidden flex flex-col border border-zinc-200"
+              className="relative w-full max-w-2xl bg-white h-full shadow-2xl pointer-events-auto overflow-hidden flex flex-col rounded-l-2xl border border-zinc-200"
             >
-              <div className="p-8 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
+              <div className="p-6 border-b border-zinc-200 flex items-center justify-between">
                 <div>
-                  <h3 className="text-2xl font-black text-zinc-900 uppercase">Inspection Terminal</h3>
-                  <p className="text-sm text-slate-500 font-medium">Reviewing: {selectedSubmission.full_name}</p>
+                  <h3 className="text-xl font-bold text-zinc-900">Response Detail</h3>
+                  <p className="text-sm text-zinc-500 mt-0.5">{selectedSubmission.full_name}</p>
                 </div>
                 <button
                   onClick={() => setSelectedSubmission(null)}
-                  className="p-3 bg-white border border-zinc-200 text-zinc-400 rounded-2xl hover:text-zinc-950 transition-colors"
+                  className="p-2 bg-zinc-100 text-zinc-600 hover:bg-zinc-200 transition-all rounded-lg"
                 >
-                  <X size={20} />
+                  <X size={18} />
                 </button>
               </div>
 
-              <div className="flex-grow overflow-y-auto p-8 space-y-8 scrollbar-hide">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 rounded-3xl bg-zinc-50 border border-zinc-100">
-                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</div>
-                    <div className="text-xs font-bold text-emerald-600 flex items-center gap-1.5 uppercase">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="flex-grow overflow-y-auto p-6 space-y-6 scrollbar-hide">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-4 border border-zinc-200 rounded-lg bg-white">
+                    <div className="text-xs text-zinc-500 mb-1">Status</div>
+                    <div className="text-sm font-semibold text-zinc-800 flex items-center gap-1.5">
+                      <div className="w-2 h-2 bg-zinc-600 rounded-full animate-pulse" />
                       {selectedSubmission.status}
                     </div>
                   </div>
-                  <div className="p-4 rounded-3xl bg-zinc-50 border border-zinc-100">
-                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Submission Time</div>
-                    <div className="text-xs font-bold text-zinc-900 uppercase font-mono">
+                  <div className="p-4 border border-zinc-200 rounded-lg bg-white">
+                    <div className="text-xs text-zinc-500 mb-1">Completed At</div>
+                    <div className="text-sm font-semibold text-zinc-800 font-mono">
                       {new Date(selectedSubmission.completed_at).toLocaleTimeString()}
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-6">
-                  <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Response Set Map</h4>
+                <div className="space-y-3">
+                  <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider border-b border-zinc-100 pb-2">Responses</h4>
                   {selectedSubmission.responses?.map((resp, idx) => (
-                    <div key={resp.id} className="p-6 rounded-3xl border border-zinc-100 bg-white hover:border-indigo-100 transition-colors group">
+                    <div key={resp.id} className="p-4 border border-zinc-200 rounded-lg bg-white hover:bg-zinc-50 transition-colors">
                       <div className="flex gap-4">
-                        <div className="text-xs font-black text-slate-300 group-hover:text-indigo-200 transition-colors">
+                        <div className="text-lg font-bold text-zinc-300 border-r border-zinc-100 pr-4 min-w-[3rem] text-center">
                           {(idx + 1).toString().padStart(2, '0')}
                         </div>
-                        <div className="space-y-3 flex-grow">
-                          <div className="text-sm font-bold text-zinc-900 leading-snug">
+                        <div className="space-y-2 flex-grow">
+                          <div className="text-sm font-medium text-zinc-800">
                             {resp.question_text}
                           </div>
-                          <div className="flex items-center gap-3">
-                            <ChevronRight size={14} className="text-indigo-400" />
-                            <div className="text-sm font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-xl uppercase tracking-tight">
-                              {resp.selected_option_label || resp.text_value || 'No response captured'}
+                          <div className="flex items-center gap-2">
+                            <ChevronRight size={14} className="text-zinc-400" />
+                            <div className="text-sm font-medium text-zinc-600 bg-zinc-100 px-3 py-1 rounded-md">
+                              {resp.selected_option_label || resp.text_value || 'No response'}
                             </div>
                           </div>
                         </div>
@@ -431,12 +422,12 @@ const AdminBaselineResultsPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-8 border-t border-zinc-100 bg-zinc-50/50">
+              <div className="p-6 border-t border-zinc-100">
                 <button
                   onClick={() => setSelectedSubmission(null)}
-                  className="w-full py-4 bg-zinc-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-zinc-800 transition-all"
+                  className="w-full py-3 bg-zinc-800 text-white rounded-lg font-medium text-sm hover:bg-zinc-700 transition-colors"
                 >
-                  Clear Terminal
+                  Close
                 </button>
               </div>
             </motion.div>

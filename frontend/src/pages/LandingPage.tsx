@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Brain, Zap, Shield, Users, Globe, Beaker } from 'lucide-react';
+import { ArrowRight, Brain, Zap, Shield, Users } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
   return (
@@ -12,20 +12,20 @@ const LandingPage: React.FC = () => {
           <span>Phase 1 Enrollment Now Open</span>
         </div>
         
-        <h1 className="text-5xl sm:text-7xl font-bold tracking-tight text-zinc-900 max-w-4xl leading-[1.1]">
-          The Science of <span className="text-zinc-500">Human Achievement</span>
+        <h1 className="text-5xl sm:text-7xl font-bold tracking-tight text-black max-w-4xl leading-[1.1]">
+          The Science of <span className="underline decoration-zinc-300 decoration-4 underline-offset-8">Human Achievement</span>
         </h1>
         
-        <p className="text-lg sm:text-xl text-zinc-600 max-w-2xl leading-relaxed">
+        <p className="text-lg sm:text-xl text-zinc-900 max-w-2xl leading-relaxed font-medium">
           Join a global cohort in a structured psychological study exploring the intersection of behavior, habit formation, and long-term potential.
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 pt-4">
-          <Link to="/register" className="btn-minimal px-8 py-3 text-base flex items-center justify-center gap-2 group">
+          <Link to="/register" className="btn-minimal px-10 py-4 text-lg border-2 border-black flex items-center justify-center gap-2 group hover:bg-black hover:text-white transition-all">
             Begin Application
-            <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
+            <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
           </Link>
-          <Link to="/login" className="px-8 py-3 text-base font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-all flex items-center justify-center">
+          <Link to="/login" className="px-10 py-4 text-lg font-bold text-black border-2 border-transparent hover:border-black rounded-lg transition-all flex items-center justify-center">
             Existing Participant
           </Link>
         </div>

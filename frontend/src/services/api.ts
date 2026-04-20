@@ -15,10 +15,32 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Global Normalization: If the response is a DRF paginated object, unwrap the results array
+    // so that collection-based components (using .map, .filter) do not crash.
+    if (
+      response.data &&
+      typeof response.data === 'object' &&
+      'results' in response.data &&
+      Array.isArray(response.data.results)
+    ) {
+      const results = response.data.results;
+      // Attach pagination metadata to the array as hidden properties for advanced use
+      Object.defineProperty(results, '_pagination', {
+        value: {
+          count: response.data.count,
+          next: response.data.next,
+          previous: response.data.previous,
+        },
+        enumerable: false,
+      });
+      response.data = results;
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
-    if (error.response.status === 401 && !originalRequest._retry) {
+    if (error.response && error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       const refreshToken = localStorage.getItem('refresh_token');
       if (refreshToken) {
