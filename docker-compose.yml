@@ -47,7 +47,13 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: [ "sh", "/app/entrypoint.sh" ]
+    command: [ "sh", "-c", "sed -i 's/\\r$//' /app/entrypoint.sh && sh /app/entrypoint.sh" ]
+    healthcheck:
+      test: [ "CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.settimeout(2); s.connect((\"localhost\", 8000)); s.close()'" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   celery_worker:
     build:
@@ -93,8 +99,10 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     depends_on:
-      - backend
-      - frontend
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_started
 
 volumes:
   postgres_data:
