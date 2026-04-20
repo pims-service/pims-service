@@ -92,7 +92,7 @@ describe('AdminBaselineResultsPage', () => {
     fireEvent.change(select, { target: { value: 'Analysis Group' } });
 
     // Simulate User starting the export action
-    const exportBtn = screen.getByText(/Export SPSS CSV/i);
+    const exportBtn = screen.getByText(/Export CSV/i);
     fireEvent.click(exportBtn);
 
     // Ensure the wrapper accurately sends the queried string argument to trigger
