@@ -74,7 +74,7 @@ const ResultsPage: React.FC = () => {
   if (error) {
     return (
       <div className="max-w-2xl mx-auto p-12 text-center bg-white rounded-3xl border border-zinc-100 shadow-xl">
-        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="w-16 h-16 bg-black text-white rounded-none flex items-center justify-center mx-auto mb-6">
           <ShieldAlert className="w-8 h-8" />
         </div>
         <h2 className="text-2xl font-bold text-zinc-900 mb-2">Results Not Found</h2>
@@ -111,7 +111,7 @@ const ResultsPage: React.FC = () => {
              Your results have been processed using high-precision psychometric benchmarks. Explore your trait profile and response audit below.
           </p>
         </div>
-        <button className="flex items-center justify-center gap-2 px-6 py-3 bg-white border border-zinc-200 text-zinc-900 rounded-xl font-bold hover:bg-zinc-50 transition-all text-sm shadow-sm group">
+        <button className="flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-black text-black rounded-none font-black uppercase tracking-widest hover:bg-black hover:text-white transition-all text-sm group">
           <Download className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
           Export Report
         </button>
@@ -125,7 +125,7 @@ const ResultsPage: React.FC = () => {
           transition={{ delay: 0.2 }}
           className="lg:col-span-1 space-y-6"
         >
-          <div className="bg-zinc-900 rounded-3xl p-8 text-white space-y-6 shadow-2xl">
+          <div className="bg-white border-2 border-black p-8 text-black space-y-6">
             <div className="space-y-1">
               <h2 className="text-xl font-bold">Trait Profile</h2>
               <p className="text-zinc-400 text-sm">Dimensional performance mapping</p>
@@ -135,8 +135,8 @@ const ResultsPage: React.FC = () => {
             
             <div className="space-y-4 pt-4 border-t border-zinc-800">
                <div className="flex items-center justify-between">
-                  <span className="text-zinc-400 text-sm">Assessment Status</span>
-                  <span className="px-2 py-0.5 bg-green-500/10 text-green-400 text-[10px] font-black uppercase rounded">Verified</span>
+                  <span className="text-zinc-500 text-sm font-bold uppercase tracking-widest">Assessment Status</span>
+                  <span className="px-2 py-0.5 border-2 border-black bg-black text-white text-[10px] font-black uppercase">Verified</span>
                </div>
                <div className="flex items-center justify-between">
                   <span className="text-zinc-400 text-sm">Completed At</span>
@@ -147,9 +147,9 @@ const ResultsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-8 bg-zinc-50 rounded-3xl border border-zinc-100 space-y-4">
-             <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">Researcher Note</h3>
-             <p className="text-zinc-600 text-sm leading-relaxed italic">
+          <div className="p-8 bg-zinc-50 border-x-4 border-black space-y-4">
+             <h3 className="text-sm font-black uppercase tracking-widest text-black">Researcher Note</h3>
+             <p className="text-black text-sm leading-relaxed italic font-medium">
                "Your consistent responses in the resilience category indicate a strong adaptive baseline for future experimental activities."
              </p>
           </div>

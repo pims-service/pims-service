@@ -4,7 +4,6 @@ import { User, Mail, Shield, Award, Edit2, Check } from 'lucide-react';
 
 const ProfilePage: React.FC = () => {
   const [user, setUser] = useState<any>(null);
-  const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,50 +24,50 @@ const ProfilePage: React.FC = () => {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="glass p-10 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-indigo-500/20 to-pink-500/20"></div>
+      <div className="bg-white border-4 border-black p-10 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-4 bg-black"></div>
         
         <div className="relative mt-8 flex flex-col items-center">
-          <div className="w-24 h-24 rounded-full bg-slate-800 border-4 border-slate-900 flex items-center justify-center text-indigo-400 mb-4 shadow-xl">
+          <div className="w-24 h-24 rounded-none bg-black flex items-center justify-center text-white mb-4">
             <User size={48} />
           </div>
-          <h2 className="text-3xl font-bold">{user?.username}</h2>
-          <p className="text-slate-400 flex items-center gap-2 mt-1">
-            <Mail size={16} /> {user?.email}
+          <h2 className="text-3xl font-black uppercase tracking-tighter">{user?.username}</h2>
+          <p className="text-zinc-600 flex items-center gap-2 mt-1 font-bold uppercase tracking-widest text-xs">
+            <Mail size={14} /> {user?.email}
           </p>
         </div>
 
         <div className="mt-10 space-y-6">
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-700">
-              <div className="text-indigo-400 mb-2 font-semibold flex items-center gap-2">
-                <Shield size={18} /> Group
+            <div className="bg-white p-6 border-2 border-black">
+              <div className="text-black mb-2 font-black uppercase tracking-widest text-xs flex items-center gap-2">
+                <Shield size={16} /> Group
               </div>
-              <div className="text-xl font-bold">{user?.group_name || 'Unassigned'}</div>
+              <div className="text-2xl font-black tracking-tighter uppercase">{user?.group_name || 'Unassigned'}</div>
             </div>
-            <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-700">
-              <div className="text-pink-400 mb-2 font-semibold flex items-center gap-2">
-                <Award size={18} /> Joined
+            <div className="bg-white p-6 border-2 border-black">
+              <div className="text-black mb-2 font-black uppercase tracking-widest text-xs flex items-center gap-2">
+                <Award size={16} /> Joined
               </div>
-              <div className="text-xl font-bold">Day 12</div>
+              <div className="text-2xl font-black tracking-tighter uppercase">Day 12</div>
             </div>
           </div>
 
-          <div className="glass p-8 bg-white/5 border-none">
+          <div className="border-2 border-black p-8 bg-black text-white">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold text-lg">Psychological Traits</h3>
-              <button className="text-indigo-400 hover:text-indigo-300">
+              <h3 className="font-black uppercase tracking-widest text-sm">Psychological Traits</h3>
+              <button className="text-white hover:underline">
                 <Edit2 size={18} />
               </button>
             </div>
             <div className="flex flex-wrap gap-3">
               {Object.entries(user?.traits || {}).map(([key, value]: [string, any]) => (
-                <span key={key} className="px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-sm flex items-center gap-2">
+                <span key={key} className="px-4 py-2 bg-white text-black text-xs font-black uppercase tracking-tight flex items-center gap-2 border border-white">
                   <Check size={14} /> {key}: {value}
                 </span>
               ))}
               {Object.keys(user?.traits || {}).length === 0 && (
-                <p className="text-slate-500 italic text-sm">No traits assessed yet.</p>
+                <p className="text-white/70 italic text-sm">No traits assessed yet.</p>
               )}
             </div>
           </div>

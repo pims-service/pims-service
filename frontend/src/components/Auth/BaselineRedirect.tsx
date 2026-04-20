@@ -35,7 +35,7 @@ const BaselineRedirect: React.FC = () => {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[40vh] p-8 text-center bg-white rounded-xl shadow-sm border border-zinc-100">
-        <p className="text-red-500 font-medium">{error}</p>
+        <p className="text-black font-black uppercase tracking-tight">{error}</p>
         <button
           onClick={() => window.location.reload()}
           className="mt-4 text-zinc-900 font-bold underline hover:no-underline"

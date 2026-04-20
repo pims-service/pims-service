@@ -72,32 +72,32 @@ const LikertSlider: React.FC<LikertSliderProps> = ({ options, value, onChange })
     <div className="py-8 px-4 select-none">
       <div 
         ref={sliderRef}
-        className="relative h-2 bg-zinc-100 rounded-full cursor-pointer mb-12"
+        className="relative h-2 bg-zinc-200 rounded-full cursor-pointer mb-12"
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
       >
         {/* Track highlight */}
         <div 
-          className="absolute h-full bg-zinc-900 rounded-full transition-all duration-75"
+          className="absolute h-full bg-zinc-700 rounded-full transition-all duration-75"
           style={{ width: `${percentage}%` }}
         />
         
         {/* Handle */}
         <div 
-          className={`absolute top-1/2 -translate-y-1/2 -ml-3 w-6 h-6 bg-white border-2 border-zinc-900 rounded-full shadow-lg transition-transform duration-75 ${isDragging ? 'scale-125' : ''}`}
+          className={`absolute top-1/2 -translate-y-1/2 -ml-3 w-6 h-6 bg-zinc-700 rounded-full shadow-lg transition-transform duration-75 ${isDragging ? 'scale-125' : ''}`}
           style={{ left: `${percentage}%` }}
         >
           {isDragging && (
-             <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-zinc-900 text-white text-xs py-1 px-2 rounded whitespace-nowrap animate-in fade-in zoom-in">
-                {value ?? min}
+             <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-zinc-800 text-white text-xs font-medium py-1 px-2.5 rounded-md whitespace-nowrap">
+                VAL: {value ?? min}
              </div>
           )}
         </div>
 
         {/* Labels at extremes */}
-        <div className="absolute top-6 w-full flex justify-between text-xs text-zinc-500 font-medium tracking-tight">
-          <span>{sortedOptions[0]?.label} ({min})</span>
-          <span>{sortedOptions[sortedOptions.length - 1]?.label} ({max})</span>
+        <div className="absolute top-6 w-full flex justify-between text-xs text-zinc-500 font-medium">
+          <span>{sortedOptions[0]?.label} [{min}]</span>
+          <span>{sortedOptions[sortedOptions.length - 1]?.label} [{max}]</span>
         </div>
       </div>
 
@@ -106,15 +106,15 @@ const LikertSlider: React.FC<LikertSliderProps> = ({ options, value, onChange })
           <button
             key={opt.id}
             onClick={() => onChange(opt.numeric_value)}
-            className={`flex-1 flex flex-col items-center py-3 rounded-lg border transition-all duration-200 ${
+            className={`flex-1 flex flex-col items-center py-3 border rounded-lg transition-all duration-200 ${
               value === opt.numeric_value 
-                ? 'bg-zinc-900 border-zinc-900 text-white shadow-md -translate-y-1' 
-                : 'bg-white border-zinc-100 text-zinc-600 hover:border-zinc-300'
+                ? 'bg-zinc-800 border-zinc-700 text-white shadow-md -translate-y-0.5' 
+                : 'bg-white border-zinc-200 text-zinc-700 hover:border-zinc-300 hover:shadow-sm'
             }`}
           >
             <span className="text-lg font-bold">{opt.numeric_value}</span>
-            <span className="text-[10px] uppercase font-semibold text-zinc-400">
-                {value === opt.numeric_value ? 'Selected' : ''}
+            <span className="text-[8px] uppercase font-medium tracking-wider mt-0.5">
+                {value === opt.numeric_value ? 'Active' : ''}
             </span>
           </button>
         ))}

@@ -117,7 +117,7 @@ const QuestionnairePage: React.FC = () => {
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', damping: 12 }}
-          className="w-24 h-24 bg-zinc-900 rounded-full flex items-center justify-center mx-auto shadow-xl"
+          className="w-20 h-20 bg-zinc-800 rounded-xl flex items-center justify-center mx-auto shadow-lg"
         >
           <CheckCircle2 className="w-12 h-12 text-white" />
         </motion.div>
@@ -128,9 +128,9 @@ const QuestionnairePage: React.FC = () => {
           transition={{ delay: 0.2 }}
           className="space-y-4"
         >
-          <h2 className="text-3xl font-serif font-bold">Assessment Finalized</h2>
-          <p className="text-zinc-500 max-w-xs mx-auto">
-            Your initial profile is complete. We are now synchronizing your results and preparing your dashboard.
+          <h2 className="text-3xl font-bold text-zinc-900">Data Finalized</h2>
+          <p className="text-zinc-500 text-sm max-w-xs mx-auto">
+            Profile entry complete. Synchronizing results with research matrix.
           </p>
         </motion.div>
 
@@ -138,10 +138,10 @@ const QuestionnairePage: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="flex items-center justify-center gap-2 text-zinc-400 text-sm font-medium"
+          className="flex items-center justify-center gap-2 text-zinc-500 text-xs font-medium"
         >
           <Loader2 className="w-4 h-4 animate-spin" />
-          Synchronizing environment...
+          Synchronizing Environment
         </motion.div>
       </div>
     );
@@ -150,19 +150,19 @@ const QuestionnairePage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Loader2 className="w-12 h-12 animate-spin text-zinc-900" />
-        <p className="text-zinc-500 font-medium font-serif">Initializing assessment environment...</p>
+        <Loader2 className="w-10 h-10 animate-spin text-zinc-400" />
+        <p className="text-zinc-500 font-medium text-sm">Loading questionnaire...</p>
       </div>
     );
   }
 
   if (error || !currentQuestion) {
     return (
-      <div className="max-w-md mx-auto card-minimal p-12 text-center mt-12 space-y-6">
-        <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
-        <h2 className="text-2xl font-bold">Something went wrong</h2>
-        <p className="text-zinc-500">{error || 'Unable to load questionnaire.'}</p>
-        <button onClick={() => navigate('/dashboard')} className="btn-minimal w-full">Back to Dashboard</button>
+      <div className="max-w-md mx-auto border border-zinc-200 rounded-xl p-10 text-center mt-12 space-y-6 bg-white shadow-sm">
+        <AlertCircle className="w-12 h-12 text-zinc-400 mx-auto" />
+        <h2 className="text-xl font-semibold text-zinc-800">Error</h2>
+        <p className="text-zinc-500 text-sm">{error || 'Unable to load questionnaire data.'}</p>
+        <button onClick={() => navigate('/dashboard')} className="w-full py-3 bg-zinc-800 text-white rounded-lg font-medium text-sm hover:bg-zinc-700 transition-colors">Back to Dashboard</button>
       </div>
     );
   }
@@ -170,14 +170,14 @@ const QuestionnairePage: React.FC = () => {
   return (
     <div className="max-w-3xl mx-auto py-12 px-4">
       {/* Header & Progress */}
-      <div className="mb-12 space-y-4">
-        <div className="flex justify-between items-center text-sm mb-2">
-          <span className="font-bold uppercase tracking-widest text-zinc-400">Step {currentIndex + 1} <span className="text-zinc-200">/</span> {questions.length}</span>
-          <span className="font-serif italic text-zinc-900">{questionnaire?.title}</span>
+      <div className="mb-16 space-y-6">
+        <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-[0.3em]">
+          <span className="text-zinc-400 text-xs font-medium">Step {currentIndex + 1} / {questions.length}</span>
+          <span className="text-zinc-700 text-xs font-medium">{questionnaire?.title}</span>
         </div>
-        <div className="h-1 w-full bg-zinc-100 rounded-full overflow-hidden">
+        <div className="h-2 w-full bg-zinc-100 rounded-full overflow-hidden">
           <motion.div
-            className="h-full bg-zinc-900"
+            className="h-full bg-zinc-700 rounded-full"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ type: 'spring', damping: 20 }}
@@ -192,12 +192,12 @@ const QuestionnairePage: React.FC = () => {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.3 }}
-          className="card-minimal p-8 md:p-12 min-h-[400px] flex flex-col"
+          className="border border-zinc-200 rounded-xl p-8 md:p-12 min-h-[500px] flex flex-col bg-white shadow-sm"
         >
           <div className="flex-grow">
-            <h2 className="text-2xl md:text-3xl font-serif leading-tight mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold text-zinc-900 leading-tight mb-12">
               {currentQuestion.content}
-              {currentQuestion.required && <span className="text-zinc-300 ml-2" title="Required">*</span>}
+              {currentQuestion.required && <span className="text-zinc-300 ml-2">*</span>}
             </h2>
 
             {/* Dynamic Rendering */}
@@ -208,12 +208,12 @@ const QuestionnairePage: React.FC = () => {
                     <button
                       key={option.id}
                       onClick={() => handleResponseChange(currentQuestion.id, option.id)}
-                      className={`group p-6 rounded-xl border-2 text-left transition-all duration-200 flex items-center justify-between ${responses[currentQuestion.id] === option.id
-                          ? 'border-zinc-900 bg-zinc-900 text-white shadow-lg'
-                          : 'border-zinc-100 hover:border-zinc-300 bg-zinc-50/50'
+                      className={`group p-5 border rounded-lg text-left transition-all duration-200 flex items-center justify-between ${responses[currentQuestion.id] === option.id
+                          ? 'border-zinc-700 bg-zinc-800 text-white shadow-md'
+                          : 'border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-sm'
                         }`}
                     >
-                      <span className="font-medium">{option.label}</span>
+                      <span className="font-medium text-sm">{option.label}</span>
                       <CheckCircle2 className={`w-6 h-6 transition-opacity ${responses[currentQuestion.id] === option.id ? 'opacity-100' : 'opacity-0'}`} />
                     </button>
                   ))}
@@ -230,8 +230,8 @@ const QuestionnairePage: React.FC = () => {
 
               {currentQuestion.type === 'TEXT' && (
                 <textarea
-                  className="input-minimal min-h-[200px] text-lg resize-none p-6"
-                  placeholder="Type your response here..."
+                  className="w-full min-h-[300px] bg-white border border-zinc-200 rounded-lg p-6 text-base outline-none focus:ring-2 focus:ring-zinc-200 transition-all resize-none"
+                  placeholder="Type your response..."
                   value={responses[currentQuestion.id] || ''}
                   onChange={(e) => handleResponseChange(currentQuestion.id, e.target.value)}
                 />
@@ -239,11 +239,11 @@ const QuestionnairePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-12 pt-8 border-t border-zinc-100 flex justify-between items-center">
+          <div className="mt-8 pt-8 border-t border-zinc-200 flex justify-between items-center">
             <button
               onClick={handleBack}
               disabled={currentIndex === 0}
-              className="flex items-center gap-2 text-zinc-400 hover:text-zinc-900 disabled:opacity-0 transition-all font-medium"
+              className="flex items-center gap-2 text-zinc-400 hover:text-zinc-700 disabled:opacity-0 transition-all font-medium text-sm"
             >
               <ArrowLeft className="w-4 h-4" /> Previous
             </button>
@@ -251,7 +251,7 @@ const QuestionnairePage: React.FC = () => {
             <button
               onClick={handleNext}
               disabled={submitting || (currentQuestion.required && responses[currentQuestion.id] === undefined)}
-              className="btn-minimal min-w-[140px] flex items-center justify-center gap-2"
+              className="px-8 py-3 bg-zinc-800 text-white font-medium rounded-lg text-sm hover:bg-zinc-700 transition-colors min-w-[140px] flex items-center justify-center gap-2"
             >
               {submitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
