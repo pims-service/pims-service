@@ -84,5 +84,10 @@ class Response(models.Model):
     selected_option = models.ForeignKey(Option, on_delete=models.SET_NULL, null=True, blank=True)
     text_value = models.TextField(null=True, blank=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['response_set', 'question'], name='unique_response_per_question')
+        ]
+
     def __str__(self):
         return f"Response to {self.question.id} in {self.response_set.id}"

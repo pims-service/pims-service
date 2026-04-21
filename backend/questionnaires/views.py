@@ -41,7 +41,20 @@ class ResponseSetListCreateView(generics.ListCreateAPIView):
         return ResponseSet.objects.filter(user=self.request.user).select_related('questionnaire').order_by('-completed_at')
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        from rest_framework.exceptions import ValidationError
+        
+        # Check if the questionnaire is a baseline and user already completed it
+        questionnaire = serializer.validated_data.get('questionnaire')
+        user = self.request.user
+        
+        if questionnaire and questionnaire.is_baseline:
+            if user.has_completed_baseline:
+                raise ValidationError({"detail": "You have already completed the baseline assessment."})
+            # Also prevent creating multiple in-progress DRAFT baseline sets
+            if ResponseSet.objects.filter(user=user, questionnaire=questionnaire).exists():
+                raise ValidationError({"detail": "You already have an active response set for this baseline."})
+        
+        serializer.save(user=user)
 
 class ResponseSetDetailView(generics.RetrieveAPIView):
     """

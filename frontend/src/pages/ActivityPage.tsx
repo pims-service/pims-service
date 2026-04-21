@@ -13,21 +13,25 @@ const ActivityPage: React.FC = () => {
   const [lastSaved, setLastSaved] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch activity details
-    // setActivity(stub)
-    const mockActivity = {
-      title: 'Daily Paragraph: Future Self',
-      description: 'Describe your ideal life 5 years from now in 200-300 words. Focus on your emotions and daily routine.',
-      activity_type: 'paragraph'
+    const fetchActivity = async () => {
+      try {
+        const response = await api.get(`/activities/daily/${id}/`);
+        setActivity(response.data);
+      } catch (err) {
+        console.error('Failed to load activity details');
+        alert('Failed to load activity details.');
+        navigate('/dashboard');
+      }
     };
-    setActivity(mockActivity);
+    
+    if (id) fetchActivity();
 
-    // Autosave interval
+    // Autosave interval (if a draft endpoint existed, currently mock)
     const interval = setInterval(() => {
-      if (content.length > 10) handleSave();
-    }, 60000); // Every minute
+      // if (content.length > 10) handleSave();
+    }, 60000); 
     return () => clearInterval(interval);
-  }, [content]);
+  }, [id, navigate]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -40,11 +44,10 @@ const ActivityPage: React.FC = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await api.post('/activities/submit/', { activity: id, content });
-      alert('Activity submitted successfully!');
+      await api.post('/activities/daily/submit/', { activity: id, content });
       navigate('/dashboard');
-    } catch (err) {
-      alert('Error submitting activity. Please try again.');
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Error submitting activity. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -59,23 +62,23 @@ const ActivityPage: React.FC = () => {
         <ArrowLeft size={18} /> Back to Dashboard
       </button>
 
-      <div className="bg-white border border-zinc-200 rounded-xl p-8 shadow-sm">
-        <header className="mb-8">
-          <h1 className="text-2xl font-bold text-zinc-900 mb-3">{activity?.title}</h1>
-          <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-lg text-zinc-700 leading-relaxed text-sm">
+      <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
+        <header className="p-8 border-b border-zinc-100 bg-zinc-50/50">
+          <h1 className="text-2xl font-bold text-zinc-900 mb-4">{activity?.title || 'Loading Activity...'}</h1>
+          <div className="text-zinc-700 leading-relaxed text-sm whitespace-pre-wrap">
             {activity?.description}
           </div>
         </header>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="p-8 space-y-6">
           <div className="space-y-2">
             <label className="text-sm font-medium text-zinc-700 flex justify-between">
               Your Submission
               <span className="text-xs text-zinc-400">{content.length} characters</span>
             </label>
             <textarea 
-              className="w-full h-64 bg-white border border-zinc-200 rounded-lg p-5 focus:ring-2 focus:ring-zinc-200 outline-none transition-all resize-none text-zinc-800"
-              placeholder="Start typing your response here..."
+              className="w-full h-64 bg-white border border-zinc-200 rounded-xl p-5 focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 outline-none transition-all resize-none text-zinc-800 shadow-sm"
+              placeholder="Reflect and write your response here..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
               required

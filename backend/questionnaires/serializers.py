@@ -97,18 +97,27 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
         questionnaire = response_set.questionnaire
         responses_data = attrs.get('responses_data', [])
 
-        # Validate that all questions belong to this questionnaire
+        # Validate that all questions belong to this questionnaire and no duplicates exist
         allowed_question_ids = set(questionnaire.questions.values_list('id', flat=True))
+        seen_questions = set()
+
         for item in responses_data:
-            if item['question'].id not in allowed_question_ids:
+            q_id = item['question'].id
+            if q_id not in allowed_question_ids:
                 raise serializers.ValidationError(
-                    f"Question {item['question'].id} does not belong to questionnaire {questionnaire.id}"
+                    f"Question {q_id} does not belong to questionnaire {questionnaire.id}"
                 )
             
-            # Additional validation: selected_option must belong to the question
-            if item.get('selected_option') and item['selected_option'].question_id != item['question'].id:
+            if q_id in seen_questions:
                 raise serializers.ValidationError(
-                    f"Option {item['selected_option'].id} is not a valid choice for question {item['question'].id}"
+                    f"Duplicate answer submitted for question {q_id}. Only one answer per question is allowed."
+                )
+            seen_questions.add(q_id)
+            
+            # Additional validation: selected_option must belong to the question
+            if item.get('selected_option') and item['selected_option'].question_id != q_id:
+                raise serializers.ValidationError(
+                    f"Option {item['selected_option'].id} is not a valid choice for question {q_id}"
                 )
         
         return attrs

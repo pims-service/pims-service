@@ -13,11 +13,13 @@ const DashboardPage: React.FC = () => {
     const fetchData = async () => {
       try {
         const [actRes, phaseRes, subRes] = await Promise.all([
-          api.get('/activities/'),
-          api.get('/phases/current/'),
-          questionnairesApi.listResponseSets()
+          api.get('/activities/daily/current/').catch(() => ({ data: null })),
+          api.get('/phases/current/').catch(() => ({ data: null })),
+          questionnairesApi.listResponseSets().catch(() => ({ data: { results: [] } }))
         ]);
-        setActivities(Array.isArray(actRes.data) ? actRes.data : actRes.data?.results || []);
+
+        const actData = actRes.data;
+        setActivities(actData && !actData.detail ? [actData] : []);
         setPhase(phaseRes.data);
 
         const rawSubmissions = Array.isArray(subRes.data) ? subRes.data : subRes.data?.results || [];
@@ -53,9 +55,13 @@ const DashboardPage: React.FC = () => {
 
             <div className="space-y-3">
               {(activities || []).map((activity) => (
-                <div key={activity.id} className="bg-white border border-zinc-200 rounded-lg p-5 flex items-center justify-between hover:border-zinc-400 hover:shadow-md transition-all cursor-pointer group">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center text-white">
+                <Link
+                  to={`/activity/${activity.id}`}
+                  key={activity.id}
+                  className="bg-white border border-zinc-200 rounded-lg p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-zinc-400 hover:shadow-md transition-all cursor-pointer group block"
+                >
+                  <div className="flex items-center gap-4 flex-1 min-w-0 w-full">
+                    <div className="w-10 h-10 shrink-0 rounded-lg bg-zinc-800 flex items-center justify-center text-white">
                       <Brain size={20} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -63,10 +69,16 @@ const DashboardPage: React.FC = () => {
                       <p className="text-sm text-zinc-500 truncate">{activity.description}</p>
                     </div>
                   </div>
-                  <Link to={`/activity/${activity.id}`} className="px-5 py-2 bg-zinc-800 text-white text-xs font-semibold rounded-lg hover:bg-zinc-700 transition-colors flex items-center gap-1">
-                    Open <ArrowRight size={14} />
-                  </Link>
-                </div>
+                  {activity.submitted_today ? (
+                    <div className="px-5 py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 text-xs font-semibold rounded-lg flex items-center gap-2 shrink-0">
+                      <CheckCircle2 size={16} /> Completed
+                    </div>
+                  ) : (
+                    <div className="px-5 py-2 bg-zinc-800 text-white text-xs font-semibold rounded-lg group-hover:bg-zinc-700 transition-colors flex items-center gap-1 shrink-0">
+                      Open <ArrowRight size={14} />
+                    </div>
+                  )}
+                </Link>
               ))}
               {activities.length === 0 && !loading && (
                 <div className="text-center py-10 text-zinc-400 italic">No activities scheduled for today. Check back later!</div>
