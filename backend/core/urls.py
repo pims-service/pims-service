@@ -4,11 +4,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from users.views import RegisterView, CustomTokenObtainPairView
+from users.views import RegisterView, CustomTokenObtainPairView, SendOTPView
 
 urlpatterns = [
     path('api/django-admin/', admin.site.urls),
     path('api/register/', RegisterView.as_view(), name='register'),
+    path('api/auth/send-otp/', SendOTPView.as_view(), name='send_otp'),
     path('api/login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     

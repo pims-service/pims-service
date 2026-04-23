@@ -42,7 +42,11 @@ const DashboardPage: React.FC = () => {
         </div>
         <div className="bg-white border border-zinc-200 rounded-lg px-4 py-2 flex items-center gap-3 shadow-sm">
           <Calendar className="text-zinc-500" size={18} />
-          <span className="text-sm font-semibold text-zinc-700">Day 12 of 30</span>
+          <span className="text-sm font-semibold text-zinc-700">
+            {activities.length > 0 && activities[0].current_day 
+              ? `Day ${activities[0].current_day} of 7` 
+              : 'Welcome'}
+          </span>
         </div>
       </header>
 

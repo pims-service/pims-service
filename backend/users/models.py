@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.core.cache import cache
 from groups.models import Group
 from django.utils import timezone
 
@@ -48,6 +49,7 @@ class User(AbstractUser):
 
     # Onboarding state
     has_completed_baseline = models.BooleanField(default=False)
+    baseline_completed_at = models.DateTimeField(null=True, blank=True)
 
     # Original consents (migrated/supported for now)
     email_consent = models.BooleanField(default=False)
@@ -57,6 +59,33 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+    @property
+    def current_experiment_day(self):
+        """
+        Calculates the user's current day in the experiment (1-indexed).
+        Caches the result in Redis until next midnight to optimize speed.
+        """
+        if not self.baseline_completed_at:
+            return None
+
+        cache_key = f"user_{self.user_id}_exp_day"
+        cached_day = cache.get(cache_key)
+        if cached_day is not None:
+            return cached_day
+
+        now = timezone.now()
+        # Calculate days since baseline completion
+        delta = now.date() - self.baseline_completed_at.date()
+        exp_day = delta.days + 1
+
+        # Cache until midnight
+        tomorrow = (now + timezone.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        seconds_until_midnight = int((tomorrow - now).total_seconds())
+        if seconds_until_midnight > 0:
+            cache.set(cache_key, exp_day, timeout=seconds_until_midnight)
+
+        return exp_day
 
 class UserConsent(models.Model):
     """
@@ -70,3 +99,20 @@ class UserConsent(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - v{self.consent_version} ({self.agreed})"
+
+class EmailVerificationOTP(models.Model):
+    """
+    Temporary storage for email verification OTCs (One-Time Codes).
+    """
+    email = models.EmailField(db_index=True)
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_verified = models.BooleanField(default=False)
+
+    def is_valid(self):
+        from datetime import timedelta
+        # Valid for 10 minutes
+        return timezone.now() < self.created_at + timedelta(minutes=10)
+
+    def __str__(self):
+        return f"{self.email} - {self.otp} (Verified: {self.is_verified})"
