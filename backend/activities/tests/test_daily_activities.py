@@ -17,7 +17,8 @@ def test_setup(db, test_phase):
     group = Group.objects.create(name="Gratitude", description="Test")
     user = User.objects.create_user(
         username="daily_user", email="daily@test.com", password="pwd",
-        group=group, has_completed_baseline=True
+        group=group, has_completed_baseline=True,
+        baseline_completed_at=timezone.now()
     )
     activity = Activity.objects.create(
         title="Gratitude Reflection",
