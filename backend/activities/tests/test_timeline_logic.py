@@ -10,27 +10,27 @@ from groups.models import Group
 from users.models import User
 from activities.tasks import sync_user_experiment_state
 
-@freeze_time("2026-04-24 10:00:00")
 @pytest.fixture
 def timeline_setup(db, test_phase):
-    group = Group.objects.create(name="Timeline Group")
-    user = User.objects.create_user(
-        username="timeline_user", email="tl@test.com", password="pwd",
-        group=group, has_completed_baseline=True,
-        baseline_completed_at=timezone.now()
-    )
-    # Create activities for Day 1 and Day 2
-    act1 = Activity.objects.create(
-        title="Day 1 Task", description="Task 1",
-        assigned_phase=test_phase, group=group,
-        activity_type="task", day_number=1
-    )
-    act2 = Activity.objects.create(
-        title="Day 2 Task", description="Task 2",
-        assigned_phase=test_phase, group=group,
-        activity_type="task", day_number=2
-    )
-    return user, group, act1, act2
+    with freeze_time("2026-04-24 10:00:00"):
+        group = Group.objects.create(name="Timeline Group")
+        user = User.objects.create_user(
+            username="timeline_user", email="tl@test.com", password="pwd",
+            group=group, has_completed_baseline=True,
+            baseline_completed_at=timezone.now()
+        )
+        # Create activities for Day 1 and Day 2
+        act1 = Activity.objects.create(
+            title="Day 1 Task", description="Task 1",
+            assigned_phase=test_phase, group=group,
+            activity_type="task", day_number=1
+        )
+        act2 = Activity.objects.create(
+            title="Day 2 Task", description="Task 2",
+            assigned_phase=test_phase, group=group,
+            activity_type="task", day_number=2
+        )
+        return user, group, act1, act2
 
 @freeze_time("2026-04-24 10:00:00")
 @pytest.mark.django_db
