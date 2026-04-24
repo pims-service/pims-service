@@ -149,6 +149,7 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
             if instance.questionnaire.is_baseline:
                 assign_user_to_group(instance.user)
                 instance.user.has_completed_baseline = True
-                instance.user.save(update_fields=['has_completed_baseline'])
+                instance.user.baseline_completed_at = timezone.now()
+                instance.user.save(update_fields=['has_completed_baseline', 'baseline_completed_at'])
 
         return instance

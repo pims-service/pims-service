@@ -14,11 +14,14 @@ const RegisterPage: React.FC = () => {
     confirm_password: '',
     consent_agreed: false,
     consent_version: '1.0',
+    otp: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [phase, setPhase] = useState<'details' | 'otp'>('details');
+  const [otpMessage, setOtpMessage] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -26,11 +29,32 @@ const RegisterPage: React.FC = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
-    // Clear error when user types
     if (errors[name]) {
       const newErrors = { ...errors };
       delete newErrors[name];
       setErrors(newErrors);
+    }
+  };
+
+  const handleSendOtp = async () => {
+    if (!formData.email) {
+      setErrors({ email: ['Email is required to send OTP.'] });
+      return;
+    }
+    setLoading(true);
+    setErrors({});
+    try {
+      const res = await api.post('/auth/send-otp/', { email: formData.email });
+      setOtpMessage(res.data.message || 'OTP sent! Please check your email.');
+      setPhase('otp');
+    } catch (err: any) {
+      if (err.response?.data?.error) {
+        setErrors({ non_field_errors: [err.response.data.error] });
+      } else {
+        setErrors({ non_field_errors: ['Failed to send OTP. Please try again.'] });
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -225,20 +249,54 @@ const RegisterPage: React.FC = () => {
             </label>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-minimal w-full flex items-center justify-center gap-2 group py-2.5"
-          >
-            {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
-            ) : (
-              <>
-                Create Account
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </>
-            )}
-          </button>
+          {phase === 'otp' && (
+            <div className="space-y-1.5 pt-2 border-t border-zinc-100">
+              <label className="text-sm font-medium text-emerald-700 font-bold" htmlFor="otp">Verification Code</label>
+              <input
+                id="otp"
+                name="otp"
+                type="text"
+                required
+                placeholder="6-digit code from email"
+                className={`input-minimal ${errors.otp ? 'border-black border-2 ring-0' : 'border-emerald-200 bg-emerald-50'}`}
+                value={formData.otp}
+                onChange={handleChange}
+                maxLength={6}
+              />
+              <p className="text-xs text-emerald-600">{otpMessage}</p>
+            </div>
+          )}
+
+          {phase === 'details' ? (
+            <button
+              type="button"
+              disabled={loading}
+              onClick={handleSendOtp}
+              className="btn-minimal w-full flex items-center justify-center gap-2 group py-2.5"
+            >
+              {loading ? (
+                <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
+              ) : (
+                <>
+                  Verify Email <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </>
+              )}
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-minimal w-full flex items-center justify-center gap-2 group py-2.5 bg-black"
+            >
+              {loading ? (
+                <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
+              ) : (
+                <>
+                  Complete Registration <CheckCircle2 className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          )}
         </form>
 
         <p className="text-center text-sm text-zinc-500 pt-2 border-t border-zinc-100">

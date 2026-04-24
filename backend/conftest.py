@@ -9,8 +9,8 @@ from django.core.cache import cache
 def clear_cache():
     cache.clear()
 
-
 @pytest.fixture
+
 def api_client():
     return APIClient()
 

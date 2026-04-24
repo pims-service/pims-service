@@ -24,6 +24,7 @@ class Submission(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='submissions')
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='submissions')
     content = models.TextField()
+    experiment_day = models.PositiveIntegerField(null=True, blank=True)
     submission_date = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

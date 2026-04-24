@@ -28,3 +28,29 @@ class AdminUserUpdateView(generics.UpdateAPIView):
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+class SendOTPView(generics.CreateAPIView):
+    permission_classes = (permissions.AllowAny,)
+    
+    def post(self, request, *args, **kwargs):
+        email = request.data.get('email')
+        if not email:
+            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if user already exists
+        from .models import User, EmailVerificationOTP
+        if User.objects.filter(email=email).exists():
+            return Response({'error': 'User with this email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        import random
+        # Generate 6 digit OTP
+        otp = str(random.randint(100000, 999999))
+        
+        # Save to DB
+        EmailVerificationOTP.objects.create(email=email, otp=otp)
+        
+        # Send async
+        from .tasks import send_otp_email_task
+        send_otp_email_task.delay(email, otp)
+        
+        return Response({'message': 'OTP sent successfully to ' + email}, status=status.HTTP_200_OK)
