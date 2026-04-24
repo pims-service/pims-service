@@ -30,6 +30,7 @@ def test_setup(db, test_phase):
     )
     return user, group, activity
 
+@freeze_time("2026-04-19 10:00:00")
 @pytest.mark.django_db
 class TestDailyActivities:
     """
