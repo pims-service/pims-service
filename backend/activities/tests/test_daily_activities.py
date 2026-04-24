@@ -9,6 +9,7 @@ from activities.models import Activity, Submission
 from groups.models import Group
 from users.models import User
 
+@freeze_time("2026-04-19 10:00:00")
 @pytest.fixture
 def test_setup(db, test_phase):
     """
@@ -50,7 +51,6 @@ class TestDailyActivities:
         assert response.data['id'] == activity.id
         assert response.data['submitted_today'] is False
 
-    @freeze_time("2026-04-19 10:00:00")
     def test_midnight_reset_logic(self, api_client, test_setup):
         user, group, activity = test_setup
         api_client.force_authenticate(user=user)

@@ -10,6 +10,7 @@ from groups.models import Group
 from users.models import User
 from activities.tasks import sync_user_experiment_state
 
+@freeze_time("2026-04-24 10:00:00")
 @pytest.fixture
 def timeline_setup(db, test_phase):
     group = Group.objects.create(name="Timeline Group")
