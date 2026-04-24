@@ -80,6 +80,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'core.middleware.RequestIDMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -265,34 +266,51 @@ MAILJET_API_KEY = env('MAILJET_API_KEY', default='mock_api_key_for_local_dev')
 MAILJET_SECRET_KEY = env('MAILJET_SECRET_KEY', default='mock_secret_key_for_local_dev')
 MAILJET_SENDER_EMAIL = env('MAILJET_SENDER_EMAIL', default='no-reply@localhost.com')
 
+# Ensure logs directory exists
+os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)
+
+# Disable Django's default logging config process so we can manage it synchronously
+LOGGING_CONFIG = None
+
+import logging.config
 # Logging Configuration
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'filters': {
+        'context': {
+            '()': 'core.logging_utils.ContextFilter',
+        }
+    },
     'formatters': {
         'verbose': {
             'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
             'style': '{',
         },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
+        'json': {
+            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+            'fmt': '%(asctime)s %(levelname)s %(name)s %(message)s %(module)s %(process)d %(thread)d %(request_id)s %(user_id)s',
         },
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
+            'filters': ['context'],
         },
         'file': {
             'level': 'INFO',
-            'class': 'logging.FileHandler',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': os.path.join(BASE_DIR, 'logs/django.log'),
-            'formatter': 'verbose',
+            'when': 'midnight',
+            'backupCount': 30,  # Retain logs for 30 days automatically
+            'formatter': 'json',
+            'encoding': 'utf-8',
+            'filters': ['context'],
         },
     },
     'root': {
-        'handlers': ['console'],
+        'handlers': ['console', 'file'],
         'level': 'INFO',
     },
     'loggers': {
@@ -304,5 +322,12 @@ LOGGING = {
     },
 }
 
-# Ensure logs directory exists
-os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)
+# Apply configuration immediately
+logging.config.dictConfig(LOGGING)
+
+# Hook the QueueListener to move file I/O to a background thread
+try:
+    from core.logging_utils import setup_async_logging
+    setup_async_logging()
+except Exception as e:
+    print(f"Warning: Failed to setup async logging: {e}")
