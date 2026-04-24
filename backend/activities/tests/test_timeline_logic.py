@@ -31,6 +31,7 @@ def timeline_setup(db, test_phase):
     )
     return user, group, act1, act2
 
+@freeze_time("2026-04-24 10:00:00")
 @pytest.mark.django_db
 class TestTimelineAndCaching:
     
