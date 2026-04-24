@@ -17,16 +17,6 @@ class DailySubmissionSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         activity = data['activity']
         
-        # Enforce Once per Day logic (Midnight Reset)
-        today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        already_submitted = Submission.objects.filter(
-            user=user,
-            submission_date__gte=today_start
-        ).exists()
-        
-        if already_submitted:
-            raise serializers.ValidationError("You have already submitted an activity for today. Please wait until tomorrow.")
-
         # Ensure activity belongs to user's group or is global
         if activity.group and activity.group != user.group:
             raise serializers.ValidationError("This activity is not assigned to your group.")

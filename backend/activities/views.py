@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.utils import timezone
 from .models import Activity, Submission
 from .serializers import ActivitySerializer, DailySubmissionSerializer, SubmissionSerializer
@@ -70,7 +70,23 @@ class DailyActivityViewSet(viewsets.ModelViewSet):
             # Proceed with submission
             serializer = DailySubmissionSerializer(data=request.data, context={'request': request})
             if serializer.is_valid():
-                serializer.save(user=user)
+                current_day = user.current_experiment_day
+                try:
+                    serializer.save(user=user, experiment_day=current_day)
+                except IntegrityError:
+                    return Response(
+                        {"detail": "You have already submitted this specific activity."}, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
+                # Update Redis cache to reflect submission
+                from django.core.cache import cache
+                cache_key = f"user_{user.user_id}_submitted_{timezone.now().date()}"
+                now = timezone.now()
+                tomorrow = (now + timezone.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+                timeout = int((tomorrow - now).total_seconds())
+                if timeout > 0:
+                    cache.set(cache_key, True, timeout=timeout)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
