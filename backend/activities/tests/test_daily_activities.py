@@ -47,6 +47,13 @@ class TestDailyActivities:
             username=f"user_{uid}", email=f"user_{uid}@test.com", password="pwd",
             group=group, has_completed_baseline=True,
             baseline_completed_at=timezone.now()
+        )
+        activity = Activity.objects.create(
+            title=f"Activity_{uid}", group=group, activity_type="paragraph",
+            assigned_phase=test_phase, day_number=1
+        )
+        return user, group, activity
+
     def test_get_current_activity_serves_correct_group_prompt(self, api_client, test_setup):
         """Verify that a user only sees the activity assigned to their group."""
         user, group, activity = test_setup
@@ -89,11 +96,13 @@ class TestDailyActivities:
             title="Other", group=other_group, activity_type="paragraph",
             assigned_phase=activity.assigned_phase
         )
-        activity = Activity.objects.create(
-            title=f"Activity_{uid}", group=group, activity_type="paragraph",
-            assigned_phase=test_phase, day_number=1
-        )
-        return user, group, activity
+        
+        url = reverse('daily-activity-submit')
+        payload = {"activity": other_activity.id, "content": "Sneaky"}
+        
+        response = api_client.post(url, payload, format='json')
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "not assigned to your group" in response.data['non_field_errors'][0]
 
     def test_request_id_in_response(self, api_client, test_phase):
         user, _, _ = self.create_context(test_phase)
