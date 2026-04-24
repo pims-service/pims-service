@@ -1,8 +1,11 @@
 import pytest
 from django.urls import reverse
 from rest_framework import status
-from users.models import User, UserConsent, Role
+from users.models import User, UserConsent, Role, EmailVerificationOTP
 from groups.models import Group
+
+def create_valid_otp(email):
+    return EmailVerificationOTP.objects.create(email=email, otp="123456")
 
 @pytest.mark.django_db
 def test_user_profile(authenticated_client, test_user):
@@ -26,8 +29,10 @@ def test_signup_success(api_client, db):
         "confirm_password": "password123!",
         "whatsapp_number": "+1234567890",
         "consent_agreed": True,
-        "consent_version": "1.0"
+        "consent_version": "1.0",
+        "otp": "123456"
     }
+    create_valid_otp("new@example.com")
     response = api_client.post(url, payload)
 
     assert response.status_code == status.HTTP_201_CREATED
@@ -48,8 +53,10 @@ def test_signup_password_mismatch(api_client, db):
         "password": "password123!",
         "confirm_password": "differentpassword",
         "consent_agreed": True,
-        "consent_version": "1.0"
+        "consent_version": "1.0",
+        "otp": "123456"
     }
+    create_valid_otp("mismatch@example.com")
     response = api_client.post(url, payload)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "password" in response.data
@@ -63,8 +70,10 @@ def test_signup_consent_required(api_client, db):
         "password": "password123!",
         "confirm_password": "password123!",
         "consent_agreed": False,
-        "consent_version": "1.0"
+        "consent_version": "1.0",
+        "otp": "123456"
     }
+    create_valid_otp("noconsent@example.com")
     response = api_client.post(url, payload)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     # Depending on serializer logic, it might be in consent_agreed or non_field_errors
@@ -82,12 +91,16 @@ def test_signup_duplicate_email(api_client, db):
         "password": "password123!",
         "confirm_password": "password123!",
         "consent_agreed": True,
-        "consent_version": "1.0"
+        "consent_version": "1.0",
+        "otp": "123456"
     }
+    create_valid_otp("duplicate@example.com")
     response = api_client.post(url, payload)
     assert response.status_code == status.HTTP_201_CREATED
 
     payload["username"] = "seconduser"
+    payload["otp"] = "123456"
+    create_valid_otp("duplicate@example.com")
     response = api_client.post(url, payload)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "email" in response.data
@@ -117,7 +130,9 @@ def test_signup_group_distribution(api_client, db):
             "full_name": f"User {i}",
             "consent_agreed": True,
             "consent_version": "1.0",
+            "otp": "123456"
         }
+        create_valid_otp(f"user{i}@example.com")
         response = api_client.post(url, payload)
         assert response.status_code == status.HTTP_201_CREATED
 

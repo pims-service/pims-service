@@ -3,6 +3,11 @@ from rest_framework.test import APIClient
 from users.models import User
 from groups.models import Group
 from phases.models import Phase
+from django.core.cache import cache
+
+@pytest.fixture(autouse=True)
+def clear_cache():
+    cache.clear()
 
 @pytest.fixture
 def api_client():

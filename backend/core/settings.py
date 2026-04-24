@@ -260,6 +260,11 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
 }
 
+# Mailjet API Integration
+MAILJET_API_KEY = env('MAILJET_API_KEY', default='mock_api_key_for_local_dev')
+MAILJET_SECRET_KEY = env('MAILJET_SECRET_KEY', default='mock_secret_key_for_local_dev')
+MAILJET_SENDER_EMAIL = env('MAILJET_SENDER_EMAIL', default='no-reply@localhost.com')
+
 # Logging Configuration
 LOGGING = {
     'version': 1,

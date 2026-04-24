@@ -31,6 +31,7 @@ class SignupSerializer(serializers.ModelSerializer):
     confirm_password = serializers.CharField(write_only=True)
     consent_agreed = serializers.BooleanField(write_only=True, required=True)
     consent_version = serializers.CharField(write_only=True, required=True)
+    otp = serializers.CharField(write_only=True, required=True, max_length=6)
 
     group = serializers.PrimaryKeyRelatedField(read_only=True)
     group_name = serializers.ReadOnlyField(source='group.name')
@@ -40,7 +41,7 @@ class SignupSerializer(serializers.ModelSerializer):
         fields = (
             'username', 'full_name', 'email', 'password', 
             'confirm_password', 'whatsapp_number', 
-            'consent_agreed', 'consent_version',
+            'consent_agreed', 'consent_version', 'otp',
             'group', 'group_name',
         )
 
@@ -55,6 +56,20 @@ class SignupSerializer(serializers.ModelSerializer):
         
         if not attrs.get('consent_agreed'):
             raise serializers.ValidationError({"consent_agreed": "You must agree to the terms and conditions."})
+        
+        # Validate OTP
+        email = attrs.get('email')
+        otp = attrs.get('otp')
+        from .models import EmailVerificationOTP
+        # Get the most recent OTP for this email
+        otp_record = EmailVerificationOTP.objects.filter(email=email).order_by('-created_at').first()
+        
+        if not otp_record:
+            raise serializers.ValidationError({"otp": "No OTP requested for this email."})
+        if not otp_record.is_valid():
+            raise serializers.ValidationError({"otp": "The OTP has expired. Please request a new one."})
+        if otp_record.otp != otp:
+            raise serializers.ValidationError({"otp": "Invalid OTP."})
             
         return attrs
 
@@ -63,6 +78,7 @@ class SignupSerializer(serializers.ModelSerializer):
         validated_data.pop('confirm_password')
         consent_agreed = validated_data.pop('consent_agreed')
         consent_version = validated_data.pop('consent_version')
+        validated_data.pop('otp')
         
         # Ensure default Role (Participant) exists
         role, _ = Role.objects.get_or_create(

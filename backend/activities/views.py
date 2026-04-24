@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db import transaction
 from django.utils import timezone
+from django.core.cache import cache
 from .models import Activity, Submission
 from .serializers import ActivitySerializer, DailySubmissionSerializer, SubmissionSerializer
 from users.permissions import BaselineCompleted
@@ -25,24 +26,45 @@ class DailyActivityViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def current(self, request):
         """
-        Returns the current activity for the user based on their group.
+        Returns the current activity for the user based on their group and individual timeline.
+        Uses Redis to cache the current day and submission status for maximum performance.
         """
         user = request.user
-        activity = Activity.objects.filter(group=user.group).first()
+        current_day = user.current_experiment_day
+
+        if not current_day:
+            return Response({"detail": "Baseline not completed."}, status=status.HTTP_404_NOT_FOUND)
+        
+        if current_day > 7:
+            return Response({"detail": "Trial period completed."}, status=status.HTTP_200_OK)
+
+        activity = Activity.objects.filter(group=user.group, day_number=current_day).first()
         if not activity:
-            return Response({"detail": "No activity found for your group."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": f"No activity found for your group on Day {current_day}."}, status=status.HTTP_404_NOT_FOUND)
         
         serializer = self.get_serializer(activity)
         
-        # Check if already submitted today
-        today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        submitted_today = Submission.objects.filter(
-            user=user,
-            submission_date__gte=today_start
-        ).exists()
+        # Check if already submitted today using Redis caching
+        cache_key = f"user_{user.user_id}_submitted_{timezone.now().date()}"
+        submitted_today = cache.get(cache_key)
+        
+        if submitted_today is None:
+            # Fallback to DB and populate cache
+            today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            submitted_today = Submission.objects.filter(
+                user=user,
+                submission_date__gte=today_start
+            ).exists()
+            # Cache until end of day
+            now = timezone.now()
+            tomorrow = (now + timezone.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+            timeout = int((tomorrow - now).total_seconds())
+            if timeout > 0:
+                cache.set(cache_key, submitted_today, timeout=timeout)
         
         data = serializer.data
         data['submitted_today'] = submitted_today
+        data['current_day'] = current_day
         return Response(data)
 
     @action(detail=False, methods=['post'])
@@ -68,9 +90,19 @@ class DailyActivityViewSet(viewsets.ModelViewSet):
                 )
             
             # Proceed with submission
+            current_day = user.current_experiment_day
             serializer = DailySubmissionSerializer(data=request.data, context={'request': request})
             if serializer.is_valid():
-                serializer.save(user=user)
+                serializer.save(user=user, experiment_day=current_day)
+                
+                # Update Redis cache to reflect submission
+                cache_key = f"user_{user.user_id}_submitted_{timezone.now().date()}"
+                now = timezone.now()
+                tomorrow = (now + timezone.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+                timeout = int((tomorrow - now).total_seconds())
+                if timeout > 0:
+                    cache.set(cache_key, True, timeout=timeout)
+
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

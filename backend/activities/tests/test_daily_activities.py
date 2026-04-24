@@ -14,21 +14,24 @@ def test_setup(db, test_phase):
     """
     Ensures user and activity are in the SAME group for reliable testing.
     """
-    group = Group.objects.create(name="Gratitude", description="Test")
-    user = User.objects.create_user(
-        username="daily_user", email="daily@test.com", password="pwd",
-        group=group, has_completed_baseline=True
-    )
-    activity = Activity.objects.create(
-        title="Gratitude Reflection",
-        description="Write 3 things...",
-        assigned_phase=test_phase,
-        group=group,
-        activity_type="paragraph",
-        day_number=1
-    )
-    return user, group, activity
+    with freeze_time("2026-04-19 10:00:00"):
+        group = Group.objects.create(name="Gratitude", description="Test")
+        user = User.objects.create_user(
+            username="daily_user", email="daily@test.com", password="pwd",
+            group=group, has_completed_baseline=True,
+            baseline_completed_at=timezone.now()
+        )
+        activity = Activity.objects.create(
+            title="Gratitude Reflection",
+            description="Write 3 things...",
+            assigned_phase=test_phase,
+            group=group,
+            activity_type="paragraph",
+            day_number=1
+        )
+        return user, group, activity
 
+@freeze_time("2026-04-19 10:00:00")
 @pytest.mark.django_db
 class TestDailyActivities:
     """
@@ -48,7 +51,6 @@ class TestDailyActivities:
         assert response.data['id'] == activity.id
         assert response.data['submitted_today'] is False
 
-    @freeze_time("2026-04-19 10:00:00")
     def test_midnight_reset_logic(self, api_client, test_setup):
         user, group, activity = test_setup
         api_client.force_authenticate(user=user)
