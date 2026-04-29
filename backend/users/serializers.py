@@ -20,8 +20,9 @@ class UserSerializer(serializers.ModelSerializer):
             'whatsapp_number', 'role', 'role_name', 
             'group', 'group_name', 'traits', 'created_at',
             'has_completed_baseline',
+            'has_completed_posttest', 'is_posttest_due',
         )
-        read_only_fields = ('created_at', 'has_completed_baseline',)
+        read_only_fields = ('created_at', 'has_completed_baseline', 'has_completed_posttest', 'is_posttest_due',)
 
 class SignupSerializer(serializers.ModelSerializer):
     """
@@ -31,7 +32,7 @@ class SignupSerializer(serializers.ModelSerializer):
     confirm_password = serializers.CharField(write_only=True)
     consent_agreed = serializers.BooleanField(write_only=True, required=True)
     consent_version = serializers.CharField(write_only=True, required=True)
-    otp = serializers.CharField(write_only=True, required=True, max_length=6)
+    otp = serializers.CharField(write_only=True, required=False, allow_blank=True, max_length=6)
 
     group = serializers.PrimaryKeyRelatedField(read_only=True)
     group_name = serializers.ReadOnlyField(source='group.name')
@@ -50,6 +51,11 @@ class SignupSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("A user with this email already exists.")
         return value
 
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("This username is already taken.")
+        return value
+
     def validate(self, attrs):
         if attrs['password'] != attrs['confirm_password']:
             raise serializers.ValidationError({"password": "Password fields didn't match."})
@@ -57,19 +63,26 @@ class SignupSerializer(serializers.ModelSerializer):
         if not attrs.get('consent_agreed'):
             raise serializers.ValidationError({"consent_agreed": "You must agree to the terms and conditions."})
         
-        # Validate OTP
-        email = attrs.get('email')
-        otp = attrs.get('otp')
-        from .models import EmailVerificationOTP
-        # Get the most recent OTP for this email
-        otp_record = EmailVerificationOTP.objects.filter(email=email).order_by('-created_at').first()
-        
-        if not otp_record:
-            raise serializers.ValidationError({"otp": "No OTP requested for this email."})
-        if not otp_record.is_valid():
-            raise serializers.ValidationError({"otp": "The OTP has expired. Please request a new one."})
-        if otp_record.otp != otp:
-            raise serializers.ValidationError({"otp": "Invalid OTP."})
+        # Django built-in password validation
+        from django.contrib.auth.password_validation import validate_password
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        try:
+            # We don't have the user instance yet, but we can pass the data
+            validate_password(attrs['password'], user=User(username=attrs.get('username')))
+        except DjangoValidationError as e:
+            raise serializers.ValidationError({"password": list(e.messages)})
+
+        # Bypassing OTP validation as requested by user
+        # email = attrs.get('email')
+        # otp = attrs.get('otp')
+        # from .models import EmailVerificationOTP
+        # otp_record = EmailVerificationOTP.objects.filter(email=email).order_by('-created_at').first()
+        # if not otp_record:
+        #     raise serializers.ValidationError({"otp": "No OTP requested for this email."})
+        # if not otp_record.is_valid():
+        #     raise serializers.ValidationError({"otp": "The OTP has expired. Please request a new one."})
+        # if otp_record.otp != otp:
+        #     raise serializers.ValidationError({"otp": "Invalid OTP."})
             
         return attrs
 
@@ -78,7 +91,7 @@ class SignupSerializer(serializers.ModelSerializer):
         validated_data.pop('confirm_password')
         consent_agreed = validated_data.pop('consent_agreed')
         consent_version = validated_data.pop('consent_version')
-        validated_data.pop('otp')
+        validated_data.pop('otp', None)
         
         # Ensure default Role (Participant) exists
         role, _ = Role.objects.get_or_create(
@@ -117,7 +130,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'email': self.user.email,
             'full_name': self.user.full_name,
             'role': self.user.role.name if self.user.role else 'Participant',
-            'has_completed_baseline': self.user.has_completed_baseline
+            'has_completed_baseline': self.user.has_completed_baseline,
+            'has_completed_posttest': self.user.has_completed_posttest,
+            'is_posttest_due': self.user.is_posttest_due,
         }
         
         return data

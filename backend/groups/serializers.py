@@ -7,7 +7,7 @@ class ParticipantSerializer(serializers.ModelSerializer):
     class Meta:
         from users.models import User
         model = User
-        fields = ['user_id', 'full_name', 'username', 'submission_count', 'has_completed_baseline']
+        fields = ['user_id', 'full_name', 'username', 'submission_count', 'has_completed_baseline', 'current_experiment_day']
         extra_kwargs = {
             'full_name': {'allow_blank': True, 'required': False},
         }

@@ -81,11 +81,18 @@ export const questionnairesApi = {
   getAnalyticsSummary: () => api.get('/questionnaires/analytics/all/'),
   getAdminBaselineResponses: (page: number = 1) => api.get(`/questionnaires/baselines/?page=${page}`),
   getAdminBaselineDetail: (id: string) => api.get(`/questionnaires/baselines/${id}/`),
+  getAdminPosttestResponses: (page: number = 1) => api.get(`/questionnaires/posttests/?page=${page}`),
+  getAdminPosttestDetail: (id: string) => api.get(`/questionnaires/posttests/${id}/`),
   getDashboardAnalytics: () => api.get('/admin/tools/dashboard-analytics/'),
   triggerAdminBaselineExport: (groupName?: string) => api.post('/admin/tools/export/baselines/csv/', { 
     group: groupName || 'All'
   }),
   getAdminBaselineExportStatus: (taskId: string) => api.get(`/admin/tools/export/status/${taskId}/`),
+};
+
+export const activitiesApi = {
+  getCurrentActivity: () => api.get('/activities/daily/current/'),
+  submitActivity: (data: { content: string }) => api.post('/activities/daily/submit/', data),
 };
 
 // Aliases for compatibility with upstream UI components

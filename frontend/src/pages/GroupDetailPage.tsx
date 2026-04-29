@@ -19,6 +19,7 @@ interface Participant {
   username: string;
   submission_count: number;
   has_completed_baseline: boolean;
+  current_experiment_day: number | null;
 }
 
 interface Group {
@@ -188,6 +189,7 @@ const GroupDetailPage: React.FC = () => {
                 <thead>
                   <tr className="bg-zinc-50/30 border-b border-zinc-100">
                     <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Participant</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Day Number</th>
                     <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Exp. Delta</th>
                     <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider text-right">Action</th>
@@ -205,6 +207,14 @@ const GroupDetailPage: React.FC = () => {
                             <div className="font-semibold text-zinc-900 leading-tight">{p.full_name || 'Anonymous Researcher'}</div>
                             <div className="text-xs text-zinc-400">@{p.username}</div>
                           </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                           <div className="w-8 h-8 rounded-full bg-zinc-800 text-white flex items-center justify-center text-[10px] font-bold">
+                              {p.current_experiment_day || 0}
+                           </div>
+                           <span className="text-xs font-medium text-zinc-500 uppercase">Day</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">

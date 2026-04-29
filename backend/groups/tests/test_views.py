@@ -74,6 +74,7 @@ def test_group_detail_contains_participants(authenticated_client, test_group, te
     participant = response.data['participants'][0]
     assert participant['user_id'] == test_user.user_id
     assert participant['full_name'] == test_user.full_name
+    assert 'current_experiment_day' in participant
 
 
 @pytest.mark.django_db

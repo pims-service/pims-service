@@ -267,36 +267,19 @@ const RegisterPage: React.FC = () => {
             </div>
           )}
 
-          {phase === 'details' ? (
-            <button
-              type="button"
-              disabled={loading}
-              onClick={handleSendOtp}
-              className="btn-minimal w-full flex items-center justify-center gap-2 group py-2.5"
-            >
-              {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
-              ) : (
-                <>
-                  Verify Email <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                </>
-              )}
-            </button>
-          ) : (
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-minimal w-full flex items-center justify-center gap-2 group py-2.5 bg-black"
-            >
-              {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
-              ) : (
-                <>
-                  Complete Registration <CheckCircle2 className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          )}
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-minimal w-full flex items-center justify-center gap-2 group py-2.5 bg-black"
+          >
+            {loading ? (
+              <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
+            ) : (
+              <>
+                Complete Registration <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </>
+            )}
+          </button>
         </form>
 
         <p className="text-center text-sm text-zinc-500 pt-2 border-t border-zinc-100">

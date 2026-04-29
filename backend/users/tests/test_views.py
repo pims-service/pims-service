@@ -45,6 +45,26 @@ def test_signup_success(api_client, db):
     assert response.data.get('group_name') is None
 
 @pytest.mark.django_db
+def test_signup_without_otp(api_client, db):
+    Role.objects.get_or_create(name='Participant')
+    url = reverse('register')
+    payload = {
+        "username": "nootpuser",
+        "full_name": "No OTP User",
+        "email": "nootp@example.com",
+        "password": "password123!",
+        "confirm_password": "password123!",
+        "whatsapp_number": "+1234567890",
+        "consent_agreed": True,
+        "consent_version": "1.0",
+        "otp": "",
+    }
+    response = api_client.post(url, payload)
+
+    assert response.status_code == status.HTTP_201_CREATED
+    assert User.objects.filter(username="nootpuser").exists()
+
+@pytest.mark.django_db
 def test_signup_password_mismatch(api_client, db):
     url = reverse('register')
     payload = {
@@ -105,6 +125,31 @@ def test_signup_duplicate_email(api_client, db):
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "email" in response.data
 
+@pytest.mark.django_db
+def test_signup_duplicate_username(api_client, db):
+    Role.objects.get_or_create(name='Participant')
+    url = reverse('register')
+    payload = {
+        "username": "taken_username",
+        "full_name": "First User",
+        "email": "user1@example.com",
+        "password": "password123!",
+        "confirm_password": "password123!",
+        "consent_agreed": True,
+        "consent_version": "1.0",
+        "otp": ""
+    }
+    # First signup
+    api_client.post(url, payload)
+    
+    # Second signup with same username but different email
+    payload["email"] = "user2@example.com"
+    response = api_client.post(url, payload)
+    
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "username" in response.data
+    error_msg = str(response.data["username"][0]).lower()
+    assert "taken" in error_msg or "exists" in error_msg
 
 @pytest.mark.django_db
 def test_admin_user_list(admin_client, test_user):
@@ -139,3 +184,27 @@ def test_signup_group_distribution(api_client, db):
     for group in groups:
         # NEW: Verify deferred assignment (Groups should remain empty after signup)
         assert group.participants.count() == 0
+
+@pytest.mark.django_db
+def test_signup_weak_password(api_client, db):
+    Role.objects.get_or_create(name='Participant')
+    url = reverse('register')
+    payload = {
+        "username": "weakuser",
+        "email": "weak@example.com",
+        "password": "123", # Too short
+        "confirm_password": "123",
+        "consent_agreed": True,
+        "consent_version": "1.0",
+        "otp": ""
+    }
+    response = api_client.post(url, payload)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "password" in response.data
+    
+    # Test common password
+    payload["password"] = "password"
+    payload["confirm_password"] = "password"
+    response = api_client.post(url, payload)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "password" in response.data
