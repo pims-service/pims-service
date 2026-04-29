@@ -40,21 +40,41 @@ class ResponseSetListCreateView(generics.ListCreateAPIView):
         # Users see their own response sets, ordered by most recent completion
         return ResponseSet.objects.filter(user=self.request.user).select_related('questionnaire').order_by('-completed_at')
 
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
         from rest_framework.exceptions import ValidationError
+        from .serializers import ResponseSetSerializer
         
-        # Check if the questionnaire is a baseline and user already completed it
-        questionnaire = serializer.validated_data.get('questionnaire')
+        questionnaire_id = request.data.get('questionnaire')
         user = self.request.user
         
-        if questionnaire and questionnaire.is_baseline:
-            if user.has_completed_baseline:
-                raise ValidationError({"detail": "You have already completed the baseline assessment."})
-            # Also prevent creating multiple in-progress DRAFT baseline sets
-            if ResponseSet.objects.filter(user=user, questionnaire=questionnaire).exists():
-                raise ValidationError({"detail": "You already have an active response set for this baseline."})
+        # Check for existing DRAFT response set for this user/questionnaire
+        existing_set = ResponseSet.objects.filter(
+            user=user, 
+            questionnaire_id=questionnaire_id,
+            status='DRAFT'
+        ).first()
         
-        serializer.save(user=user)
+        if existing_set:
+            serializer = self.get_serializer(existing_set)
+            return DRFResponse(serializer.data, status=status.HTTP_200_OK)
+            
+        # If it's a baseline and they already completed it (not just draft), block it
+        try:
+            q_obj = Questionnaire.objects.get(id=questionnaire_id)
+            if q_obj.is_baseline and user.has_completed_baseline:
+                raise ValidationError({"detail": "You have already completed the baseline assessment."})
+            if q_obj.is_posttest:
+                if not user.is_posttest_due:
+                    raise ValidationError({"detail": "Post-test is not available yet. Complete 7 days first."})
+                if user.has_completed_posttest:
+                    raise ValidationError({"detail": "You have already completed the post-test."})
+        except Questionnaire.DoesNotExist:
+            pass
+
+        return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 class ResponseSetDetailView(generics.RetrieveAPIView):
     """
@@ -116,6 +136,36 @@ class AdminBaselineResponseDetailView(generics.RetrieveAPIView):
 
     def get_queryset(self):
         return ResponseSet.objects.filter(
+            status='COMPLETED'
+        ).select_related('user', 'questionnaire').prefetch_related(
+            'responses__question',
+            'responses__selected_option'
+        )
+
+class AdminPosttestResponseListView(generics.ListAPIView):
+    """
+    Researcher-only view to list all completed Day 7 post-test assessments.
+    """
+    serializer_class = AdminResponseSetSerializer
+    permission_classes = (permissions.IsAdminUser,)
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        return ResponseSet.objects.filter(
+            questionnaire__is_posttest=True,
+            status='COMPLETED'
+        ).select_related('user', 'questionnaire').order_by('-completed_at')
+
+class AdminPosttestResponseDetailView(generics.RetrieveAPIView):
+    """
+    Researcher-only view to inspect a specific post-test submission.
+    """
+    serializer_class = AdminResponseSetSerializer
+    permission_classes = (permissions.IsAdminUser,)
+
+    def get_queryset(self):
+        return ResponseSet.objects.filter(
+            questionnaire__is_posttest=True,
             status='COMPLETED'
         ).select_related('user', 'questionnaire').prefetch_related(
             'responses__question',

@@ -51,6 +51,10 @@ class User(AbstractUser):
     has_completed_baseline = models.BooleanField(default=False)
     baseline_completed_at = models.DateTimeField(null=True, blank=True)
 
+    # Post-test state (Day 7 reassessment)
+    has_completed_posttest = models.BooleanField(default=False)
+    posttest_completed_at = models.DateTimeField(null=True, blank=True)
+
     # Original consents (migrated/supported for now)
     email_consent = models.BooleanField(default=False)
     whatsapp_consent = models.BooleanField(default=False)
@@ -86,6 +90,13 @@ class User(AbstractUser):
             cache.set(cache_key, exp_day, timeout=seconds_until_midnight)
 
         return exp_day
+
+    @property
+    def is_posttest_due(self):
+        """Returns True if the user has reached Day 7+ and hasn't completed the post-test."""
+        if not self.has_completed_baseline or self.has_completed_posttest:
+            return False
+        return self.current_experiment_day is not None and self.current_experiment_day >= 7
 
 class UserConsent(models.Model):
     """

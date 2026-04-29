@@ -11,6 +11,7 @@ class Questionnaire(models.Model):
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     is_baseline = models.BooleanField(default=False, help_text="Defines if this questionnaire is the initial screening for group assignment")
+    is_posttest = models.BooleanField(default=False, help_text="Defines if this questionnaire is the Day 7 post-test reassessment")
     max_completion_time = models.DurationField(null=True, blank=True, help_text="Maximum allowed time to complete the questionnaire")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

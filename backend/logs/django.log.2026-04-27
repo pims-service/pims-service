@@ -1,0 +1,1 @@
+{"asctime": "2026-04-27 18:19:07,758", "levelname": "WARNING", "name": "django.request", "message": "Not Found: /api/activities/daily/current/", "module": "log", "process": 16, "thread": 140693224395520, "request_id": null, "user_id": null, "status_code": 404, "request": "<WSGIRequest: GET '/api/activities/daily/current/'>"}

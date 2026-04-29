@@ -1,26 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api, { questionnairesApi } from '../services/api';
-import { Calendar, CheckCircle2, Clock, ArrowRight, Bell, FileText } from 'lucide-react';
+import { Calendar, CheckCircle2, Clock, ArrowRight, Bell, FileText, ClipboardCheck } from 'lucide-react';
 
 const DashboardPage: React.FC = () => {
   const [activities, setActivities] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [phase, setPhase] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [posttestQuestionnaire, setPosttestQuestionnaire] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [actRes, phaseRes, subRes] = await Promise.all([
+        const [actRes, phaseRes, subRes, profileRes] = await Promise.all([
           api.get('/activities/daily/current/').catch(() => ({ data: null })),
           api.get('/phases/current/').catch(() => ({ data: null })),
-          questionnairesApi.listResponseSets().catch(() => ({ data: { results: [] } }))
+          questionnairesApi.listResponseSets().catch(() => ({ data: { results: [] } })),
+          api.get('/users/me/').catch(() => ({ data: null }))
         ]);
 
         const actData = actRes.data;
         setActivities(actData && !actData.detail ? [actData] : []);
         setPhase(phaseRes.data);
+        setUserProfile(profileRes.data);
+
+        // If user is due for post-test, find the post-test questionnaire
+        if (profileRes.data?.is_posttest_due) {
+          try {
+            const questionnaires = await questionnairesApi.list();
+            const qList = Array.isArray(questionnaires.data) ? questionnaires.data : questionnaires.data?.results || [];
+            const posttest = qList.find((q: any) => q.is_posttest);
+            if (posttest) setPosttestQuestionnaire(posttest);
+          } catch (e) {
+            console.error('Failed to fetch posttest questionnaire', e);
+          }
+        }
 
         const rawSubmissions = Array.isArray(subRes.data) ? subRes.data : subRes.data?.results || [];
         setSubmissions(rawSubmissions.filter((s: any) => s.status === 'COMPLETED').slice(0, 5));
@@ -52,6 +68,29 @@ const DashboardPage: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
+          {/* Post-test Banner */}
+          {userProfile?.is_posttest_due && posttestQuestionnaire && (
+            <section className="border-2 border-emerald-200 rounded-xl p-6 md:p-8 bg-gradient-to-r from-emerald-50 to-white shadow-sm">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center text-white shrink-0">
+                    <ClipboardCheck size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-zinc-900">Day 7 Post-Test Available</h3>
+                    <p className="text-sm text-zinc-500 mt-0.5">Congratulations on completing 7 days! Please take the final assessment to wrap up your experiment.</p>
+                  </div>
+                </div>
+                <Link
+                  to={`/questionnaire/${posttestQuestionnaire.id}`}
+                  className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold text-sm hover:bg-emerald-700 transition-colors flex items-center gap-2 shrink-0"
+                >
+                  Start Post-Test <ArrowRight size={16} />
+                </Link>
+              </div>
+            </section>
+          )}
+
           <section className="border border-zinc-200 rounded-xl p-6 md:p-8 bg-white shadow-sm">
             <h2 className="text-xl font-bold text-zinc-900 mb-6 flex items-center gap-2">
               <Clock className="text-zinc-500" size={20} /> Today's Focus

@@ -70,3 +70,30 @@ class QuestionnaireAnalyticsSummaryView(views.APIView):
             "total_completions": completed_attempts,
             "completion_rate_percentage": round(completion_rate, 2),
         })
+
+class GlobalQuestionnaireAnalyticsView(views.APIView):
+    """
+    Provides a JSON summary of completion and basic stats for ALL questionnaires.
+    Used by the Experimental Reports dashboard.
+    """
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        questionnaires = Questionnaire.objects.filter(is_active=True)
+        results = []
+
+        for q in questionnaires:
+            attempts = q.attempts.all()
+            total = attempts.count()
+            completed = attempts.filter(status='COMPLETED').count()
+            rate = (completed / total * 100) if total > 0 else 0
+
+            results.append({
+                "questionnaire_id": str(q.id),
+                "title": q.title,
+                "total_starts": total,
+                "total_completions": completed,
+                "completion_rate": round(rate, 2),
+            })
+
+        return response.Response(results)

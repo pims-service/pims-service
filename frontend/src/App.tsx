@@ -14,6 +14,7 @@ const AdminReportsPage = lazy(() => import('./pages/AdminReportsPage'));
 const GroupsManagementPage = lazy(() => import('./pages/GroupsManagementPage'));
 const GroupDetailPage = lazy(() => import('./pages/GroupDetailPage'));
 const AdminBaselineResultsPage = lazy(() => import('./pages/AdminBaselineResultsPage'));
+const AdminPosttestResultsPage = lazy(() => import('./pages/AdminPosttestResultsPage'));
 const AdminLayout = lazy(() => import('./components/Admin/AdminLayout'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const ResultsPage = lazy(() => import('./pages/ResultsPage'));
@@ -59,11 +60,12 @@ const App: React.FC = () => {
               
               {/* Admin Hub - Nested Routes with Sidebar Layout */}
               <Route element={<AuthOnboardingGuard requireAdmin={true}><AdminLayout /></AuthOnboardingGuard>}>
-                 <Route path="/admin" element={<AdminDashboardPage />} />
-                 <Route path="/admin/groups" element={<GroupsManagementPage />} />
-                 <Route path="/admin/groups/:id" element={<GroupDetailPage />} />
+                  <Route path="/admin" element={<AdminDashboardPage />} />
+                  <Route path="/admin/groups" element={<GroupsManagementPage />} />
+                  <Route path="/admin/groups/:id" element={<GroupDetailPage />} />
                  <Route path="/admin/reports" element={<AdminReportsPage />} />
                  <Route path="/admin/baseline-data" element={<AdminBaselineResultsPage />} />
+                 <Route path="/admin/posttest-data" element={<AdminPosttestResultsPage />} />
               </Route>
 
               {/* Fallback */}

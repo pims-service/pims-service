@@ -1,21 +1,23 @@
-from django.db.models import Count
+from django.db.models import Count, F
 
 from .models import Group
 
 
 def assign_group():
     """
-    Finds the group with the fewest participants.
+    Finds the active group with the fewest participants that hasn't reached capacity.
     """
     group = (
         Group.objects
+        .filter(is_active=True)
         .annotate(current_count=Count('participants'))
+        .filter(current_count__lt=F('capacity'))
         .order_by('current_count', 'pk')
         .first()
     )
 
     if group is None:
-        raise Group.DoesNotExist("No groups available for assignment.")
+        raise Group.DoesNotExist("No groups available for assignment (all inactive or at capacity).")
 
     return group
 

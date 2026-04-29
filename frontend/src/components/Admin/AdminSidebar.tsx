@@ -4,7 +4,8 @@ import {
   Users, 
   LayoutDashboard, 
   BarChart2,
-  Database
+  Database,
+  ClipboardCheck
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -15,6 +16,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate }) => {
   const navItems = [
     { label: 'Overview', path: '/admin', icon: <LayoutDashboard size={18} /> },
     { label: 'Baseline Raw Data', path: '/admin/baseline-data', icon: <Database size={18} /> },
+    { label: 'Post-Test Data', path: '/admin/posttest-data', icon: <ClipboardCheck size={18} /> },
     { label: 'Experimental Reports', path: '/admin/reports', icon: <BarChart2 size={18} /> },
     { label: 'Groups Management', path: '/admin/groups', icon: <Users size={18} /> },
   ];

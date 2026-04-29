@@ -18,7 +18,7 @@ class QuestionnaireSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Questionnaire
-        fields = ['id', 'title', 'description', 'is_active', 'is_baseline', 'max_completion_time', 'questions']
+        fields = ['id', 'title', 'description', 'is_active', 'is_baseline', 'is_posttest', 'max_completion_time', 'questions']
 
 class ResponseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -151,5 +151,11 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
                 instance.user.has_completed_baseline = True
                 instance.user.baseline_completed_at = timezone.now()
                 instance.user.save(update_fields=['has_completed_baseline', 'baseline_completed_at'])
+
+            # 5. Mark post-test completed if applicable
+            if instance.questionnaire.is_posttest:
+                instance.user.has_completed_posttest = True
+                instance.user.posttest_completed_at = timezone.now()
+                instance.user.save(update_fields=['has_completed_posttest', 'posttest_completed_at'])
 
         return instance
