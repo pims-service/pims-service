@@ -23,7 +23,7 @@ def generate_baseline_export_csv(task_id):
         questions = list(Question.objects.filter(questionnaire__is_baseline=True).order_by('order'))
 
         # Header for Wide Format
-        static_headers = ['ParticipantID', 'Username', 'Group', 'StartedAt', 'CompletedAt']
+        static_headers = ['ParticipantID', 'Username', 'Group', 'DateOfBirth', 'StartedAt', 'CompletedAt']
         dynamic_headers = [f"Question {i + 1}" for i in range(len(questions))]
         writer.writerow(static_headers + dynamic_headers)
 
@@ -51,6 +51,7 @@ def generate_baseline_export_csv(task_id):
                 rs.user.user_id,
                 rs.user.username,
                 rs.user.group.name if rs.user.group else 'None',
+                rs.user.date_of_birth.strftime('%Y-%m-%d') if rs.user.date_of_birth else '',
                 rs.started_at.strftime('%Y-%m-%d %H:%M:%S') if rs.started_at else '',
                 rs.completed_at.strftime('%Y-%m-%d %H:%M:%S') if rs.completed_at else '',
             ]
@@ -100,7 +101,7 @@ def generate_posttest_export_csv(task_id):
         
         questions = list(Question.objects.filter(questionnaire__is_posttest=True).order_by('order'))
 
-        static_headers = ['ParticipantID', 'Username', 'Group', 'StartedAt', 'CompletedAt']
+        static_headers = ['ParticipantID', 'Username', 'Group', 'DateOfBirth', 'StartedAt', 'CompletedAt']
         dynamic_headers = [f"Question {i + 1}" for i in range(len(questions))]
         writer.writerow(static_headers + dynamic_headers)
 
@@ -126,6 +127,7 @@ def generate_posttest_export_csv(task_id):
                 rs.user.user_id,
                 rs.user.username,
                 rs.user.group.name if rs.user.group else 'None',
+                rs.user.date_of_birth.strftime('%Y-%m-%d') if rs.user.date_of_birth else '',
                 rs.started_at.strftime('%Y-%m-%d %H:%M:%S') if rs.started_at else '',
                 rs.completed_at.strftime('%Y-%m-%d %H:%M:%S') if rs.completed_at else '',
             ]

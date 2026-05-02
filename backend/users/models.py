@@ -22,6 +22,7 @@ class User(AbstractUser):
     full_name = models.CharField(max_length=255, blank=True)
     email = models.EmailField(unique=True)
     whatsapp_number = models.CharField(max_length=20, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
     
     # New Role ForeignKey
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
