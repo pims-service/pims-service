@@ -17,7 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             'user_id', 'username', 'full_name', 'email', 
-            'whatsapp_number', 'role', 'role_name', 
+            'whatsapp_number', 'date_of_birth', 'role', 'role_name', 
             'group', 'group_name', 'traits', 'created_at',
             'has_completed_baseline',
             'has_completed_posttest', 'is_posttest_due',
@@ -41,7 +41,7 @@ class SignupSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             'username', 'full_name', 'email', 'password', 
-            'confirm_password', 'whatsapp_number', 
+            'confirm_password', 'whatsapp_number', 'date_of_birth',
             'consent_agreed', 'consent_version', 'otp',
             'group', 'group_name',
         )
@@ -56,6 +56,17 @@ class SignupSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("This username is already taken.")
         return value
 
+    def validate_date_of_birth(self, value):
+        if not value:
+            raise serializers.ValidationError("Date of birth is mandatory.")
+        
+        today = timezone.now().date()
+        age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
+        
+        if age < 15 or age > 80:
+            raise serializers.ValidationError("Age must be between 15 and 80 years old.")
+        return value
+
     def validate(self, attrs):
         if attrs['password'] != attrs['confirm_password']:
             raise serializers.ValidationError({"password": "Password fields didn't match."})
@@ -63,6 +74,9 @@ class SignupSerializer(serializers.ModelSerializer):
         if not attrs.get('consent_agreed'):
             raise serializers.ValidationError({"consent_agreed": "You must agree to the terms and conditions."})
         
+        if not attrs.get('date_of_birth'):
+            raise serializers.ValidationError({"date_of_birth": "Date of birth is mandatory."})
+
         # Django built-in password validation
         from django.contrib.auth.password_validation import validate_password
         from django.core.exceptions import ValidationError as DjangoValidationError
@@ -72,18 +86,6 @@ class SignupSerializer(serializers.ModelSerializer):
         except DjangoValidationError as e:
             raise serializers.ValidationError({"password": list(e.messages)})
 
-        # Bypassing OTP validation as requested by user
-        # email = attrs.get('email')
-        # otp = attrs.get('otp')
-        # from .models import EmailVerificationOTP
-        # otp_record = EmailVerificationOTP.objects.filter(email=email).order_by('-created_at').first()
-        # if not otp_record:
-        #     raise serializers.ValidationError({"otp": "No OTP requested for this email."})
-        # if not otp_record.is_valid():
-        #     raise serializers.ValidationError({"otp": "The OTP has expired. Please request a new one."})
-        # if otp_record.otp != otp:
-        #     raise serializers.ValidationError({"otp": "Invalid OTP."})
-            
         return attrs
 
     def create(self, validated_data):
@@ -106,6 +108,7 @@ class SignupSerializer(serializers.ModelSerializer):
             password=validated_data['password'],
             full_name=validated_data.get('full_name', ''),
             whatsapp_number=validated_data.get('whatsapp_number', ''),
+            date_of_birth=validated_data.get('date_of_birth'),
             role=role,
         )
         
@@ -129,6 +132,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'username': self.user.username,
             'email': self.user.email,
             'full_name': self.user.full_name,
+            'date_of_birth': self.user.date_of_birth.strftime('%Y-%m-%d') if self.user.date_of_birth else None,
             'role': self.user.role.name if self.user.role else 'Participant',
             'has_completed_baseline': self.user.has_completed_baseline,
             'has_completed_posttest': self.user.has_completed_posttest,

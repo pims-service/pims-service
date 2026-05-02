@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api, { questionnairesApi } from '../services/api';
+import { useTranslation } from 'react-i18next';
 import { Calendar, CheckCircle2, Clock, ArrowRight, Bell, FileText, ClipboardCheck } from 'lucide-react';
 
 const DashboardPage: React.FC = () => {
@@ -10,6 +11,7 @@ const DashboardPage: React.FC = () => {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [posttestQuestionnaire, setPosttestQuestionnaire] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,15 +55,15 @@ const DashboardPage: React.FC = () => {
     <div className="space-y-8">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-2 text-zinc-900 leading-tight">Welcome Back</h1>
-          <p className="text-zinc-500 font-medium text-sm">You are currently in <span className="text-zinc-800 font-semibold">{phase?.name || 'Initialization'}</span></p>
+          <h1 className="text-3xl font-bold mb-2 text-zinc-900 leading-tight">{t('dashboard.welcome')}</h1>
+          <p className="text-zinc-500 font-medium text-sm">{t('dashboard.welcome_new')} <span className="text-zinc-800 font-semibold">{phase?.name || t('dashboard.initialization')}</span></p>
         </div>
         <div className="bg-white border border-zinc-200 rounded-lg px-4 py-2 flex items-center gap-3 shadow-sm">
           <Calendar className="text-zinc-500" size={18} />
           <span className="text-sm font-semibold text-zinc-700">
             {activities.length > 0 && activities[0].current_day 
-              ? `Day ${activities[0].current_day} of 7` 
-              : 'Welcome'}
+              ? t('dashboard.day_of', { current: activities[0].current_day, total: 7 })
+              : t('dashboard.welcome_new')}
           </span>
         </div>
       </header>
@@ -93,7 +95,7 @@ const DashboardPage: React.FC = () => {
 
           <section className="border border-zinc-200 rounded-xl p-6 md:p-8 bg-white shadow-sm">
             <h2 className="text-xl font-bold text-zinc-900 mb-6 flex items-center gap-2">
-              <Clock className="text-zinc-500" size={20} /> Today's Focus
+              <Clock className="text-zinc-500" size={20} /> {t('dashboard.todays_focus')}
             </h2>
 
             <div className="space-y-3">
@@ -124,14 +126,14 @@ const DashboardPage: React.FC = () => {
                 </Link>
               ))}
               {activities.length === 0 && !loading && (
-                <div className="text-center py-10 text-zinc-400 italic">No activities scheduled for today. Check back later!</div>
+                <div className="text-center py-10 text-zinc-400 italic">{t('dashboard.no_activities')}</div>
               )}
             </div>
           </section>
 
           <section className="border border-zinc-200 rounded-xl p-6 md:p-8 bg-white shadow-sm">
             <h2 className="text-xl font-bold text-zinc-900 mb-6 flex items-center gap-2">
-              <CheckCircle2 className="text-zinc-500" size={20} /> Recent Submissions
+              <CheckCircle2 className="text-zinc-500" size={20} /> {t('dashboard.recent_submissions')}
             </h2>
             <div className="divide-y divide-zinc-100">
               {(submissions || []).map((sub) => (
@@ -144,13 +146,13 @@ const DashboardPage: React.FC = () => {
                     </div>
                   </div>
                   <Link to={`/results/${sub.id}`} className="flex items-center gap-1 text-zinc-600 text-sm font-medium hover:text-zinc-900 opacity-0 group-hover:opacity-100 transition-all">
-                    View Insights <ArrowRight size={14} />
+                    {t('dashboard.view_insights')} <ArrowRight size={14} />
                   </Link>
                 </div>
               ))}
               {submissions.length === 0 && (
                 <div className="py-8 text-center text-zinc-400 italic text-sm">
-                  No submissions yet. Complete your baseline to see insights.
+                  {t('dashboard.no_submissions')}
                 </div>
               )}
             </div>
@@ -160,7 +162,7 @@ const DashboardPage: React.FC = () => {
         <div className="space-y-6">
           <div className="border border-zinc-200 rounded-xl p-6 bg-zinc-800 text-white shadow-sm">
             <div className="flex items-center gap-2 font-semibold text-xs mb-4 text-zinc-300 uppercase tracking-wider">
-              <Bell size={14} /> Notification
+              <Bell size={14} /> {t('dashboard.notifications')}
             </div>
             <p className="text-sm leading-relaxed text-zinc-100">
               "Great job completing yesterday's task! Phase 2 begins in 3 days. Get ready for new challenges."
@@ -171,8 +173,8 @@ const DashboardPage: React.FC = () => {
             <div className="inline-block p-5 rounded-xl bg-zinc-800 text-white mb-4">
               <div className="text-3xl font-bold">85%</div>
             </div>
-            <h4 className="font-semibold text-zinc-800 text-sm">Completion Rate</h4>
-            <p className="text-zinc-400 text-xs mt-1">Performance: Optimal</p>
+            <h4 className="font-semibold text-zinc-800 text-sm">{t('dashboard.completion_rate')}</h4>
+            <p className="text-zinc-400 text-xs mt-1">{t('dashboard.performance')}: {t('dashboard.optimal')}</p>
           </div>
         </div>
       </div>

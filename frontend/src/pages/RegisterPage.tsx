@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
-import { User, Mail, Phone, ArrowRight, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { User, Mail, Phone, Lock, Calendar, ArrowRight, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const RegisterPage: React.FC = () => {
     whatsapp_number: '',
     password: '',
     confirm_password: '',
+    date_of_birth: '',
     consent_agreed: false,
     consent_version: '1.0',
     otp: '',
@@ -22,6 +24,7 @@ const RegisterPage: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [phase, setPhase] = useState<'details' | 'otp'>('details');
   const [otpMessage, setOtpMessage] = useState('');
+  const { t } = useTranslation();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -114,12 +117,13 @@ const RegisterPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[90vh] flex items-center justify-center p-4 bg-white">
-      <div className="card-minimal max-w-md w-full p-8 space-y-8">
-        <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-900">Create an account</h1>
-          <p className="text-zinc-500">Enter your details below to get started</p>
-        </div>
+    <div className="min-h-[90vh] flex flex-col p-4 bg-white relative">
+      <div className="flex-1 flex items-center justify-center">
+        <div className="card-minimal max-w-md w-full p-8 space-y-8">
+          <div className="space-y-2 text-center">
+            <h1 className="text-3xl font-bold tracking-tight text-zinc-900">{t('register.title')}</h1>
+            <p className="text-zinc-500">{t('register.subtitle')}</p>
+          </div>
 
         {Object.keys(errors).length > 0 && (
           <div className="p-4 rounded-none bg-white border-2 border-black space-y-2">
@@ -140,16 +144,16 @@ const RegisterPage: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-zinc-700" htmlFor="username">Username</label>
+              <label className="text-sm font-medium text-zinc-700" htmlFor="username">{t('register.username')}</label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                 <input
                   id="username"
                   name="username"
                   type="text"
                   required
-                  placeholder="johndoe"
-                  className={`input-minimal ${errors.username ? 'border-black border-2 ring-0' : ''}`}
+                  placeholder={t('register.username_placeholder')}
+                  className={`input-minimal !ps-10 ${errors.username ? 'border-black border-2 ring-0' : ''}`}
                   value={formData.username}
                   onChange={handleChange}
                 />
@@ -157,30 +161,33 @@ const RegisterPage: React.FC = () => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-zinc-700" htmlFor="full_name">Full Name</label>
-              <input
-                id="full_name"
-                name="full_name"
-                type="text"
-                required
-                placeholder="John Doe"
-                className={`input-minimal ${errors.full_name ? 'border-black border-2 ring-0' : ''}`}
-                value={formData.full_name}
-                onChange={handleChange}
-              />
+              <label className="text-sm font-medium text-zinc-700" htmlFor="full_name">{t('register.full_name')}</label>
+              <div className="relative">
+                <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <input
+                  id="full_name"
+                  name="full_name"
+                  type="text"
+                  required
+                  placeholder={t('register.full_name_placeholder')}
+                  className={`input-minimal !ps-10 ${errors.full_name ? 'border-black border-2 ring-0' : ''}`}
+                  value={formData.full_name}
+                  onChange={handleChange}
+                />
+              </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-zinc-700" htmlFor="email">Email Address</label>
+              <label className="text-sm font-medium text-zinc-700" htmlFor="email">{t('register.email')}</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                 <input
                   id="email"
                   name="email"
                   type="email"
                   required
-                  placeholder="name@example.com"
-                  className={`input-minimal pl-10 ${errors.email ? 'border-black border-2 ring-0' : ''}`}
+                  placeholder={t('register.email_placeholder')}
+                  className={`input-minimal !ps-10 ${errors.email ? 'border-black border-2 ring-0' : ''}`}
                   value={formData.email}
                   onChange={handleChange}
                 />
@@ -188,17 +195,33 @@ const RegisterPage: React.FC = () => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-zinc-700" htmlFor="whatsapp_number">WhatsApp Number</label>
+              <label className="text-sm font-medium text-zinc-700" htmlFor="whatsapp_number">{t('register.whatsapp_number')}</label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <Phone className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                 <input
                   id="whatsapp_number"
                   name="whatsapp_number"
                   type="text"
                   required
-                  placeholder="+1234567890"
-                  className={`input-minimal pl-10 ${errors.whatsapp_number ? 'border-black border-2 ring-0' : ''}`}
+                  placeholder={t('register.whatsapp_number_placeholder')}
+                  className={`input-minimal !ps-10 ${errors.whatsapp_number ? 'border-black border-2 ring-0' : ''}`}
                   value={formData.whatsapp_number}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-zinc-700" htmlFor="date_of_birth">{t('register.date_of_birth')}</label>
+              <div className="relative">
+                <Calendar className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <input
+                  id="date_of_birth"
+                  name="date_of_birth"
+                  type="date"
+                  required
+                  className={`input-minimal !ps-10 ${errors.date_of_birth ? 'border-black border-2 ring-0' : ''}`}
+                  value={formData.date_of_birth}
                   onChange={handleChange}
                 />
               </div>
@@ -206,30 +229,36 @@ const RegisterPage: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-zinc-700" htmlFor="password">Password</label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  className={`input-minimal ${errors.password ? 'border-black border-2 ring-0' : ''}`}
-                  value={formData.password}
-                  onChange={handleChange}
-                />
+                <label className="text-sm font-medium text-zinc-700" htmlFor="password">{t('register.password')}</label>
+                <div className="relative">
+                  <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    placeholder={t('register.password_placeholder')}
+                    className={`input-minimal !ps-10 ${errors.password ? 'border-black border-2 ring-0' : ''}`}
+                    value={formData.password}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-zinc-700" htmlFor="confirm_password">Confirm</label>
-                <input
-                  id="confirm_password"
-                  name="confirm_password"
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  className={`input-minimal ${errors.password ? 'border-black border-2 ring-0' : ''}`}
-                  value={formData.confirm_password}
-                  onChange={handleChange}
-                />
+                <label className="text-sm font-medium text-zinc-700" htmlFor="confirm_password">{t('register.confirm_password')}</label>
+                <div className="relative">
+                  <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <input
+                    id="confirm_password"
+                    name="confirm_password"
+                    type="password"
+                    required
+                    placeholder={t('register.confirm_password_placeholder')}
+                    className={`input-minimal !ps-10 ${errors.password ? 'border-black border-2 ring-0' : ''}`}
+                    value={formData.confirm_password}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -245,7 +274,7 @@ const RegisterPage: React.FC = () => {
               onChange={handleChange}
             />
             <label htmlFor="consent_agreed" className="text-sm text-zinc-600 leading-tight">
-              I agree to the <Link to="/terms" className="text-zinc-900 underline underline-offset-4 hover:text-zinc-700 font-medium">terms of service</Link> and data processing policy.
+              {t('register.consent_text')}
             </label>
           </div>
 
@@ -276,18 +305,19 @@ const RegisterPage: React.FC = () => {
               <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
             ) : (
               <>
-                Complete Registration <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                {t('register.sign_up')} <ArrowRight className="w-4 h-4 rtl:rotate-180 rtl:group-hover:-translate-x-0.5 group-hover:translate-x-0.5 transition-transform" />
               </>
             )}
           </button>
         </form>
 
         <p className="text-center text-sm text-zinc-500 pt-2 border-t border-zinc-100">
-          Already have an account?{' '}
+          {t('register.has_account')}{' '}
           <Link to="/login" className="text-zinc-900 font-medium hover:underline underline-offset-4">
-            Sign in
+            {t('register.sign_in')}
           </Link>
         </p>
+      </div>
       </div>
     </div>
   );
