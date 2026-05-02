@@ -26,12 +26,14 @@ const Navbar: React.FC = () => {
         <div className="hidden md:flex items-center gap-8">
           {isAuthenticated ? (
             <>
-              <Link to="/dashboard" className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors flex items-center gap-2">
-                <LayoutDashboard size={18} /> Dashboard
-              </Link>
+              {!isAdmin && (
+                <Link to="/dashboard" className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors flex items-center gap-2">
+                  <LayoutDashboard size={18} /> Dashboard
+                </Link>
+              )}
               {isAdmin && (
                 <Link to="/admin" className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors flex items-center gap-2">
-                  <Settings size={18} /> Admin
+                  <Settings size={18} /> Admin Dashboard
                 </Link>
               )}
               <Link to="/profile" className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors flex items-center gap-2">
@@ -72,20 +74,22 @@ const Navbar: React.FC = () => {
         <div className="md:hidden border-t border-zinc-100 bg-white py-4 px-6 space-y-4 animate-in slide-in-from-top-2 duration-200">
           {isAuthenticated ? (
             <>
-              <Link 
-                to="/dashboard" 
-                onClick={() => setIsMenuOpen(false)}
-                className="flex items-center gap-3 text-sm font-medium text-zinc-600 py-2"
-              >
-                <LayoutDashboard size={20} /> Dashboard
-              </Link>
+              {!isAdmin && (
+                <Link 
+                  to="/dashboard" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-3 text-sm font-medium text-zinc-600 py-2"
+                >
+                  <LayoutDashboard size={20} /> Dashboard
+                </Link>
+              )}
               {isAdmin && (
                 <Link 
                   to="/admin" 
                   onClick={() => setIsMenuOpen(false)}
                   className="flex items-center gap-3 text-sm font-medium text-zinc-600 py-2"
                 >
-                  <Settings size={20} /> Admin Hub
+                  <Settings size={20} /> Admin Dashboard
                 </Link>
               )}
               <Link 

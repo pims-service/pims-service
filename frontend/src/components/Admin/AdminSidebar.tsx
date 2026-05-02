@@ -1,8 +1,8 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { 
-  Users, 
-  LayoutDashboard, 
+import {
+  Users,
+  LayoutDashboard,
   BarChart2,
   Database,
   ClipboardCheck
@@ -15,9 +15,8 @@ interface AdminSidebarProps {
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate }) => {
   const navItems = [
     { label: 'Overview', path: '/admin', icon: <LayoutDashboard size={18} /> },
-    { label: 'Baseline Raw Data', path: '/admin/baseline-data', icon: <Database size={18} /> },
+    { label: 'Initial Questionnaire Reports', path: '/admin/baseline-data', icon: <Database size={18} /> },
     { label: 'Post-Test Data', path: '/admin/posttest-data', icon: <ClipboardCheck size={18} /> },
-    { label: 'Experimental Reports', path: '/admin/reports', icon: <BarChart2 size={18} /> },
     { label: 'Groups Management', path: '/admin/groups', icon: <Users size={18} /> },
   ];
 
@@ -35,8 +34,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate }) => {
             onClick={onNavigate}
             className={({ isActive }) => `
               flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-all rounded-lg mx-2
-              ${isActive 
-                ? 'bg-zinc-100 text-zinc-900' 
+              ${isActive
+                ? 'bg-zinc-100 text-zinc-900'
                 : 'text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50'}
             `}
           >

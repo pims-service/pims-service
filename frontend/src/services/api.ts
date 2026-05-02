@@ -84,10 +84,14 @@ export const questionnairesApi = {
   getAdminPosttestResponses: (page: number = 1) => api.get(`/questionnaires/posttests/?page=${page}`),
   getAdminPosttestDetail: (id: string) => api.get(`/questionnaires/posttests/${id}/`),
   getDashboardAnalytics: () => api.get('/admin/tools/dashboard-analytics/'),
-  triggerAdminBaselineExport: (groupName?: string) => api.post('/admin/tools/export/baselines/csv/', { 
+  triggerAdminBaselineExport: (groupName?: string) => api.post('/admin/tools/export/baselines/csv/', {
+    group: groupName || 'All'
+  }),
+  triggerAdminPosttestExport: (groupName?: string) => api.post('/admin/tools/export/posttests/csv/', {
     group: groupName || 'All'
   }),
   getAdminBaselineExportStatus: (taskId: string) => api.get(`/admin/tools/export/status/${taskId}/`),
+  exportQuestionnaireData: (id: string) => api.get(`/questionnaires/${id}/export/`, { responseType: 'blob' }),
 };
 
 export const activitiesApi = {

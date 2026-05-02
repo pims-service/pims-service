@@ -178,7 +178,7 @@ const AdminBaselineResultsPage: React.FC = () => {
           <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium mb-1">
             <ClipboardList size={14} /> Research Data Hub
           </div>
-          <h1 className="text-3xl font-bold text-zinc-900">Baseline Raw Data</h1>
+          <h1 className="text-3xl font-bold text-zinc-900">Initial Questionnaire Reports</h1>
           <p className="text-zinc-500 text-sm">Direct Oversight of Participant Screening</p>
         </div>
 

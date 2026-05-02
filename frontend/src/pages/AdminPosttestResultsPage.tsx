@@ -11,9 +11,10 @@ import {
   ChevronRight,
   Eye,
   ChevronLeft,
+  Download,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { questionnairesApi } from '../services/api';
+import { questionnairesApi, API_URL } from '../services/api';
 
 interface RawResponse {
   id: string;
@@ -30,6 +31,7 @@ interface PosttestSet {
   user: number;
   full_name: string;
   username: string;
+  questionnaire: string;
   questionnaire_title: string;
   group_name: string | null;
   status: string;
@@ -52,6 +54,8 @@ const AdminPosttestResultsPage: React.FC = () => {
   const [hasPrev, setHasPrev] = useState(false);
 
   const [selectedSubmission, setSelectedSubmission] = useState<PosttestSet | null>(null);
+  const [exportingId, setExportingId] = useState<string | null>(null);
+  const [exportStatus, setExportStatus] = useState<'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED' | null>(null);
 
   const fetchSubmissions = async (page: number = 1) => {
     setLoading(true);
@@ -88,12 +92,62 @@ const AdminPosttestResultsPage: React.FC = () => {
     fetchSubmissions();
   }, []);
 
+  // Polling logic for Export Task
+  useEffect(() => {
+    let pollInterval: NodeJS.Timeout;
+
+    if (exportingId && (exportStatus === 'PENDING' || exportStatus === 'PROCESSING')) {
+      pollInterval = setInterval(async () => {
+        try {
+          const response = await questionnairesApi.getAdminBaselineExportStatus(exportingId);
+          const { status, file_url } = response.data;
+          
+          setExportStatus(status);
+          
+          if (status === 'SUCCESS' && file_url) {
+            setExportingId(null);
+            setExportStatus(null);
+            const link = document.createElement('a');
+            link.href = file_url;
+            link.setAttribute('download', 'posttest_export.csv');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+          } else if (status === 'FAILED') {
+            setExportingId(null);
+          }
+        } catch (err) {
+          console.error('Polling failed', err);
+          setExportingId(null);
+          setExportStatus('FAILED');
+        }
+      }, 2000);
+    }
+
+    return () => {
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [exportingId, exportStatus]);
+
   const handleViewDetail = async (id: string) => {
     try {
       const response = await questionnairesApi.getAdminPosttestDetail(id);
       setSelectedSubmission(response.data);
     } catch (err) {
       console.error('Failed to fetch submission detail', err);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      setExportStatus('PENDING');
+      const response = await questionnairesApi.triggerAdminPosttestExport(selectedGroup);
+      setExportingId(response.data.task_id);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to export posttest data', err);
+      setError('Failed to initiate CSV export. Please check server logs.');
+      setExportStatus(null);
     }
   };
 
@@ -119,7 +173,7 @@ const AdminPosttestResultsPage: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-700 pt-0">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-zinc-200 pb-6">
-        <div className="space-y-1">
+        <div className="space-y-1 flex-1">
           <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium mb-1">
             <ClipboardCheck size={14} /> Day 7 Post-Test Data
           </div>
@@ -128,6 +182,23 @@ const AdminPosttestResultsPage: React.FC = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+          <button
+            onClick={handleExport}
+            disabled={!!exportingId}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-zinc-800 text-white rounded-lg font-medium text-sm hover:bg-zinc-700 transition-colors disabled:opacity-40 whitespace-nowrap mr-2"
+          >
+            {exportingId ? (
+              <>
+                <RotateCw size={16} className="animate-spin" />
+                Preparing...
+              </>
+            ) : (
+              <>
+                <Download size={16} /> Export CSV
+              </>
+            )}
+          </button>
+          
           <div className="relative group flex-grow sm:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
             <input
@@ -151,6 +222,21 @@ const AdminPosttestResultsPage: React.FC = () => {
           </select>
         </div>
       </header>
+
+      {exportStatus === 'FAILED' && (
+        <div className="bg-white border border-zinc-200 rounded-lg p-4 flex items-center gap-3 text-zinc-700 shadow-sm">
+          <AlertTriangle size={16} className="text-zinc-500" />
+          <span className="text-sm font-medium">Export task failed. Please check server logs.</span>
+          <button onClick={() => setExportStatus(null)} className="ml-auto text-xs font-medium text-zinc-500 hover:text-zinc-700">Dismiss</button>
+        </div>
+      )}
+
+      {exportingId && (
+        <div className="bg-zinc-800 text-white rounded-lg p-4 flex items-center gap-3 shadow-sm">
+          <ClipboardCheck size={16} className="animate-bounce" />
+          <span className="text-sm font-medium">Processing large dataset export. Please wait...</span>
+        </div>
+      )}
 
       {error ? (
         <div className="border border-zinc-200 rounded-xl p-12 text-center space-y-4 max-w-2xl mx-auto bg-white shadow-sm">
