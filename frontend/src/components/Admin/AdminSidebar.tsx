@@ -9,6 +9,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import api from '../../services/api';
+import { useNotifications } from '../../hooks/useNotifications';
 
 interface AdminSidebarProps {
   onNavigate?: () => void;
@@ -16,6 +17,11 @@ interface AdminSidebarProps {
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate }) => {
   const [openQueriesCount, setOpenQueriesCount] = useState(0);
+  const { ticketCount } = useNotifications();
+
+  useEffect(() => {
+    setOpenQueriesCount(ticketCount);
+  }, [ticketCount]);
 
   useEffect(() => {
     const fetchOpenQueriesCount = async () => {
@@ -27,9 +33,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate }) => {
       }
     };
     fetchOpenQueriesCount();
-    // Poll every 30 seconds
-    const interval = setInterval(fetchOpenQueriesCount, 30000);
-    return () => clearInterval(interval);
   }, []);
 
   const navItems = [

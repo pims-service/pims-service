@@ -35,3 +35,43 @@ class SupportTicket(models.Model):
 
     def __str__(self):
         return f"{self.ticket_number} - {self.subject} ({self.status})"
+
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from django.db.models import Count
+
+def broadcast_ticket_counts(user):
+    channel_layer = get_channel_layer()
+    
+    # 1. Notify the specific user about unread replies
+    unread_count = SupportTicket.objects.filter(user=user, is_read_by_user=False).exclude(admin_reply__isnull=True).count()
+    async_to_sync(channel_layer.group_send)(
+        f"user_{user.id}",
+        {
+            "type": "update_ticket_count",
+            "count": unread_count
+        }
+    )
+
+    # 2. Notify all admins about open tickets
+    from users.models import User
+    open_count = SupportTicket.objects.filter(status='Open').count()
+    admins = User.objects.filter(is_staff=True)
+    for admin in admins:
+        async_to_sync(channel_layer.group_send)(
+            f"user_{admin.id}",
+            {
+                "type": "update_ticket_count",
+                "count": open_count
+            }
+        )
+
+@receiver(post_save, sender=SupportTicket)
+def ticket_updated(sender, instance, **kwargs):
+    broadcast_ticket_counts(instance.user)
+
+@receiver(post_delete, sender=SupportTicket)
+def ticket_deleted(sender, instance, **kwargs):
+    broadcast_ticket_counts(instance.user)

@@ -24,7 +24,9 @@ class DailySubmissionSerializer(serializers.ModelSerializer):
         return data
 
 class SubmissionSerializer(serializers.ModelSerializer):
+    activity_title = serializers.CharField(source='activity.title', read_only=True)
+
     class Meta:
         model = Submission
-        fields = ['id', 'activity', 'content', 'submission_date']
+        fields = ['id', 'activity', 'activity_title', 'content', 'submission_date']
         read_only_fields = ['submission_date']

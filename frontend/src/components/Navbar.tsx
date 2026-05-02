@@ -5,6 +5,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 import SupportModal from './SupportModal';
 import { useTranslation } from 'react-i18next';
 import api from '../services/api';
+import { useNotifications } from '../hooks/useNotifications';
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +16,14 @@ const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSupportOpen, setIsSupportOpen] = useState(false);
   const [unreadReplies, setUnreadReplies] = useState(0);
+
+  const { ticketCount } = useNotifications();
+
+  useEffect(() => {
+    if (isAuthenticated && !isAdmin) {
+      setUnreadReplies(ticketCount);
+    }
+  }, [ticketCount, isAuthenticated, isAdmin]);
 
   useEffect(() => {
     if (isAuthenticated && !isAdmin) {
@@ -27,10 +36,8 @@ const Navbar: React.FC = () => {
         }
       };
       fetchUnreadReplies();
-      const interval = setInterval(fetchUnreadReplies, 30000);
-      return () => clearInterval(interval);
     }
-  }, [isAuthenticated, isAdmin, isSupportOpen]); // re-fetch when modal closes
+  }, [isAuthenticated, isAdmin, isSupportOpen]);
 
   const handleLogout = () => {
     localStorage.clear();

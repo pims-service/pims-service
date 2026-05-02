@@ -20,3 +20,21 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.n_type} - {self.status}"
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
+@receiver(post_save, sender=Notification)
+def send_notification_realtime(sender, instance, created, **kwargs):
+    if created:
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"user_{instance.user.id}",
+            {
+                "type": "send_notification",
+                "message": instance.message,
+                "n_type": instance.n_type,
+            }
+        )

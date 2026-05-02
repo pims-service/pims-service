@@ -77,10 +77,11 @@ class TestDailyActivities:
         resp1 = api_client.post(submit_url, payload, format='json')
         assert resp1.status_code == status.HTTP_201_CREATED
         
-        # 2. Re-submit same day (11:59 PM)
+        # 2. Re-submit same day (11:59 PM) - Should succeed (Update)
         with freeze_time("2026-04-19 23:59:59"):
-            resp2 = api_client.post(submit_url, payload, format='json')
-            assert resp2.status_code == status.HTTP_400_BAD_REQUEST
+            resp2 = api_client.post(submit_url, {"activity": activity.id, "content": "Updated Entry"}, format='json')
+            assert resp2.status_code == status.HTTP_201_CREATED
+            assert Submission.objects.get(id=resp1.data['id']).content == "Updated Entry"
             
         # 3. Submit next day (00:01 AM)
         with freeze_time("2026-04-20 00:00:01"):
@@ -94,7 +95,8 @@ class TestDailyActivities:
         other_group = Group.objects.create(name="Other")
         other_activity = Activity.objects.create(
             title="Other", group=other_group, activity_type="paragraph",
-            assigned_phase=activity.assigned_phase
+            assigned_phase=activity.assigned_phase,
+            day_number=1
         )
         
         url = reverse('daily-activity-submit')
@@ -112,28 +114,21 @@ class TestDailyActivities:
         assert 'X-Request-ID' in response
 
     @freeze_time("2026-05-01 10:00:00")
-    def test_integrity_error_caught_as_400(self, api_client, test_phase):
+    def test_update_daily_submission(self, api_client, test_phase):
         """
-        Force an IntegrityError by creating a duplicate submission and 
-        verify the ViewSet returns 400 instead of 500.
+        Verify that submitting again on the same day updates the existing record.
         """
         user, group, activity = self.create_context(test_phase)
-        # Ensure baseline is before frozen time
         user.baseline_completed_at = datetime(2026, 5, 1, 0, 0, tzinfo=dt_timezone.utc)
         user.save()
         
         api_client.force_authenticate(user=user)
         
-        # Create first submission
         url = reverse('daily-activity-submit')
-        payload = {"activity": activity.id, "content": "Success"}
-        api_client.post(url, payload, format='json')
+        api_client.post(url, {"activity": activity.id, "content": "Initial"}, format='json')
         
-        # Manually delete the first submission but leave it in cache or similar? 
-        # No, just try to submit again. The ViewSet's DB lock check should catch it, 
-        # but if we bypass it...
-        
-        # Actually, let's just test that a normal duplicate returns 400
-        response = api_client.post(url, payload, format='json')
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "already submitted" in response.data['detail'].lower()
+        # Update
+        response = api_client.post(url, {"activity": activity.id, "content": "Revised"}, format='json')
+        assert response.status_code == status.HTTP_201_CREATED
+        assert Submission.objects.filter(user=user).count() == 1
+        assert Submission.objects.get(user=user).content == "Revised"
