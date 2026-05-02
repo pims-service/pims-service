@@ -19,7 +19,7 @@
     "i18next": "^26.0.8",
     "i18next-browser-languagedetector": "^8.2.1",
     "lucide-react": "^0.477.0",
-    "postcss": "^8.5.3",
+    "postcss": "^8.5.13",
     "react": "^19.2.4",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.2.4",
