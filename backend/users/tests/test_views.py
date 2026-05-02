@@ -1,6 +1,7 @@
 import pytest
 from django.urls import reverse
 from rest_framework import status
+from django.utils import timezone
 from users.models import User, UserConsent, Role, EmailVerificationOTP
 from groups.models import Group
 
@@ -28,6 +29,7 @@ def test_signup_success(api_client, db):
         "password": "password123!",
         "confirm_password": "password123!",
         "whatsapp_number": "+1234567890",
+        "date_of_birth": "1990-01-01",
         "consent_agreed": True,
         "consent_version": "1.0",
         "otp": "123456"
@@ -39,6 +41,7 @@ def test_signup_success(api_client, db):
     assert User.objects.filter(username="newuser").exists()
     assert UserConsent.objects.filter(user__username="newuser", agreed=True).exists()
     user = User.objects.get(username="newuser")
+    assert user.date_of_birth.strftime('%Y-%m-%d') == "1990-01-01"
     # NEW: Verify deferred assignment (Group should be None)
     assert user.group is None
     assert response.data.get('group') is None
@@ -55,6 +58,7 @@ def test_signup_without_otp(api_client, db):
         "password": "password123!",
         "confirm_password": "password123!",
         "whatsapp_number": "+1234567890",
+        "date_of_birth": "1995-05-05",
         "consent_agreed": True,
         "consent_version": "1.0",
         "otp": "",
@@ -65,6 +69,46 @@ def test_signup_without_otp(api_client, db):
     assert User.objects.filter(username="nootpuser").exists()
 
 @pytest.mark.django_db
+def test_signup_age_validation(api_client, db):
+    Role.objects.get_or_create(name='Participant')
+    url = reverse('register')
+    base_payload = {
+        "username": "ageuser",
+        "full_name": "Age User",
+        "email": "age@example.com",
+        "password": "password123!",
+        "confirm_password": "password123!",
+        "whatsapp_number": "+1234567890",
+        "consent_agreed": True,
+        "consent_version": "1.0",
+        "otp": ""
+    }
+
+    # Too young (e.g., 5 years old)
+    today = timezone.now().date()
+    too_young = today.replace(year=today.year - 5)
+    payload = base_payload.copy()
+    payload["date_of_birth"] = too_young.strftime('%Y-%m-%d')
+    response = api_client.post(url, payload)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "date_of_birth" in response.data
+    assert "15 and 80" in str(response.data["date_of_birth"][0])
+
+    # Too old (e.g., 90 years old)
+    too_old = today.replace(year=today.year - 90)
+    payload["date_of_birth"] = too_old.strftime('%Y-%m-%d')
+    response = api_client.post(url, payload)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "date_of_birth" in response.data
+    assert "15 and 80" in str(response.data["date_of_birth"][0])
+
+    # Just right (e.g., 20 years old)
+    just_right = today.replace(year=today.year - 20)
+    payload["date_of_birth"] = just_right.strftime('%Y-%m-%d')
+    response = api_client.post(url, payload)
+    assert response.status_code == status.HTTP_201_CREATED
+
+@pytest.mark.django_db
 def test_signup_password_mismatch(api_client, db):
     url = reverse('register')
     payload = {
@@ -72,6 +116,7 @@ def test_signup_password_mismatch(api_client, db):
         "email": "mismatch@example.com",
         "password": "password123!",
         "confirm_password": "differentpassword",
+        "date_of_birth": "1990-01-01",
         "consent_agreed": True,
         "consent_version": "1.0",
         "otp": "123456"
@@ -89,6 +134,7 @@ def test_signup_consent_required(api_client, db):
         "email": "noconsent@example.com",
         "password": "password123!",
         "confirm_password": "password123!",
+        "date_of_birth": "1990-01-01",
         "consent_agreed": False,
         "consent_version": "1.0",
         "otp": "123456"
@@ -110,6 +156,7 @@ def test_signup_duplicate_email(api_client, db):
         "email": "duplicate@example.com",
         "password": "password123!",
         "confirm_password": "password123!",
+        "date_of_birth": "1990-01-01",
         "consent_agreed": True,
         "consent_version": "1.0",
         "otp": "123456"
@@ -135,6 +182,7 @@ def test_signup_duplicate_username(api_client, db):
         "email": "user1@example.com",
         "password": "password123!",
         "confirm_password": "password123!",
+        "date_of_birth": "1990-01-01",
         "consent_agreed": True,
         "consent_version": "1.0",
         "otp": ""
@@ -173,6 +221,7 @@ def test_signup_group_distribution(api_client, db):
             "password": "password123!",
             "confirm_password": "password123!",
             "full_name": f"User {i}",
+            "date_of_birth": "1990-01-01",
             "consent_agreed": True,
             "consent_version": "1.0",
             "otp": "123456"
@@ -194,6 +243,7 @@ def test_signup_weak_password(api_client, db):
         "email": "weak@example.com",
         "password": "123", # Too short
         "confirm_password": "123",
+        "date_of_birth": "1990-01-01",
         "consent_agreed": True,
         "consent_version": "1.0",
         "otp": ""

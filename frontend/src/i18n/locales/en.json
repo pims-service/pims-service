@@ -1,0 +1,64 @@
+{
+  "login": {
+    "title": "Welcome back",
+    "subtitle": "Enter your credentials to access your account",
+    "username": "Username",
+    "username_placeholder": "johndoe",
+    "password": "Password",
+    "password_placeholder": "••••••••",
+    "forgot_password": "Forgot password?",
+    "sign_in": "Sign In",
+    "no_account": "Don't have an account?",
+    "create_one": "Create one",
+    "invalid_credentials": "Invalid username or password. Please try again.",
+    "server_error": "Server error (500). Please contact administration.",
+    "unexpected_error": "An unexpected error occurred. Please try again."
+  },
+  "register": {
+    "title": "Create an account",
+    "subtitle": "Enter your details to get started",
+    "username": "Username",
+    "username_placeholder": "johndoe",
+    "full_name": "Full Name",
+    "full_name_placeholder": "John Doe",
+    "email": "Email Address",
+    "email_placeholder": "name@example.com",
+    "whatsapp_number": "WhatsApp Number",
+    "whatsapp_number_placeholder": "+1234567890",
+    "date_of_birth": "Date of Birth",
+    "password": "Password",
+    "password_placeholder": "••••••••",
+    "confirm_password": "Confirm",
+    "confirm_password_placeholder": "••••••••",
+    "consent_text": "I agree to the terms and conditions of the experiment.",
+    "sign_up": "Sign Up",
+    "has_account": "Already have an account?",
+    "sign_in": "Sign in"
+  },
+  "navbar": {
+    "dashboard": "Dashboard",
+    "admin_dashboard": "Admin Dashboard",
+    "profile": "Profile",
+    "logout": "Logout",
+    "login": "Log in",
+    "signup": "Sign up"
+  },
+  "dashboard": {
+    "welcome": "Welcome Back",
+    "initialization": "Initialization",
+    "day_of": "Day {{current}} of {{total}}",
+    "welcome_new": "Welcome",
+    "todays_focus": "Today's Focus",
+    "recent_submissions": "Recent Submissions",
+    "view_insights": "View Insights",
+    "no_activities": "No activities scheduled for today. Check back later!",
+    "no_submissions": "No submissions yet. Complete your baseline to see insights.",
+    "notifications": "Notifications",
+    "completion_rate": "Completion Rate",
+    "performance": "Performance",
+    "optimal": "Optimal"
+  },
+  "common": {
+    "loading": "Loading..."
+  }
+}

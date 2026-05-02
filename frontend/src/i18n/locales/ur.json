@@ -1,0 +1,64 @@
+{
+  "login": {
+    "title": "خوش آمدید",
+    "subtitle": "اپنے اکاؤنٹ تک رسائی کے لیے اپنی اسناد درج کریں",
+    "username": "صارف کا نام",
+    "username_placeholder": "johndoe",
+    "password": "پاس ورڈ",
+    "password_placeholder": "••••••••",
+    "forgot_password": "پاس ورڈ بھول گئے؟",
+    "sign_in": "سائن ان کریں",
+    "no_account": "اکاؤنٹ نہیں ہے؟",
+    "create_one": "ایک بنائیں",
+    "invalid_credentials": "غلط صارف نام یا پاس ورڈ۔ براہ کرم دوبارہ کوشش کریں۔",
+    "server_error": "سرور کی خرابی (500)۔ براہ کرم انتظامیہ سے رابطہ کریں۔",
+    "unexpected_error": "ایک غیر متوقع خرابی پیش آ گئی۔ براہ کرم دوبارہ کوشش کریں۔"
+  },
+  "register": {
+    "title": "ایک اکاؤنٹ بنائیں",
+    "subtitle": "شروع کرنے کے لیے اپنی تفصیلات درج کریں",
+    "username": "صارف کا نام",
+    "username_placeholder": "johndoe",
+    "full_name": "پورا نام",
+    "full_name_placeholder": "جان ڈو",
+    "email": "ای میل ایڈریس",
+    "email_placeholder": "name@example.com",
+    "whatsapp_number": "واٹس ایپ نمبر",
+    "whatsapp_number_placeholder": "+1234567890",
+    "date_of_birth": "تاریخ پیدائش",
+    "password": "پاس ورڈ",
+    "password_placeholder": "••••••••",
+    "confirm_password": "تصدیق کریں",
+    "confirm_password_placeholder": "••••••••",
+    "consent_text": "میں تجربے کی شرائط و ضوابط سے اتفاق کرتا ہوں۔",
+    "sign_up": "سائن اپ کریں",
+    "has_account": "پہلے سے ہی ایک اکاؤنٹ ہے؟",
+    "sign_in": "سائن ان کریں"
+  },
+  "navbar": {
+    "dashboard": "ڈیش بورڈ",
+    "admin_dashboard": "ایڈمن ڈیش بورڈ",
+    "profile": "پروفائل",
+    "logout": "لاگ آؤٹ",
+    "login": "لاگ ان",
+    "signup": "سائن اپ"
+  },
+  "dashboard": {
+    "welcome": "خوش آمدید",
+    "initialization": "ابتدا",
+    "day_of": "7 میں سے {{current}} دن",
+    "welcome_new": "خوش آمدید",
+    "todays_focus": "آج کی توجہ",
+    "recent_submissions": "حالیہ گذارشات",
+    "view_insights": "بصیرت دیکھیں",
+    "no_activities": "آج کے لیے کوئی سرگرمیاں طے نہیں ہیں۔ بعد میں دوبارہ چیک کریں!",
+    "no_submissions": "ابھی تک کوئی گذارشات نہیں ہیں۔ بصیرت دیکھنے کے لیے اپنا بیس لائن مکمل کریں۔",
+    "notifications": "اطلاعات",
+    "completion_rate": "تکمیل کی شرح",
+    "performance": "کارکردگی",
+    "optimal": "بہترین"
+  },
+  "common": {
+    "loading": "لوڈ ہو رہا ہے..."
+  }
+}
