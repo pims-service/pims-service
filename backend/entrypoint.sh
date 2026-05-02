@@ -21,5 +21,5 @@ else:
     print(f'Superuser {username} created.')
 "
 
-echo "Starting Gunicorn..."
-exec gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 5
+echo "Starting Daphne (ASGI server)..."
+exec daphne -b 0.0.0.0 -p 8000 core.asgi:application

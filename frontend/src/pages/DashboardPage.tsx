@@ -13,20 +13,28 @@ const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { t } = useTranslation();
 
+  const [notifications, setNotifications] = useState<any[]>([]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [actRes, phaseRes, subRes, profileRes] = await Promise.all([
+        const [actRes, phaseRes, subRes, activitySubRes, profileRes, notifRes] = await Promise.all([
           api.get('/activities/daily/current/').catch(() => ({ data: null })),
           api.get('/phases/current/').catch(() => ({ data: null })),
-          questionnairesApi.listResponseSets().catch(() => ({ data: { results: [] } })),
-          api.get('/users/me/').catch(() => ({ data: null }))
+          api.get('/questionnaires/response-sets/').catch(() => ({ data: { results: [] } })),
+          api.get('/activities/all-submissions/').catch(() => ({ data: { results: [] } })),
+          api.get('/users/me/').catch(() => ({ data: null })),
+          api.get('/notifications/').catch(() => ({ data: [] }))
         ]);
 
         const actData = actRes.data;
         setActivities(actData && !actData.detail ? [actData] : []);
         setPhase(phaseRes.data);
         setUserProfile(profileRes.data);
+        
+        // Handle notifications
+        const notifData = Array.isArray(notifRes.data) ? notifRes.data : notifRes.data?.results || [];
+        setNotifications(notifData.slice(0, 3));
 
         // If user is due for post-test, find the post-test questionnaire
         if (profileRes.data?.is_posttest_due) {
@@ -40,8 +48,27 @@ const DashboardPage: React.FC = () => {
           }
         }
 
-        const rawSubmissions = Array.isArray(subRes.data) ? subRes.data : subRes.data?.results || [];
-        setSubmissions(rawSubmissions.filter((s: any) => s.status === 'COMPLETED').slice(0, 5));
+        const questionnaireSubmissions = (Array.isArray(subRes.data) ? subRes.data : subRes.data?.results || [])
+          .filter((s: any) => s.status === 'COMPLETED')
+          .map((s: any) => ({
+            ...s,
+            type: 'questionnaire',
+            display_title: s.questionnaire_title || 'Assessment Result',
+            date: s.completed_at
+          }));
+
+        const dailySubmissions = (Array.isArray(activitySubRes.data) ? activitySubRes.data : activitySubRes.data?.results || []).map((s: any) => ({
+          ...s,
+          type: 'activity',
+          display_title: s.activity_title || 'Daily Activity',
+          date: s.submission_date
+        }));
+
+        const combinedSubmissions = [...questionnaireSubmissions, ...dailySubmissions]
+          .filter(s => s.date)
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        setSubmissions(combinedSubmissions.slice(0, 5));
       } catch (err) {
         console.error(err);
       } finally {
@@ -50,6 +77,13 @@ const DashboardPage: React.FC = () => {
     };
     fetchData();
   }, []);
+
+  const getPerformanceLabel = (rate: number) => {
+    if (rate >= 90) return t('dashboard.optimal');
+    if (rate >= 70) return 'Good';
+    if (rate >= 40) return 'Average';
+    return 'Action Required';
+  };
 
   return (
     <div className="space-y-8">
@@ -137,17 +171,23 @@ const DashboardPage: React.FC = () => {
             </h2>
             <div className="divide-y divide-zinc-100">
               {(submissions || []).map((sub) => (
-                <div key={sub.id} className="py-4 flex items-center justify-between group">
+                <div key={`${sub.type}-${sub.id}`} className="py-4 flex items-center justify-between group">
                   <div className="flex items-center gap-3">
                     <FileText size={18} className="text-zinc-400" />
                     <div>
-                      <span className="block font-medium text-zinc-800">{sub.questionnaire_title || 'Assessment Result'}</span>
-                      <span className="text-zinc-400 text-xs">{new Date(sub.completed_at).toLocaleDateString()}</span>
+                      <span className="block font-medium text-zinc-800">{sub.display_title}</span>
+                      <span className="text-zinc-400 text-xs">{new Date(sub.date).toLocaleDateString()}</span>
                     </div>
                   </div>
-                  <Link to={`/results/${sub.id}`} className="flex items-center gap-1 text-zinc-600 text-sm font-medium hover:text-zinc-900 opacity-0 group-hover:opacity-100 transition-all">
-                    {t('dashboard.view_insights')} <ArrowRight size={14} />
-                  </Link>
+                  {sub.type === 'questionnaire' ? (
+                    <Link to={`/results/${sub.id}`} className="flex items-center gap-1 text-zinc-600 text-sm font-medium hover:text-zinc-900 opacity-0 group-hover:opacity-100 transition-all">
+                      {t('dashboard.view_insights')} <ArrowRight size={14} />
+                    </Link>
+                  ) : (
+                    <Link to={`/activity/${sub.activity}`} className="flex items-center gap-1 text-zinc-600 text-sm font-medium hover:text-zinc-900 opacity-0 group-hover:opacity-100 transition-all">
+                      Edit <ArrowRight size={14} />
+                    </Link>
+                  )}
                 </div>
               ))}
               {submissions.length === 0 && (
@@ -164,17 +204,28 @@ const DashboardPage: React.FC = () => {
             <div className="flex items-center gap-2 font-semibold text-xs mb-4 text-zinc-300 uppercase tracking-wider">
               <Bell size={14} /> {t('dashboard.notifications')}
             </div>
-            <p className="text-sm leading-relaxed text-zinc-100">
-              "Great job completing yesterday's task! Phase 2 begins in 3 days. Get ready for new challenges."
-            </p>
+            {notifications.length > 0 ? (
+              <div className="space-y-4">
+                {notifications.map((n) => (
+                  <div key={n.id} className="text-sm leading-relaxed border-b border-zinc-700 pb-2 last:border-0">
+                    {n.message}
+                    <div className="text-[10px] text-zinc-400 mt-1">{new Date(n.created_at).toLocaleString()}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm italic text-zinc-400">No new notifications</p>
+            )}
           </div>
 
           <div className="border border-zinc-200 rounded-xl p-6 text-center bg-white shadow-sm">
             <div className="inline-block p-5 rounded-xl bg-zinc-800 text-white mb-4">
-              <div className="text-3xl font-bold">85%</div>
+              <div className="text-3xl font-bold">{userProfile?.completion_rate || 0}%</div>
             </div>
             <h4 className="font-semibold text-zinc-800 text-sm">{t('dashboard.completion_rate')}</h4>
-            <p className="text-zinc-400 text-xs mt-1">{t('dashboard.performance')}: {t('dashboard.optimal')}</p>
+            <p className="text-zinc-400 text-xs mt-1">
+              {t('dashboard.performance')}: {getPerformanceLabel(userProfile?.completion_rate || 0)}
+            </p>
           </div>
         </div>
       </div>

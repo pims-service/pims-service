@@ -21,8 +21,9 @@ class UserSerializer(serializers.ModelSerializer):
             'group', 'group_name', 'traits', 'created_at',
             'has_completed_baseline',
             'has_completed_posttest', 'is_posttest_due',
+            'completion_rate',
         )
-        read_only_fields = ('created_at', 'has_completed_baseline', 'has_completed_posttest', 'is_posttest_due',)
+        read_only_fields = ('created_at', 'has_completed_baseline', 'has_completed_posttest', 'is_posttest_due', 'completion_rate',)
 
 class SignupSerializer(serializers.ModelSerializer):
     """

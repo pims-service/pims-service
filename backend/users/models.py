@@ -99,6 +99,23 @@ class User(AbstractUser):
             return False
         return self.current_experiment_day is not None and self.current_experiment_day >= 7
 
+    @property
+    def completion_rate(self):
+        """Calculates the percentage of daily activities completed relative to current day."""
+        current_day = self.current_experiment_day
+        if not current_day:
+            return 0
+        
+        # Max out at 7 days for calculation
+        effective_day = min(current_day, 7)
+        
+        from activities.models import Submission
+        submissions_count = Submission.objects.filter(user=self).values('experiment_day').distinct().count()
+        
+        # Avoid division by zero
+        rate = int((submissions_count / effective_day) * 100) if effective_day > 0 else 0
+        return min(rate, 100) # Cap at 100%
+
 class UserConsent(models.Model):
     """
     Detailed consent record for a specific user.

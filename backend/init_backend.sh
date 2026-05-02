@@ -25,6 +25,6 @@ if [ "$DJANGO_SUPERUSER_USERNAME" ]; then
         --email "$DJANGO_SUPERUSER_EMAIL"
 fi
 
-# Start Gunicorn
-echo "Starting Gunicorn..."
-exec gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3
+# Start Daphne (ASGI server for WebSockets support)
+echo "Starting Daphne..."
+exec daphne -b 0.0.0.0 -p 8000 core.asgi:application
