@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { 
-  Users, 
-  LayoutDashboard, 
+import {
+  Users,
+  LayoutDashboard,
   BarChart2,
   Database,
   ClipboardCheck,
@@ -34,9 +34,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate }) => {
 
   const navItems = [
     { label: 'Overview', path: '/admin', icon: <LayoutDashboard size={18} /> },
-    { label: 'Baseline Raw Data', path: '/admin/baseline-data', icon: <Database size={18} /> },
+    { label: 'Initial Questionnaire Reports', path: '/admin/baseline-data', icon: <Database size={18} /> },
     { label: 'Post-Test Data', path: '/admin/posttest-data', icon: <ClipboardCheck size={18} /> },
-    { label: 'Experimental Reports', path: '/admin/reports', icon: <BarChart2 size={18} /> },
     { label: 'Groups Management', path: '/admin/groups', icon: <Users size={18} /> },
     { label: 'User Queries', path: '/admin/support-queries', icon: <MessageSquare size={18} />, badge: openQueriesCount },
   ];
@@ -56,7 +55,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate }) => {
             className={({ isActive }) => `
               flex items-center justify-between px-5 py-2.5 text-sm font-medium transition-all rounded-lg mx-2
               ${isActive 
-                ? 'bg-zinc-100 text-zinc-900' 
+                ? 'bg-zinc-100 text-zinc-900'
                 : 'text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50'}
             `}
           >
