@@ -15,6 +15,7 @@ const GroupsManagementPage = lazy(() => import('./pages/GroupsManagementPage'));
 const GroupDetailPage = lazy(() => import('./pages/GroupDetailPage'));
 const AdminBaselineResultsPage = lazy(() => import('./pages/AdminBaselineResultsPage'));
 const AdminPosttestResultsPage = lazy(() => import('./pages/AdminPosttestResultsPage'));
+const AdminSupportQueriesPage = lazy(() => import('./pages/AdminSupportQueriesPage'));
 const AdminLayout = lazy(() => import('./components/Admin/AdminLayout'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const ResultsPage = lazy(() => import('./pages/ResultsPage'));
@@ -66,6 +67,7 @@ const App: React.FC = () => {
                  <Route path="/admin/reports" element={<AdminReportsPage />} />
                  <Route path="/admin/baseline-data" element={<AdminBaselineResultsPage />} />
                  <Route path="/admin/posttest-data" element={<AdminPosttestResultsPage />} />
+                 <Route path="/admin/support-queries" element={<AdminSupportQueriesPage />} />
               </Route>
 
               {/* Fallback */}

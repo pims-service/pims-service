@@ -76,6 +76,7 @@ INSTALLED_APPS = [
     'notifications',
     'questionnaires',
     'admin_tools',
+    'support',
 ]
 
 MIDDLEWARE = [
