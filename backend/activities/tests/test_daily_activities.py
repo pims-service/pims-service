@@ -79,13 +79,26 @@ class TestDailyActivities:
         
         # 2. Re-submit same day (11:59 PM) - Should succeed (Update)
         with freeze_time("2026-04-19 23:59:59"):
+            from django.core.cache import cache
+            cache.clear()
             resp2 = api_client.post(submit_url, {"activity": activity.id, "content": "Updated Entry"}, format='json')
             assert resp2.status_code == status.HTTP_201_CREATED
             assert Submission.objects.get(id=resp1.data['id']).content == "Updated Entry"
             
         # 3. Submit next day (00:01 AM)
         with freeze_time("2026-04-20 00:00:01"):
-            resp3 = api_client.post(submit_url, {"activity": activity.id, "content": "Entry 2"}, format='json')
+            cache.clear()
+            # Create a Day 2 activity to satisfy the new validation
+            # (User is now on Day 2 because baseline was at 10:00 AM on 2026-04-19)
+            activity_day2 = Activity.objects.create(
+                title="Gratitude Reflection Day 2",
+                description="Day 2 prompt",
+                assigned_phase=activity.assigned_phase,
+                group=group,
+                activity_type="paragraph",
+                day_number=2
+            )
+            resp3 = api_client.post(submit_url, {"activity": activity_day2.id, "content": "Entry 2"}, format='json')
             assert resp3.status_code == status.HTTP_201_CREATED
 
     def test_prevent_submission_for_wrong_group(self, api_client, test_setup):
