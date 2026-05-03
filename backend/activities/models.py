@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.db.models.functions import TruncDate
 from phases.models import Phase
 
 class Activity(models.Model):
@@ -27,6 +28,19 @@ class Submission(models.Model):
     experiment_day = models.PositiveIntegerField(null=True, blank=True)
     submission_date = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                TruncDate('submission_date'),
+                'user',
+                name='unique_daily_submission_per_user'
+            ),
+            models.UniqueConstraint(
+                fields=['user', 'experiment_day'],
+                name='unique_user_experiment_day'
+            )
+        ]
 
     def __str__(self):
         return f"{self.user.username} - {self.activity.title}"

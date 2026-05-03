@@ -16,10 +16,15 @@ class DailySubmissionSerializer(serializers.ModelSerializer):
     def validate(self, data):
         user = self.context['request'].user
         activity = data['activity']
+        current_day = user.current_experiment_day
         
         # Ensure activity belongs to user's group or is global
         if activity.group and activity.group != user.group:
             raise serializers.ValidationError("This activity is not assigned to your group.")
+            
+        # Ensure activity matches the user's current experiment day
+        if activity.day_number and activity.day_number != current_day:
+            raise serializers.ValidationError(f"You can only submit for Day {current_day}. This activity is for Day {activity.day_number}.")
             
         return data
 

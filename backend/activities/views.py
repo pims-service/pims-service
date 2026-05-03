@@ -108,7 +108,7 @@ class DailyActivityViewSet(viewsets.ModelViewSet):
                     serializer.save(user=user, experiment_day=current_day)
                 except IntegrityError:
                     return Response(
-                        {"detail": "You have already submitted this specific activity."}, 
+                        {"detail": "You have already made a submission for today or for this experiment day."}, 
                         status=status.HTTP_400_BAD_REQUEST
                     )
                 
@@ -140,5 +140,16 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Submission.objects.filter(user=self.request.user).order_by('-submission_date')
 
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError:
+            return Response(
+                {"detail": "You have already made a submission for today or for this experiment day."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        user = self.request.user
+        current_day = user.current_experiment_day
+        serializer.save(user=user, experiment_day=current_day)
