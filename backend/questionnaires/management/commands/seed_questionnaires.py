@@ -19,7 +19,8 @@ class Command(BaseCommand):
         questionnaire = Questionnaire.objects.create(
             title=q_title,
             description="A comprehensive initial assessment to determine experimental group eligibility and capture baseline psychometric data.",
-            is_active=True
+            is_active=True,
+            is_baseline=True
         )
 
         # 3. Define Questions
