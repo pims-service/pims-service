@@ -149,7 +149,7 @@ class AdminDashboardAnalyticsView(APIView):
                 'id': u.id,
                 'username': u.username,
                 'group': u.group.name if hasattr(u, 'group') and u.group else 'Unassigned',
-                'submissions_count': f"{b_count + a_count}/30", # format for dashboard out of 30
+                'submissions_count': f"{b_count + a_count}/9", # format for dashboard out of 9 (1 baseline + 7 activities + 1 post-test)
                 'status': 'Active' if u.id in active_users else 'Inactive'
             })
 

@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-psych_db}
+      POSTGRES_USER: ${POSTGRES_USER:-psych_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+
+  backend:
+    image: ${ACR_NAME}.azurecr.io/backend:latest
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DEBUG: "False"
+      ALLOWED_HOSTS: "*"
+      DATABASE_URL: postgres://psych_user:${POSTGRES_PASSWORD}@db:5432/psych_db
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+
+  celery_worker:
+    image: ${ACR_NAME}.azurecr.io/backend:latest
+    command: celery -A core worker --loglevel=info
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DATABASE_URL: postgres://psych_user:${POSTGRES_PASSWORD}@db:5432/psych_db
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+
+  frontend:
+    image: ${ACR_NAME}.azurecr.io/frontend:latest
+    environment:
+      VITE_API_URL: ${VITE_API_URL}
+    depends_on:
+      - backend
+
+  nginx:
+    image: ${ACR_NAME}.azurecr.io/nginx:latest
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
+
+volumes:
+  postgres_data:
