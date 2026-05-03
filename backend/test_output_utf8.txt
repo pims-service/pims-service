@@ -1,0 +1,76 @@
+﻿============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-8.4.2, pluggy-1.6.0 -- /usr/local/bin/python3.11
+cachedir: .pytest_cache
+django: version: 5.1, settings: core.settings (from ini)
+rootdir: /app
+configfile: pytest.ini
+plugins: factoryboy-2.7.0, django-4.9.0, Faker-30.8.1, asyncio-0.24.0
+asyncio: mode=Mode.AUTO, default_loop_scope=None
+collecting ... collected 1 item
+
+notifications/tests/test_websockets.py::test_notification_websocket_authenticated FAILED [100%]
+
+=================================== FAILURES ===================================
+__________________ test_notification_websocket_authenticated ___________________
+
+    @pytest.mark.django_db(transaction=True)
+    @pytest.mark.asyncio
+    async def test_notification_websocket_authenticated():
+        user = await sync_to_async(User.objects.create_user)(username="wsuser", email="ws@ex.com", password="pass")
+        token = str(AccessToken.for_user(user))
+    
+        communicator = WebsocketCommunicator(application, f"/ws/notifications/?token={token}")
+        connected, _ = await communicator.connect()
+        assert connected
+    
+        # Trigger a notification push via signal
+        await sync_to_async(Notification.objects.create)(
+            user=user,
+            n_type="email",
+            message="Real-time check",
+            scheduled_time=timezone.now()
+        )
+    
+        # Receive message
+        response = await communicator.receive_json_from()
+>       assert response["type"] == "send_notification"
+E       AssertionError: assert 'notification' == 'send_notification'
+E         
+E         - send_notification
+E         ? -----
+E         + notification
+
+notifications/tests/test_websockets.py:34: AssertionError
+---------------------------- Captured stdout setup -----------------------------
+Operations to perform:
+  Synchronize unmigrated apps: channels, corsheaders, daphne, django_filters, drf_spectacular, messages, rest_framework, rest_framework_simplejwt, staticfiles
+  Apply all migrations: activities, admin, admin_tools, auth, contenttypes, groups, notifications, phases, questionnaires, sessions, support, users
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  No migrations to apply.
+---------------------------- Captured stderr setup -----------------------------
+Using existing test database for alias 'default' ('test_psych_clean_db')...
+=============================== warnings summary ===============================
+../usr/local/lib/python3.11/site-packages/_pytest/config/__init__.py:1474
+  /usr/local/lib/python3.11/site-packages/_pytest/config/__init__.py:1474: PytestConfigWarning: Unknown config option: asyncio_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+notifications/tests/test_websockets.py::test_notification_websocket_authenticated
+  /usr/local/lib/python3.11/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 20 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+    return self._jws.encode(
+
+notifications/tests/test_websockets.py::test_notification_websocket_authenticated
+  /usr/local/lib/python3.11/site-packages/jwt/api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 20 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+    decoded = self.decode_complete(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED notifications/tests/test_websockets.py::test_notification_websocket_authenticated - AssertionError: assert 'notification' == 'send_notification'
+  
+  - send_notification
+  ? -----
+  + notification
+======================== 1 failed, 3 warnings in 4.14s =========================

@@ -1,0 +1,126 @@
+﻿============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-8.4.2, pluggy-1.6.0 -- /usr/local/bin/python3.11
+cachedir: .pytest_cache
+django: version: 5.1, settings: core.settings (from ini)
+rootdir: /app
+configfile: pytest.ini
+plugins: factoryboy-2.7.0, django-4.9.0, Faker-30.8.1, asyncio-0.24.0
+asyncio: mode=Mode.AUTO, default_loop_scope=None
+collecting ... collected 3 items
+
+notifications/tests/test_websockets.py::test_notification_websocket_authenticated PASSED [ 33%]
+notifications/tests/test_websockets.py::test_notification_websocket_unauthenticated FAILED [ 66%]
+notifications/tests/test_websockets.py::test_support_ticket_count_push FAILED [100%]
+
+=================================== FAILURES ===================================
+_________________ test_notification_websocket_unauthenticated __________________
+
+    @pytest.mark.django_db(transaction=True)
+    @pytest.mark.asyncio
+    async def test_notification_websocket_unauthenticated():
+        communicator = WebsocketCommunicator(application, "/ws/notifications/?token=invalid")
+        connected, _ = await communicator.connect()
+>       assert connected
+E       assert False
+
+notifications/tests/test_websockets.py:44: AssertionError
+________________________ test_support_ticket_count_push ________________________
+
+    @pytest.mark.django_db(transaction=True)
+    @pytest.mark.asyncio
+    async def test_support_ticket_count_push():
+        user = await sync_to_async(User.objects.create_user)(username="ticketuser", email="t@ex.com", password="pass")
+        token = str(AccessToken.for_user(user))
+    
+        communicator = WebsocketCommunicator(application, f"/ws/notifications/?token={token}")
+        await communicator.connect()
+    
+        # Create a ticket
+        ticket = await sync_to_async(SupportTicket.objects.create)(
+            user=user,
+            subject="Help",
+            message="Issue"
+        )
+    
+        # Receive initial count (created)
+>       response = await communicator.receive_json_from()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+notifications/tests/test_websockets.py:77: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.11/site-packages/channels/testing/websocket.py:100: in receive_json_from
+    payload = await self.receive_from(timeout)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/site-packages/channels/testing/websocket.py:79: in receive_from
+    response = await self.receive_output(timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/site-packages/asgiref/testing.py:106: in receive_output
+    self.future.result()
+/usr/local/lib/python3.11/site-packages/channels/routing.py:62: in __call__
+    return await application(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+core/middleware.py:83: in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/site-packages/channels/routing.py:132: in __call__
+    return await application(
+/usr/local/lib/python3.11/site-packages/channels/consumer.py:94: in app
+    return await consumer(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/site-packages/channels/consumer.py:58: in __call__
+    await await_many_dispatch(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+consumer_callables = [<bound method Queue.get of <Queue at 0x750287a909d0 maxsize=0 tasks=1>>, functools.partial(<bound method RedisChannel...ChannelLayer object at 0x750287bd8d10>>, 'specific.5690cad290964b84b183d2f1757bc415!d741c9e20c8b4bf6a6f5ac8a0d618a7f')]
+dispatch = <bound method AsyncConsumer.dispatch of <notifications.consumers.NotificationConsumer object at 0x750287be7790>>
+
+    async def await_many_dispatch(consumer_callables, dispatch):
+        """
+        Given a set of consumer callables, awaits on them all and passes results
+        from them to the dispatch awaitable as they come in.
+        """
+        # Call all callables, and ensure all return types are Futures
+        tasks = [
+            asyncio.ensure_future(consumer_callable())
+            for consumer_callable in consumer_callables
+        ]
+        try:
+            while True:
+                # Wait for any of them to complete
+                await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+                # Find the completed one(s), yield results, and replace them
+                for i, task in enumerate(tasks):
+                    if task.done():
+                        result = task.result()
+                        await dispatch(result)
+                        tasks[i] = asyncio.ensure_future(consumer_callables[i]())
+        finally:
+            # Make sure we clean up tasks on exit
+            for task in tasks:
+                task.cancel()
+                try:
+>                   await task
+E                   RuntimeError: Two event loops are trying to receive() on one channel layer at once!
+
+/usr/local/lib/python3.11/site-packages/channels/utils.py:57: RuntimeError
+=============================== warnings summary ===============================
+../usr/local/lib/python3.11/site-packages/_pytest/config/__init__.py:1474
+  /usr/local/lib/python3.11/site-packages/_pytest/config/__init__.py:1474: PytestConfigWarning: Unknown config option: asyncio_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+notifications/tests/test_websockets.py::test_notification_websocket_authenticated
+notifications/tests/test_websockets.py::test_support_ticket_count_push
+  /usr/local/lib/python3.11/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 20 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+    return self._jws.encode(
+
+notifications/tests/test_websockets.py::test_notification_websocket_authenticated
+notifications/tests/test_websockets.py::test_support_ticket_count_push
+  /usr/local/lib/python3.11/site-packages/jwt/api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 20 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+    decoded = self.decode_complete(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED notifications/tests/test_websockets.py::test_notification_websocket_unauthenticated - assert False
+FAILED notifications/tests/test_websockets.py::test_support_ticket_count_push - RuntimeError: Two event loops are trying to receive() on one channel layer at once!
+=================== 2 failed, 1 passed, 5 warnings in 6.43s ====================

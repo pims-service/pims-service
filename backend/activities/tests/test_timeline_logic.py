@@ -84,7 +84,7 @@ class TestTimelineAndCaching:
         
         assert user.current_experiment_day == 1 # Hits cache
 
-    def test_submission_persists_experiment_day(self, api_client, timeline_setup):
+    def test_submission_persists_experiment_day(self, api_client, timeline_setup, test_phase):
         """Verify that submissions store the chronological day of the experiment."""
         user, group, act1, act2 = timeline_setup
         api_client.force_authenticate(user=user)
@@ -95,14 +95,67 @@ class TestTimelineAndCaching:
         user.save()
         cache.clear() # Ensure clean state
 
+        # Create activity for Day 3 to satisfy validation
+        act3 = Activity.objects.create(
+            title="Day 3 Task", description="Task 3",
+            assigned_phase=test_phase, group=group,
+            activity_type="task", day_number=3
+        )
+
         url = reverse('daily-activity-submit')
-        payload = {"activity": act1.id, "content": "Day 3 entry"} # User can submit any activity for their group
+        payload = {"activity": act3.id, "content": "Day 3 entry"}
         
         response = api_client.post(url, payload, format='json')
         assert response.status_code == status.HTTP_201_CREATED
         
         submission = Submission.objects.get(user=user, content="Day 3 entry")
         assert submission.experiment_day == 3
+
+    def test_block_wrong_experiment_day_submission(self, api_client, timeline_setup):
+        """Verify that user cannot submit for an activity that doesn't match their current experiment day."""
+        user, group, act1, act2 = timeline_setup
+        api_client.force_authenticate(user=user)
+        
+        # User is on Day 1, try to submit for Day 2
+        url = reverse('daily-activity-submit')
+        payload = {"activity": act2.id, "content": "Premature entry"}
+        
+        response = api_client.post(url, payload, format='json')
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "You can only submit for Day 1" in str(response.data)
+
+    def test_block_multiple_submissions_same_day_generic_api(self, api_client, timeline_setup):
+        """Verify that the generic submission endpoint blocks multiple activities per day via database constraints."""
+        user, group, act1, act2 = timeline_setup
+        api_client.force_authenticate(user=user)
+        
+        url = reverse('submission-list') # Generic SubmissionViewSet
+        
+        # First submission succeeds
+        response1 = api_client.post(url, {"activity": act1.id, "content": "First"}, format='json')
+        assert response1.status_code == status.HTTP_201_CREATED
+        
+        # Second submission on same day fails due to database IntegrityError (one per calendar day)
+        response2 = api_client.post(url, {"activity": act1.id, "content": "Second"}, format='json')
+        assert response2.status_code == status.HTTP_400_BAD_REQUEST
+        assert "already made a submission for today" in str(response2.data)
+
+    def test_daily_activity_update_behavior(self, api_client, timeline_setup):
+        """Verify that the daily activity endpoint allows updating today's submission rather than creating a new one."""
+        user, group, act1, act2 = timeline_setup
+        api_client.force_authenticate(user=user)
+        
+        url = reverse('daily-activity-submit')
+        
+        # First submission
+        api_client.post(url, {"activity": act1.id, "content": "Initial"}, format='json')
+        assert Submission.objects.filter(user=user).count() == 1
+        
+        # Second submission (update)
+        response = api_client.post(url, {"activity": act1.id, "content": "Updated"}, format='json')
+        assert response.status_code == status.HTTP_201_CREATED
+        assert Submission.objects.filter(user=user).count() == 1
+        assert Submission.objects.get(user=user).content == "Updated"
 
     def test_redis_submission_flag_caching(self, api_client, timeline_setup):
         """Verify that submitted_today flag is cached in Redis after submission."""
