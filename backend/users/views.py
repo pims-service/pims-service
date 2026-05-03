@@ -1,5 +1,6 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import User
 from .serializers import UserSerializer, SignupSerializer, CustomTokenObtainPairSerializer
@@ -53,4 +54,8 @@ class SendOTPView(generics.CreateAPIView):
         from .tasks import send_otp_email_task
         send_otp_email_task.delay(email, otp)
         
-        return Response({'message': 'OTP sent successfully to ' + email}, status=status.HTTP_200_OK)
+
+class HealthCheckView(APIView):
+    permission_classes = (permissions.AllowAny,)
+    def get(self, request):
+        return Response({"status": "ok"})

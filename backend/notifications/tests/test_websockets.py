@@ -1,4 +1,5 @@
 import pytest
+from django.utils import timezone
 from channels.testing import WebsocketCommunicator
 from core.asgi import application
 from notifications.models import Notification
@@ -23,14 +24,15 @@ async def test_notification_websocket_authenticated():
     # Trigger a notification push via signal
     await sync_to_async(Notification.objects.create)(
         user=user,
-        title="WebSocket Test",
-        message="Real-time check"
+        n_type="email",
+        message="Real-time check",
+        scheduled_time=timezone.now()
     )
     
     # Receive message
     response = await communicator.receive_json_from()
     assert response["type"] == "notification"
-    assert response["data"]["title"] == "WebSocket Test"
+    assert response["message"] == "Real-time check"
     
     await communicator.disconnect()
 
@@ -38,20 +40,11 @@ async def test_notification_websocket_authenticated():
 @pytest.mark.asyncio
 async def test_notification_websocket_unauthenticated():
     communicator = WebsocketCommunicator(application, "/ws/notifications/?token=invalid")
-    connected, _ = await communicator.connect()
-    assert connected
+    connected, close_code = await communicator.connect()
+    # Should be rejected due to invalid token
+    assert not connected
+    assert close_code == 1000 or close_code is None
     
-    # Since user is Anonymous, they shouldn't receive notifications
-    user = await sync_to_async(User.objects.create_user)(username="otheruser", email="o@ex.com", password="pass")
-    await sync_to_async(Notification.objects.create)(
-        user=user,
-        title="Secret",
-        message="Private"
-    )
-    
-    # Check if we receive anything (we shouldn't)
-    assert await communicator.receive_nothing()
-        
     await communicator.disconnect()
 
 @pytest.mark.django_db(transaction=True)
@@ -72,7 +65,8 @@ async def test_support_ticket_count_push():
     
     # Receive initial count (created)
     response = await communicator.receive_json_from()
-    assert "ticket_count" in response["data"]
+    assert response["type"] == "ticket_count"
+    assert "count" in response
     
     # Update ticket (admin reply)
     ticket.admin_reply = "Resolved"
