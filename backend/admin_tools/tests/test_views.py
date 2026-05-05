@@ -118,7 +118,7 @@ def analytics_setup(db, admin_user, test_phase):
 def test_dashboard_analytics_requires_admin(api_client, test_user):
     """Non-admin users must be rejected with 403."""
     api_client.force_authenticate(user=test_user)
-    url = reverse('admin_dashboard_analytics')
+    url = reverse('dashboard_analytics')
     response = api_client.get(url)
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -126,7 +126,7 @@ def test_dashboard_analytics_requires_admin(api_client, test_user):
 @pytest.mark.django_db
 def test_dashboard_analytics_total_participants(admin_client, analytics_setup):
     """total_participants must count only non-superuser accounts."""
-    url = reverse('admin_dashboard_analytics')
+    url = reverse('dashboard_analytics')
     response = admin_client.get(url)
 
     assert response.status_code == status.HTTP_200_OK
@@ -137,7 +137,7 @@ def test_dashboard_analytics_total_participants(admin_client, analytics_setup):
 @pytest.mark.django_db
 def test_dashboard_analytics_total_submissions(admin_client, analytics_setup):
     """total_submissions = completed baselines + activity submissions."""
-    url = reverse('admin_dashboard_analytics')
+    url = reverse('dashboard_analytics')
     response = admin_client.get(url)
 
     assert response.status_code == status.HTTP_200_OK
@@ -148,7 +148,7 @@ def test_dashboard_analytics_total_submissions(admin_client, analytics_setup):
 @pytest.mark.django_db
 def test_dashboard_analytics_active_rate(admin_client, analytics_setup):
     """Both users completed baseline recently, so active rate must be 100%."""
-    url = reverse('admin_dashboard_analytics')
+    url = reverse('dashboard_analytics')
     response = admin_client.get(url)
 
     assert response.status_code == status.HTTP_200_OK
@@ -158,7 +158,7 @@ def test_dashboard_analytics_active_rate(admin_client, analytics_setup):
 @pytest.mark.django_db
 def test_dashboard_analytics_engagement_trend_shape(admin_client, analytics_setup):
     """Engagement trend must always return exactly 7 entries."""
-    url = reverse('admin_dashboard_analytics')
+    url = reverse('dashboard_analytics')
     response = admin_client.get(url)
 
     assert response.status_code == status.HTTP_200_OK
@@ -173,7 +173,7 @@ def test_dashboard_analytics_engagement_trend_shape(admin_client, analytics_setu
 @pytest.mark.django_db
 def test_dashboard_analytics_engagement_trend_counts(admin_client, analytics_setup):
     """Today's trend count must include baselines + the activity submission."""
-    url = reverse('admin_dashboard_analytics')
+    url = reverse('dashboard_analytics')
     response = admin_client.get(url)
 
     trend = response.data['engagement_trend']
@@ -185,7 +185,7 @@ def test_dashboard_analytics_engagement_trend_counts(admin_client, analytics_set
 @pytest.mark.django_db
 def test_dashboard_analytics_recent_participants_shape(admin_client, analytics_setup):
     """Recent participants list must include required keys and group names."""
-    url = reverse('admin_dashboard_analytics')
+    url = reverse('dashboard_analytics')
     response = admin_client.get(url)
 
     assert response.status_code == status.HTTP_200_OK
@@ -211,7 +211,7 @@ def test_dashboard_analytics_submissions_count_per_user(admin_client, analytics_
     user_a: 1 completed baseline + 1 activity submission = 2 total -> "2/9"
     user_b: 1 completed baseline + 0 activity submissions = 1 total -> "1/9"
     """
-    url = reverse('admin_dashboard_analytics')
+    url = reverse('dashboard_analytics')
     response = admin_client.get(url)
 
     participants = {p['username']: p for p in response.data['recent_participants']}
@@ -227,7 +227,7 @@ def test_dashboard_analytics_inactive_user(admin_client, analytics_setup):
         username='inactive_user', email='inactive@test.com', password='pass',
         group=analytics_setup['group_a'], has_completed_baseline=False
     )
-    url = reverse('admin_dashboard_analytics')
+    url = reverse('dashboard_analytics')
     response = admin_client.get(url)
 
     participants = {p['username']: p for p in response.data['recent_participants']}
