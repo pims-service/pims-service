@@ -94,8 +94,8 @@ def analytics_setup(db, admin_user, test_phase):
     )
 
     questionnaire = Questionnaire.objects.create(title='Baseline', is_baseline=True, is_active=True)
-    rs_a = ResponseSet.objects.create(user=user_a, questionnaire=questionnaire, status='COMPLETED')
-    rs_b = ResponseSet.objects.create(user=user_b, questionnaire=questionnaire, status='COMPLETED')
+    rs_a = ResponseSet.objects.create(user=user_a, questionnaire=questionnaire, status='COMPLETED', completed_at=timezone.now())
+    rs_b = ResponseSet.objects.create(user=user_b, questionnaire=questionnaire, status='COMPLETED', completed_at=timezone.now())
 
     activity = Activity.objects.create(
         title='Day 1 Activity', description='Write.', assigned_phase=test_phase,
