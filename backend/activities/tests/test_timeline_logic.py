@@ -135,7 +135,7 @@ class TestTimelineAndCaching:
         response1 = api_client.post(url, {"activity": act1.id, "content": "First"}, format='json')
         assert response1.status_code == status.HTTP_201_CREATED
         
-        # Second submission on same day fails due to database IntegrityError (one per calendar day)
+        # Second submission on same day fails due to database IntegrityError (one per experiment day)
         response2 = api_client.post(url, {"activity": act1.id, "content": "Second"}, format='json')
         assert response2.status_code == status.HTTP_400_BAD_REQUEST
         assert "already made a submission for today" in str(response2.data)
