@@ -64,10 +64,12 @@ def admin_client(api_client, admin_user):
 
 @pytest.fixture
 def test_phase(db):
-    from datetime import date, timedelta
+    from datetime import timedelta
+    from django.utils import timezone
+    today = timezone.localdate()
     return Phase.objects.create(
         phase_number=1,
         name="Phase 1",
-        start_date=date.today(),
-        end_date=date.today() + timedelta(days=7)
+        start_date=today,
+        end_date=today + timedelta(days=7)
     )

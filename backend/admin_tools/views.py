@@ -129,6 +129,7 @@ class AdminDashboardAnalyticsView(APIView):
         from phases.models import Phase
 
         now = timezone.now()
+        local_now = timezone.localtime(now)
         seven_days_ago = now - datetime.timedelta(days=7)
 
         user_qs = User.objects.filter(is_superuser=False)
@@ -152,12 +153,12 @@ class AdminDashboardAnalyticsView(APIView):
         active_rate = round((len(active_users) / total_participants * 100), 1) if total_participants > 0 else 0
 
         # --- Phase Status ---
-        today = now.date()
+        today = local_now.date()
         current_phase = Phase.objects.filter(start_date__lte=today, end_date__gte=today).first()
         current_phase_name = current_phase.name if current_phase else "Pre-Launch"
 
         # --- Engagement Trend: SINGLE aggregated query instead of 7 separate ones ---
-        day_start_7 = (now - datetime.timedelta(days=6)).replace(hour=0, minute=0, second=0, microsecond=0)
+        day_start_7 = (local_now - datetime.timedelta(days=6)).replace(hour=0, minute=0, second=0, microsecond=0)
 
         baseline_by_day = (
             ResponseSet.objects
@@ -183,7 +184,7 @@ class AdminDashboardAnalyticsView(APIView):
 
         engagement_trend = []
         for i in range(6, -1, -1):
-            d = (now - datetime.timedelta(days=i)).date()
+            d = (local_now - datetime.timedelta(days=i)).date()
             engagement_trend.append({
                 'date': d.strftime('%a %d'),
                 'count': day_counts.get(d, 0)

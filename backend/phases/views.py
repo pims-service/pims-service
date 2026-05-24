@@ -14,5 +14,5 @@ class CurrentPhaseView(generics.RetrieveAPIView):
     permission_classes = (permissions.IsAuthenticated, BaselineCompleted,)
 
     def get_object(self):
-        today = timezone.now().date()
+        today = timezone.localdate()
         return Phase.objects.filter(start_date__lte=today, end_date__gte=today).first()
