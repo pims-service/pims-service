@@ -90,6 +90,9 @@ export const questionnairesApi = {
   triggerAdminPosttestExport: (groupName?: string) => api.post('/admin/tools/export/posttests/csv/', {
     group: groupName || 'All'
   }),
+  triggerAdminLongitudinalExport: (groupName?: string) => api.post('/admin/tools/export/longitudinal/csv/', {
+    group: groupName || 'All'
+  }),
   getAdminBaselineExportStatus: (taskId: string) => api.get(`/admin/tools/export/status/${taskId}/`),
   exportQuestionnaireData: (id: string) => api.get(`/questionnaires/${id}/export/`, { responseType: 'blob' }),
 };

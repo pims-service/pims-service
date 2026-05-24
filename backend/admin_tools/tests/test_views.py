@@ -362,3 +362,127 @@ def test_generate_longitudinal_export_csv_task(admin_user, test_group):
     assert "Male" in csv_content
     # PERMA joy answer
     assert "10 - Completely" in csv_content
+
+
+@pytest.mark.django_db
+def test_generate_baseline_export_csv_task(admin_user, test_group):
+    from admin_tools.tasks import generate_baseline_export_csv
+    from questionnaires.models import Questionnaire, Question, Option, ResponseSet, Response
+    from django.utils import timezone
+
+    # 1. Create a sociodemographic questionnaire and questions
+    socio_q = Questionnaire.objects.create(
+        title="Socio Survey", assessment_type='SOCIODEMOGRAPHIC', is_active=True
+    )
+    gender_q = Question.objects.create(
+        questionnaire=socio_q, content="What is your gender?", type="CHOICE", order=1
+    )
+    opt_male = Option.objects.create(question=gender_q, label="Male", numeric_value=1, order=1)
+
+    # 2. Create a psychometric questionnaire and questions
+    psy_q = Questionnaire.objects.create(
+        title="Battery", assessment_type='PSYCHOMETRIC', is_active=True
+    )
+    perma_q = Question.objects.create(
+        questionnaire=psy_q, content="[PERMA] Feel joyful?", type="SCALE", order=1
+    )
+    opt_joy = Option.objects.create(question=perma_q, label="10 - Completely", numeric_value=10, order=10)
+
+    # 3. Create a participant user who completed baseline
+    from users.models import User
+    user = User.objects.create_user(
+        username="baseline_participant", email="bp@example.com", password="password",
+        group=test_group, has_completed_baseline=True,
+        baseline_completed_at=timezone.now(),
+        has_completed_sociodemographic=True,
+        whatsapp_number="123456789"
+    )
+
+    # 4. Create completed response sets
+    rs_socio = ResponseSet.objects.create(user=user, questionnaire=socio_q, status='COMPLETED')
+    Response.objects.create(response_set=rs_socio, question=gender_q, selected_option=opt_male)
+
+    rs_signup = ResponseSet.objects.create(user=user, questionnaire=psy_q, status='COMPLETED', milestone='SIGNUP')
+    Response.objects.create(response_set=rs_signup, question=perma_q, selected_option=opt_joy)
+
+    # 5. Trigger the export task
+    task = ExportTask.objects.create(user=admin_user, filters={'group': 'All'})
+    generate_baseline_export_csv(task.id)
+
+    # 6. Verify task succeeded and file is saved
+    task.refresh_from_db()
+    assert task.status == 'SUCCESS'
+    assert task.file is not None
+
+    # Read and assert file content
+    csv_content = task.file.read().decode('utf-8')
+    import csv
+    import io
+    reader = csv.reader(io.StringIO(csv_content))
+    rows = list(reader)
+
+    # Check Headers
+    headers = rows[0]
+    assert 'ParticipantID' in headers
+    assert 'WhatsAppNumber' in headers
+    assert 'Socio_Gender' in headers
+    assert 'PERMA_Q1_SIGNUP' in headers
+
+    # Check Data Row
+    data_row = rows[1]
+    assert data_row[0] == str(user.user_id)
+    assert data_row[2] == "123456789"
+    assert "Male" in csv_content
+    assert "10 - Completely" in csv_content
+
+
+@pytest.mark.django_db
+def test_generate_posttest_export_csv_task(admin_user, test_group):
+    from admin_tools.tasks import generate_posttest_export_csv
+    from questionnaires.models import Questionnaire, Question, Option, ResponseSet, Response
+
+    # 1. Create a psychometric questionnaire and questions
+    psy_q = Questionnaire.objects.create(
+        title="Battery", assessment_type='PSYCHOMETRIC', is_active=True
+    )
+    perma_q = Question.objects.create(
+        questionnaire=psy_q, content="[PERMA] Feel joyful?", type="SCALE", order=1
+    )
+    opt_joy = Option.objects.create(question=perma_q, label="10 - Completely", numeric_value=10, order=10)
+
+    # 2. Create a participant user who completed 7_DAYS milestone
+    from users.models import User
+    user = User.objects.create_user(
+        username="posttest_participant", email="pp@example.com", password="password",
+        group=test_group, has_completed_baseline=True
+    )
+
+    # 3. Create completed response set for 7_DAYS milestone
+    rs_posttest = ResponseSet.objects.create(user=user, questionnaire=psy_q, status='COMPLETED', milestone='7_DAYS')
+    Response.objects.create(response_set=rs_posttest, question=perma_q, selected_option=opt_joy)
+
+    # 4. Trigger the export task
+    task = ExportTask.objects.create(user=admin_user, filters={'group': 'All'})
+    generate_posttest_export_csv(task.id)
+
+    # 5. Verify task succeeded and file is saved
+    task.refresh_from_db()
+    assert task.status == 'SUCCESS'
+    assert task.file is not None
+
+    # Read and assert file content
+    csv_content = task.file.read().decode('utf-8')
+    import csv
+    import io
+    reader = csv.reader(io.StringIO(csv_content))
+    rows = list(reader)
+
+    # Check Headers
+    headers = rows[0]
+    assert 'ParticipantID' in headers
+    assert 'PERMA_Q1_7_DAYS' in headers
+
+    # Check Data Row
+    data_row = rows[1]
+    assert data_row[0] == str(user.user_id)
+    assert "10 - Completely" in csv_content

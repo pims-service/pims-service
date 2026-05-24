@@ -6,7 +6,10 @@ import {
   Clock, 
   BarChart3,
   AlertCircle,
-  RefreshCcw
+  RefreshCcw,
+  Loader2,
+  FileSpreadsheet,
+  AlertTriangle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { questionnairesApi, API_URL } from '../services/api';
@@ -25,6 +28,10 @@ const AdminReportsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Longitudinal Export States
+  const [exportingId, setExportingId] = useState<string | null>(null);
+  const [exportStatus, setExportStatus] = useState<'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED' | null>(null);
+
   const fetchSummary = async () => {
     try {
       setLoading(true);
@@ -42,6 +49,56 @@ const AdminReportsPage: React.FC = () => {
   useEffect(() => {
     fetchSummary();
   }, []);
+
+  // Polling for Longitudinal Export
+  useEffect(() => {
+    let pollInterval: NodeJS.Timeout;
+
+    if (exportingId && (exportStatus === 'PENDING' || exportStatus === 'PROCESSING')) {
+      pollInterval = setInterval(async () => {
+        try {
+          const response = await questionnairesApi.getAdminBaselineExportStatus(exportingId);
+          const { status, file_url } = response.data;
+          
+          setExportStatus(status);
+          
+          if (status === 'SUCCESS' && file_url) {
+            setExportingId(null);
+            setExportStatus(null);
+            const link = document.createElement('a');
+            link.href = file_url;
+            link.setAttribute('download', 'longitudinal_export.csv');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+          } else if (status === 'FAILED') {
+            setExportingId(null);
+          }
+        } catch (err) {
+          console.error('Polling longitudinal export status failed', err);
+          setExportingId(null);
+          setExportStatus('FAILED');
+        }
+      }, 2000);
+    }
+
+    return () => {
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [exportingId, exportStatus]);
+
+  const handleExportLongitudinal = async () => {
+    try {
+      setExportStatus('PENDING');
+      const response = await questionnairesApi.triggerAdminLongitudinalExport('All');
+      setExportingId(response.data.task_id);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to export longitudinal data', err);
+      setError('Failed to initiate CSV export. Please check server logs.');
+      setExportStatus(null);
+    }
+  };
 
   const handleExport = (id: string) => {
     const exportUrl = `${API_URL}/questionnaires/${id}/export/`;
@@ -63,6 +120,21 @@ const AdminReportsPage: React.FC = () => {
         <h1 className="text-3xl font-bold text-zinc-900">Experimental Reports</h1>
         <p className="text-zinc-500 mt-1 text-sm">Monitor assessment completion rates and export participant data.</p>
       </header>
+
+      {exportStatus === 'FAILED' && (
+        <div className="bg-white border border-zinc-200 rounded-lg p-4 flex items-center gap-3 text-zinc-700 shadow-sm animate-in fade-in duration-300">
+          <AlertTriangle size={16} className="text-zinc-500" />
+          <span className="text-sm font-medium">Export task failed. Please check server logs.</span>
+          <button onClick={() => setExportStatus(null)} className="ml-auto text-xs font-medium text-zinc-500 hover:text-zinc-700">Dismiss</button>
+        </div>
+      )}
+
+      {exportingId && (
+        <div className="bg-zinc-800 text-white rounded-lg p-4 flex items-center gap-3 shadow-sm animate-in fade-in duration-300">
+          <FileSpreadsheet size={16} className="animate-bounce" />
+          <span className="text-sm font-medium">Processing large dataset export. Please wait...</span>
+        </div>
+      )}
 
       {error && (
         <div className="p-5 bg-white border border-zinc-200 rounded-xl flex items-center gap-4 shadow-sm">
@@ -137,8 +209,22 @@ const AdminReportsPage: React.FC = () => {
                <p className="text-zinc-500 text-sm max-w-lg mt-1">Download the global longitudinal dataset including day-over-day participant delta and group assignment metrics.</p>
             </div>
          </div>
-         <button className="w-full lg:w-auto px-6 py-3 bg-zinc-800 text-white rounded-lg font-medium text-sm hover:bg-zinc-700 transition-colors whitespace-nowrap">
-            Global SPSS Export
+         <button 
+           onClick={handleExportLongitudinal}
+           disabled={!!exportingId}
+           className="w-full lg:w-auto px-6 py-3 bg-zinc-800 text-white rounded-lg font-medium text-sm hover:bg-zinc-700 transition-colors whitespace-nowrap flex items-center justify-center gap-2 disabled:opacity-40"
+         >
+            {exportingId ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Preparing...
+              </>
+            ) : (
+              <>
+                <Download size={16} />
+                Global SPSS Export
+              </>
+            )}
          </button>
       </div>
     </div>

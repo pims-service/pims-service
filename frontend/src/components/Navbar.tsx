@@ -41,8 +41,7 @@ const Navbar: React.FC = () => {
 
   const handleLogout = () => {
     localStorage.clear();
-    navigate('/login');
-    window.location.reload();
+    window.location.href = '/login';
   };
 
   return (

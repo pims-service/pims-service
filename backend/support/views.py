@@ -7,7 +7,7 @@ from .serializers import SupportTicketSerializer, AdminSupportTicketSerializer
 class SupportTicketViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
-        if self.request.user.is_staff or self.request.user.role == 'Admin':
+        if self.request.user.is_staff or (self.request.user.role and self.request.user.role.name == 'Admin'):
             return SupportTicket.objects.all()
         return SupportTicket.objects.filter(user=self.request.user)
     
@@ -19,7 +19,7 @@ class SupportTicketViewSet(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
-        if self.request.user.is_staff or self.request.user.role == 'Admin':
+        if self.request.user.is_staff or (self.request.user.role and self.request.user.role.name == 'Admin'):
             return AdminSupportTicketSerializer
         return SupportTicketSerializer
 

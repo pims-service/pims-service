@@ -39,17 +39,14 @@ const LoginPage: React.FC = () => {
         
         // Redirection based on role and onboarding status
         if (data.user.role === 'Admin') {
-          navigate('/admin');
+          window.location.href = '/admin';
         } else if (data.user.has_completed_sociodemographic === false) {
-          navigate('/sociodemographic');
+          window.location.href = '/sociodemographic';
         } else if (data.user.has_completed_baseline === false) {
-          navigate('/baseline-scales');
+          window.location.href = '/baseline-scales';
         } else {
-          navigate('/dashboard');
+          window.location.href = '/dashboard';
         }
-        
-        // Force a reload to ensure App.tsx checkAuth() returns fresh status
-        window.location.reload();
       }
     } catch (err: any) {
       if (err.response?.status === 401) {
