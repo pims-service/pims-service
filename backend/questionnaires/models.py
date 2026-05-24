@@ -12,6 +12,11 @@ class Questionnaire(models.Model):
     is_active = models.BooleanField(default=True)
     is_baseline = models.BooleanField(default=False, help_text="Defines if this questionnaire is the initial screening for group assignment")
     is_posttest = models.BooleanField(default=False, help_text="Defines if this questionnaire is the Day 7 post-test reassessment")
+    ASSESSMENT_TYPES = (
+        ('SOCIODEMOGRAPHIC', 'Sociodemographic Form'),
+        ('PSYCHOMETRIC', 'Psychometric Battery'),
+    )
+    assessment_type = models.CharField(max_length=20, choices=ASSESSMENT_TYPES, default='PSYCHOMETRIC')
     max_completion_time = models.DurationField(null=True, blank=True, help_text="Maximum allowed time to complete the questionnaire")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -71,6 +76,15 @@ class ResponseSet(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='DRAFT')
     started_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
+    
+    MILESTONES = (
+        ('SIGNUP', 'Signup Baseline'),
+        ('7_DAYS', '7 Days Post-Test'),
+        ('3_MONTHS', '3 Months'),
+        ('6_MONTHS', '6 Months'),
+        ('1_YEAR', '1 Year'),
+    )
+    milestone = models.CharField(max_length=15, choices=MILESTONES, db_index=True, null=True, blank=True)
 
     class Meta:
         indexes = [
@@ -78,6 +92,11 @@ class ResponseSet(models.Model):
             models.Index(fields=['status', 'completed_at'], name='idx_rs_status_completed'),
             # Speeds up: participant dashboard loading their own responses
             models.Index(fields=['user', 'status'], name='idx_rs_user_status'),
+            # Speeds up: querying user progress by milestone
+            models.Index(fields=['user', 'milestone', 'status'], name='idx_rs_user_milestone_status'),
+        ]
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'questionnaire', 'milestone'], name='unique_user_questionnaire_milestone')
         ]
 
     def __str__(self):
