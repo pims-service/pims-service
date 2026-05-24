@@ -5,12 +5,50 @@ from phases.models import Phase
 from django.utils import timezone
 from datetime import timedelta
 
+
+# Default prompts for the 4 original research groups.
+# Any group not listed here gets the fallback prompt.
+GROUP_PROMPTS = {
+    'Control': (
+        'Think of an early childhood memory and write it down in as much detail as you can remember.'
+    ),
+    'PERMA': (
+        'Before going to sleep, write down one thing from each of the following from your day:\n'
+        '- Something that gave you pleasure or made you smile\n'
+        '- Something you were so absorbed in you lost track of time\n'
+        '- A meaningful interaction you had with someone\n'
+        '- Something that felt purposeful or significant to you\n'
+        '- Something you did well or accomplished today'
+    ),
+    'Gratitude': (
+        'Before going to sleep, write down three things you are genuinely grateful for today. '
+        'They can be big or small — a person, a moment, a blessing, anything.'
+    ),
+    'Combined': (
+        'Before going to sleep, write down the following:\n'
+        '- One thing that gave you pleasure today\n'
+        '- One thing you were deeply absorbed in\n'
+        '- One meaningful interaction with someone\n'
+        '- One thing that felt purposeful\n'
+        '- One thing you accomplished\n'
+        '- One thing you are genuinely grateful for today'
+    ),
+}
+
+FALLBACK_PROMPT = (
+    'Write a brief reflection about your day. '
+    'What stood out to you? What are you thinking about?'
+)
+
+EXPERIMENT_DAYS = 7
+
+
 class Command(BaseCommand):
-    help = 'Seeds the default daily activities for the 4 research groups'
+    help = 'Seeds daily activities for ALL active groups for days 1-7'
 
     def handle(self, *args, **options):
         # 1. Ensure a Phase exists
-        phase, created = Phase.objects.get_or_create(
+        phase, _ = Phase.objects.get_or_create(
             phase_number=1,
             defaults={
                 'name': 'Main Intervention Phase',
@@ -19,57 +57,40 @@ class Command(BaseCommand):
             }
         )
 
-        # 2. Define Groups and Prompts
-        group_data = [
-            {
-                'name': 'Control',
-                'prompt': 'Think of an early childhood memory and write it down in as much detail as you can remember.'
-            },
-            {
-                'name': 'PERMA',
-                'prompt': 'Before going to sleep, write down one thing from each of the following from your day:\n'
-                          '- Something that gave you pleasure or made you smile\n'
-                          '- Something you were so absorbed in you lost track of time\n'
-                          '- A meaningful interaction you had with someone\n'
-                          '- Something that felt purposeful or significant to you\n'
-                          '- Something you did well or accomplished today'
-            },
-            {
-                'name': 'Gratitude',
-                'prompt': 'Before going to sleep, write down three things you are genuinely grateful for today. '
-                          'They can be big or small — a person, a moment, a blessing, anything.'
-            },
-            {
-                'name': 'Combined',
-                'prompt': 'Before going to sleep, write down the following:\n'
-                          '- One thing that gave you pleasure today\n'
-                          '- One thing you were deeply absorbed in\n'
-                          '- One meaningful interaction with someone\n'
-                          '- One thing that felt purposeful\n'
-                          '- One thing you accomplished\n'
-                          '- One thing you are genuinely grateful for today'
-            }
-        ]
+        # 2. Ensure the 4 core research groups exist
+        for group_name in GROUP_PROMPTS:
+            Group.objects.get_or_create(name=group_name)
 
-        for data in group_data:
-            group, _ = Group.objects.get_or_create(name=data['name'])
-            
-            activity, created = Activity.objects.get_or_create(
-                group=group,
-                activity_type='paragraph',
-                defaults={
-                    'title': f'Daily Reflection - {group.name}',
-                    'description': data['prompt'],
-                    'assigned_phase': phase,
-                    'day_number': 1
-                }
-            )
-            
-            if created:
-                self.stdout.write(self.style.SUCCESS(f'Created daily activity for {group.name}'))
-            else:
-                activity.description = data['prompt']
-                activity.save()
-                self.stdout.write(self.style.INFO(f'Updated daily activity for {group.name}'))
+        # 3. Seed activities for EVERY active group, days 1-7
+        groups = Group.objects.filter(is_active=True)
+        total_created = 0
 
-        self.stdout.write(self.style.SUCCESS('Successfully seeded daily tasks.'))
+        for group in groups:
+            prompt = GROUP_PROMPTS.get(group.name, FALLBACK_PROMPT)
+
+            for day in range(1, EXPERIMENT_DAYS + 1):
+                activity, created = Activity.objects.get_or_create(
+                    group=group,
+                    activity_type='paragraph',
+                    day_number=day,
+                    defaults={
+                        'title': f'Daily Reflection - {group.name} - Day {day}',
+                        'description': prompt,
+                        'assigned_phase': phase,
+                    }
+                )
+
+                if created:
+                    total_created += 1
+                else:
+                    # Update existing prompt if it changed
+                    if activity.description != prompt:
+                        activity.description = prompt
+                        activity.save(update_fields=['description'])
+                        self.stdout.write(
+                            f'Updated prompt for {group.name} Day {day}'
+                        )
+
+        self.stdout.write(self.style.SUCCESS(
+            f'Done. Created {total_created} new activities across {groups.count()} groups × {EXPERIMENT_DAYS} days.'
+        ))
