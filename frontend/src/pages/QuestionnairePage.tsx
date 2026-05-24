@@ -28,9 +28,12 @@ const QuestionnairePage: React.FC = () => {
     const initSession = async () => {
       if (!id) return;
       try {
+        const queryParams = new URLSearchParams(window.location.search);
+        const milestone = queryParams.get('milestone') || undefined;
+
         const [qRes, rsRes] = await Promise.all([
           questionnairesApi.getDetail(id),
-          questionnairesApi.createResponseSet(id)
+          questionnairesApi.createResponseSet(id, milestone)
         ]);
         setQuestionnaire(qRes.data);
         setResponseSetId(rsRes.data.id);
@@ -92,16 +95,30 @@ const QuestionnairePage: React.FC = () => {
       await questionnairesApi.submitResponseSet(responseSetId, payload);
 
       // Update Onboarding State
-      localStorage.setItem('has_completed_baseline', 'true');
+      const queryParams = new URLSearchParams(window.location.search);
+      const milestone = queryParams.get('milestone');
+
+      if (questionnaire?.assessment_type === 'SOCIODEMOGRAPHIC') {
+        localStorage.setItem('has_completed_sociodemographic', 'true');
+      }
+
+      const hasCompletedSocio = localStorage.getItem('has_completed_sociodemographic') === 'true';
+      if (hasCompletedSocio && questionnaire?.assessment_type === 'PSYCHOMETRIC' && milestone === 'SIGNUP') {
+        localStorage.setItem('has_completed_baseline', 'true');
+      }
 
       setCompleted(true);
 
       // Short delay for success experience before redirect
       setTimeout(() => {
-        navigate('/dashboard', {
-          state: { message: 'Baseline assessment finalized and group assigned.' },
-          replace: true
-        });
+        if (questionnaire?.assessment_type === 'SOCIODEMOGRAPHIC') {
+          navigate('/baseline-scales', { replace: true });
+        } else {
+          navigate('/dashboard', {
+            state: { message: 'Assessment finalized.' },
+            replace: true
+          });
+        }
       }, 3000);
     } catch (err: any) {
       setError('Failed to submit questionnaire. Please try again.');

@@ -58,6 +58,8 @@ const App: React.FC = () => {
                 <Route path="/results/:id" element={<ResultsPage />} />
                 <Route path="/questionnaire/:id" element={<QuestionnairePage />} />
                 <Route path="/baseline-questionnaire" element={<BaselineRedirect />} />
+                <Route path="/sociodemographic" element={<BaselineRedirect />} />
+                <Route path="/baseline-scales" element={<BaselineRedirect />} />
               </Route>
               
               {/* Admin Hub - Nested Routes with Sidebar Layout */}

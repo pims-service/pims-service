@@ -19,11 +19,12 @@ class UserSerializer(serializers.ModelSerializer):
             'user_id', 'username', 'full_name', 'email', 
             'whatsapp_number', 'date_of_birth', 'role', 'role_name', 
             'group', 'group_name', 'traits', 'created_at',
+            'has_completed_sociodemographic',
             'has_completed_baseline',
             'has_completed_posttest', 'is_posttest_due',
             'completion_rate',
         )
-        read_only_fields = ('created_at', 'has_completed_baseline', 'has_completed_posttest', 'is_posttest_due', 'completion_rate',)
+        read_only_fields = ('created_at', 'has_completed_sociodemographic', 'has_completed_baseline', 'has_completed_posttest', 'is_posttest_due', 'completion_rate',)
 
 class SignupSerializer(serializers.ModelSerializer):
     """
@@ -135,6 +136,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'full_name': self.user.full_name,
             'date_of_birth': self.user.date_of_birth.strftime('%Y-%m-%d') if self.user.date_of_birth else None,
             'role': self.user.role.name if self.user.role else 'Participant',
+            'has_completed_sociodemographic': self.user.has_completed_sociodemographic,
             'has_completed_baseline': self.user.has_completed_baseline,
             'has_completed_posttest': self.user.has_completed_posttest,
             'is_posttest_due': self.user.is_posttest_due,

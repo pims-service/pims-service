@@ -49,6 +49,7 @@ class User(AbstractUser):
         return name_part.title()
 
     # Onboarding state
+    has_completed_sociodemographic = models.BooleanField(default=False)
     has_completed_baseline = models.BooleanField(default=False)
     baseline_completed_at = models.DateTimeField(null=True, blank=True)
 

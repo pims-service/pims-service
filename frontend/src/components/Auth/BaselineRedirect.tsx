@@ -10,18 +10,29 @@ const BaselineRedirect: React.FC = () => {
   useEffect(() => {
     const fetchBaselineId = async () => {
       try {
+        const hasCompletedSociodemographic = localStorage.getItem('has_completed_sociodemographic') === 'true';
         const response = await questionnairesApi.list();
         const questionnaires = response.data;
 
-        // Priority: Find an active questionnaire marked explicitly as 'is_baseline'
-        // Fallback: Use the first active questionnaire
-        const baseline = questionnaires.find((q: any) => q.is_active && q.is_baseline) ||
-          questionnaires.find((q: any) => q.is_active);
-
-        if (baseline) {
-          navigate(`/questionnaire/${baseline.id}`, { replace: true });
+        if (!hasCompletedSociodemographic) {
+          // Find the questionnaire with assessment_type === 'SOCIODEMOGRAPHIC'
+          const socio = questionnaires.find((q: any) => q.is_active && q.assessment_type === 'SOCIODEMOGRAPHIC');
+          if (socio) {
+            navigate(`/questionnaire/${socio.id}?milestone=SIGNUP`, { replace: true });
+          } else {
+            setError('No active sociodemographic assessment found. Please contact an administrator.');
+          }
         } else {
-          setError('No active assessments found. Please contact an administrator.');
+          // Find the baseline psychometric scales
+          const battery = questionnaires.find((q: any) => q.is_active && q.assessment_type === 'PSYCHOMETRIC') ||
+                          questionnaires.find((q: any) => q.is_active && q.is_baseline) ||
+                          questionnaires.find((q: any) => q.is_active);
+          
+          if (battery) {
+            navigate(`/questionnaire/${battery.id}?milestone=SIGNUP`, { replace: true });
+          } else {
+            setError('No active psychometric assessment found. Please contact an administrator.');
+          }
         }
       } catch (err) {
         setError('Failed to load assessment information. Please try again later.');

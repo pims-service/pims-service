@@ -18,7 +18,7 @@ class QuestionnaireSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Questionnaire
-        fields = ['id', 'title', 'description', 'is_active', 'is_baseline', 'is_posttest', 'max_completion_time', 'questions']
+        fields = ['id', 'title', 'description', 'is_active', 'is_baseline', 'is_posttest', 'assessment_type', 'max_completion_time', 'questions']
 
 class ResponseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -28,10 +28,11 @@ class ResponseSerializer(serializers.ModelSerializer):
 class ResponseSetSerializer(serializers.ModelSerializer):
     responses = ResponseSerializer(many=True, read_only=True)
     questionnaire_title = serializers.CharField(source='questionnaire.title', read_only=True)
+    milestone = serializers.CharField(required=False, allow_null=True, allow_blank=True, default=None)
 
     class Meta:
         model = ResponseSet
-        fields = ['id', 'user', 'questionnaire', 'questionnaire_title', 'status', 'started_at', 'completed_at', 'responses']
+        fields = ['id', 'user', 'questionnaire', 'questionnaire_title', 'status', 'started_at', 'completed_at', 'responses', 'milestone']
         read_only_fields = ['user', 'started_at', 'completed_at', 'status']
 
 class ResponseSetDetailSerializer(serializers.ModelSerializer):
@@ -145,17 +146,35 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
             instance.completed_at = timezone.now()
             instance.save()
 
-            # 4. Trigger Group Assignment if Baseline
-            if instance.questionnaire.is_baseline:
-                assign_user_to_group(instance.user)
-                instance.user.has_completed_baseline = True
-                instance.user.baseline_completed_at = timezone.now()
-                instance.user.save(update_fields=['has_completed_baseline', 'baseline_completed_at'])
+            # 4. Handle Onboarding Completions (Sociodemographic & Signup Psychometrics)
+            user = instance.user
+            if instance.questionnaire.assessment_type == 'SOCIODEMOGRAPHIC':
+                user.has_completed_sociodemographic = True
+                user.save(update_fields=['has_completed_sociodemographic'])
 
-            # 5. Mark post-test completed if applicable
-            if instance.questionnaire.is_posttest:
-                instance.user.has_completed_posttest = True
-                instance.user.posttest_completed_at = timezone.now()
-                instance.user.save(update_fields=['has_completed_posttest', 'posttest_completed_at'])
+            # Query if they have completed the signup psychometric scales
+            has_signup_scales = ResponseSet.objects.filter(
+                user=user,
+                questionnaire__assessment_type='PSYCHOMETRIC',
+                milestone='SIGNUP',
+                status='COMPLETED'
+            ).exists()
+
+            # Backward compatibility check for is_baseline flag
+            is_legacy_baseline = instance.questionnaire.is_baseline
+
+            if (user.has_completed_sociodemographic and has_signup_scales) or is_legacy_baseline:
+                if not user.has_completed_baseline:
+                    assign_user_to_group(user)
+                    user.has_completed_baseline = True
+                    user.baseline_completed_at = timezone.now()
+                    user.save(update_fields=['has_completed_baseline', 'baseline_completed_at'])
+
+            # 5. Mark post-test completed if milestone is '7_DAYS' or is_legacy_posttest
+            is_legacy_posttest = instance.questionnaire.is_posttest
+            if instance.milestone == '7_DAYS' or is_legacy_posttest:
+                user.has_completed_posttest = True
+                user.posttest_completed_at = timezone.now()
+                user.save(update_fields=['has_completed_posttest', 'posttest_completed_at'])
 
         return instance
