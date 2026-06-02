@@ -51,4 +51,4 @@ const SociodemographicRedirect: React.FC = () => {
   );
 };
 
-export default BaselineRedirect;
+export default SociodemographicRedirect;
