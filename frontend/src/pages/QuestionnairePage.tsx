@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { questionnairesApi } from '../services/api';
 import LikertSlider from '../components/Questionnaire/LikertSlider';
+import SociodemographicForm from '../components/Questionnaire/SociodemographicForm';
 import {
   Loader2,
   ArrowLeft,
@@ -37,6 +38,15 @@ const QuestionnairePage: React.FC = () => {
         ]);
         setQuestionnaire(qRes.data);
         setResponseSetId(rsRes.data.id);
+        
+        // Restore previous draft responses if they exist
+        if (rsRes.data.responses && Array.isArray(rsRes.data.responses)) {
+          const restored: Record<string, any> = {};
+          rsRes.data.responses.forEach((r: any) => {
+            restored[r.question] = r.selected_option || r.text_value;
+          });
+          setResponses(restored);
+        }
       } catch (err: any) {
         setError(err.response?.data?.detail || 'Failed to initialize questionnaire session.');
       } finally {
@@ -71,12 +81,14 @@ const QuestionnairePage: React.FC = () => {
     }
   };
 
-  const submitAll = async () => {
+  const submitAll = async (overrideResponses?: Record<string, any>) => {
     if (!responseSetId) return;
     setSubmitting(true);
+    const finalState = overrideResponses || responses;
+    
     try {
       const payload = questions.map((q: any) => {
-        const response = responses[q.id];
+        const response = finalState[q.id];
         const base = { question_id: q.id };
 
         if (q.type === 'TEXT') {
@@ -180,6 +192,23 @@ const QuestionnairePage: React.FC = () => {
         <h2 className="text-xl font-semibold text-zinc-800">Error</h2>
         <p className="text-zinc-500 text-sm">{error || 'Unable to load questionnaire data.'}</p>
         <button onClick={() => navigate('/dashboard')} className="w-full py-3 bg-zinc-800 text-white rounded-lg font-medium text-sm hover:bg-zinc-700 transition-colors">Back to Dashboard</button>
+      </div>
+    );
+  }
+
+  // Branch for Sociodemographic Form (Display Rules applied)
+  if (questionnaire?.assessment_type === 'SOCIODEMOGRAPHIC') {
+    return (
+      <div className="max-w-4xl mx-auto py-12 px-4 md:px-8">
+        <SociodemographicForm 
+          questions={questions}
+          responseSetId={responseSetId!}
+          initialResponses={responses}
+          onComplete={(finalResponses) => {
+            setResponses(finalResponses);
+            submitAll(finalResponses);
+          }}
+        />
       </div>
     );
   }

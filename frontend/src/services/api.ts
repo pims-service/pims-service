@@ -76,6 +76,8 @@ export const questionnairesApi = {
   listResponseSets: () => api.get('/questionnaires/response-sets/'),
   submitResponseSet: (responseSetId: string, responsesData: any[]) =>
     api.post(`/questionnaires/response-sets/${responseSetId}/submit/`, { responses_data: responsesData }),
+  saveDraftResponseSet: (responseSetId: string, responsesData: any[]) =>
+    api.post(`/questionnaires/response-sets/${responseSetId}/save-draft/`, { responses_data: responsesData }),
 
   // Administrative Operations
   getAnalyticsSummary: () => api.get('/questionnaires/analytics/all/'),

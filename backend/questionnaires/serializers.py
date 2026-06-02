@@ -196,3 +196,62 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
             cache.delete(f"user_{user.id}_due_milestone")
 
         return instance
+
+class ResponseSetDraftSerializer(serializers.ModelSerializer):
+    """
+    Serializer to handle incremental saving of a ResponseSet (auto-save),
+    without marking it as COMPLETED.
+    """
+    responses_data = ResponseBulkSerializer(many=True, write_only=True)
+
+    class Meta:
+        model = ResponseSet
+        fields = ['id', 'responses_data']
+
+    def validate(self, attrs):
+        response_set = self.instance
+        questionnaire = response_set.questionnaire
+        responses_data = attrs.get('responses_data', [])
+
+        allowed_question_ids = set(questionnaire.questions.values_list('id', flat=True))
+        seen_questions = set()
+
+        for item in responses_data:
+            q_id = item['question'].id
+            if q_id not in allowed_question_ids:
+                raise serializers.ValidationError(
+                    f"Question {q_id} does not belong to questionnaire {questionnaire.id}"
+                )
+            
+            if q_id in seen_questions:
+                raise serializers.ValidationError(
+                    f"Duplicate answer submitted for question {q_id}. Only one answer per question is allowed."
+                )
+            seen_questions.add(q_id)
+            
+            if item.get('selected_option') and item['selected_option'].question_id != q_id:
+                raise serializers.ValidationError(
+                    f"Option {item['selected_option'].id} is not a valid choice for question {q_id}"
+                )
+        
+        return attrs
+
+    def update(self, instance, validated_data):
+        from django.db import transaction
+
+        responses_data = validated_data.pop('responses_data', [])
+        
+        with transaction.atomic():
+            # Clear existing draft responses and replace them
+            instance.responses.all().delete()
+            
+            for item in responses_data:
+                Response.objects.create(
+                    response_set=instance,
+                    **item
+                )
+            
+            # Note: We do NOT mark status = 'COMPLETED' or set completed_at
+            instance.save()
+
+        return instance

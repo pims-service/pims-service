@@ -126,6 +126,25 @@ class ResponseSetSubmitView(generics.UpdateAPIView):
         # Alias POST to perform the update
         return self.update(request, *args, **kwargs)
 
+class ResponseSetSaveDraftView(generics.UpdateAPIView):
+    """
+    Endpoint to save draft responses without completing the set.
+    """
+    queryset = ResponseSet.objects.all()
+    permission_classes = (permissions.IsAuthenticated,)
+    http_method_names = ['post', 'put', 'patch']
+
+    def get_serializer_class(self):
+        from .serializers import ResponseSetDraftSerializer
+        return ResponseSetDraftSerializer
+
+    def get_queryset(self):
+        # Users can only modify their own DRAFT response sets
+        return super().get_queryset().filter(user=self.request.user, status='DRAFT')
+
+    def post(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
 class AdminBaselineResponseListView(generics.ListAPIView):
     """
     Researcher-only view to list all completed baseline assessments.
