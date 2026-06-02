@@ -20,7 +20,7 @@ def test_seed_longitudinal_scales_command_success(db):
     socio = Questionnaire.objects.get(title="Sociodemographic Survey")
     assert socio.assessment_type == 'SOCIODEMOGRAPHIC'
     assert socio.is_active is True
-    assert Question.objects.filter(questionnaire=socio).count() == 4
+    assert Question.objects.filter(questionnaire=socio).count() == 12
 
     battery = Questionnaire.objects.get(title="Longitudinal Psychometric Scales")
     assert battery.assessment_type == 'PSYCHOMETRIC'

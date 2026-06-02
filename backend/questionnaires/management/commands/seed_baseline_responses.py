@@ -64,10 +64,13 @@ class Command(BaseCommand):
                 for question in socio_questions:
                     options = list(question.options.all())
                     if options:
+                        # Prevent seeding disqualifying responses so dummy users stay active
+                        valid_options = [opt for opt in options if 'DISQUALIFY' not in opt.label]
+                        selected_opt = random.choice(valid_options) if valid_options else random.choice(options)
                         Response.objects.create(
                             response_set=rs_socio,
                             question=question,
-                            selected_option=random.choice(options)
+                            selected_option=selected_opt
                         )
 
             # Seed Psychometric Baseline ResponseSet (SIGNUP milestone)

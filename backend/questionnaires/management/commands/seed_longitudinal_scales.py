@@ -9,44 +9,94 @@ class Command(BaseCommand):
 
         # 1. Seed Sociodemographic Form
         socio_title = "Sociodemographic Survey"
+        
+        # Always recreate the sociodemographic form to ensure it matches the 12-item schema
+        Questionnaire.objects.filter(title=socio_title).delete()
+        
         if not Questionnaire.objects.filter(title=socio_title).exists():
             socio_q = Questionnaire.objects.create(
                 title=socio_title,
-                description="Collected once on signup to understand participant background.",
+                description="Collected once on signup to understand participant background. Items 11 and 12 are eligibility screeners.",
                 is_active=True,
                 assessment_type='SOCIODEMOGRAPHIC'
             )
             
             socio_data = [
                 {
-                    "content": "What is your gender?",
+                    "content": "Age | عمر",
                     "type": "CHOICE",
                     "order": 1,
-                    "options": [("Male", 1), ("Female", 2), ("Non-binary", 3), ("Prefer not to say", 4)]
+                    "options": [("18–25", 1), ("26–35", 2), ("36–45", 3), ("46–55", 4), ("56–65", 5), ("65+", 6)]
                 },
                 {
-                    "content": "What is your age range?",
+                    "content": "Gender | جنس",
                     "type": "CHOICE",
                     "order": 2,
-                    "options": [("Under 18", 1), ("18-24", 2), ("25-34", 3), ("35-44", 4), ("45-54", 5), ("55 or older", 6)]
+                    "options": [("Male", 1), ("Female", 2), ("Prefer not to say", 3)]
                 },
                 {
-                    "content": "What is your current employment status?",
+                    "content": "Province / Region of Residence | رہائشی صوبہ / علاقہ",
                     "type": "CHOICE",
                     "order": 3,
-                    "options": [("Employed full-time", 1), ("Employed part-time", 2), ("Self-employed", 3), ("Student", 4), ("Unemployed", 5), ("Other", 6)]
+                    "options": [("Punjab", 1), ("Sindh", 2), ("KPK", 3), ("Balochistan", 4), ("AJK", 5), ("GB", 6), ("ICT", 7), ("Other", 8)]
                 },
                 {
-                    "content": "What is your highest completed level of education?",
+                    "content": "Highest Level of Education Completed | اعلیٰ ترین تعلیمی قابلیت",
                     "type": "CHOICE",
                     "order": 4,
-                    "options": [("High School or equivalent", 1), ("Bachelor's Degree", 2), ("Master's Degree", 3), ("Doctorate or higher", 4), ("Other", 5)]
+                    "options": [("None", 1), ("Primary-Middle", 2), ("Matric", 3), ("Inter-A-Lvl", 4), ("Bachelor", 5), ("Master", 6), ("PhD", 7)]
+                },
+                {
+                    "content": "Current Employment Status | موجودہ ملازمت کی صورتحال",
+                    "type": "CHOICE",
+                    "order": 5,
+                    "options": [("Full-time", 1), ("Part-time", 2), ("Self-employed", 3), ("Student", 4), ("Homemaker", 5), ("Unemployed", 6), ("Retired", 7)]
+                },
+                {
+                    "content": "Monthly Household Income (PKR) | ماہانہ گھریلو آمدنی",
+                    "type": "CHOICE",
+                    "order": 6,
+                    "options": [("<30k", 1), ("30–60k", 2), ("60–100k", 3), ("100–150k", 4), ("150–250k", 5), (">250k", 6), ("Prefer not", 7)]
+                },
+                {
+                    "content": "Current Marital Status | موجودہ ازدواجی حیثیت",
+                    "type": "CHOICE",
+                    "order": 7,
+                    "options": [("Single", 1), ("Married", 2), ("Divorced", 3), ("Widowed", 4), ("Separated", 5)]
+                },
+                {
+                    "content": "Current Living Arrangement | موجودہ رہائشی انتظام",
+                    "type": "CHOICE",
+                    "order": 8,
+                    "options": [("Alone", 1), ("Spouse only", 2), ("Immediate family", 3), ("Joint family", 4), ("Flatmates", 5), ("Other", 6)]
+                },
+                {
+                    "content": "Primary Internet Device | انٹرنیٹ تک رسائی کا بنیادی آلہ",
+                    "type": "CHOICE",
+                    "order": 9,
+                    "options": [("Smartphone", 1), ("Computer", 2), ("Both", 3), ("Tablet", 4), ("Other", 5)]
+                },
+                {
+                    "content": "Internet Access Frequency | آپ انٹرنیٹ کتنی بار استعمال کرتے ہیں؟",
+                    "type": "CHOICE",
+                    "order": 10,
+                    "options": [("Multiple/day", 1), ("Once/day", 2), ("Few/week", 3), ("Rarely", 4)]
+                },
+                {
+                    "content": "Currently taking psychotropic medication? | کیا آپ نفسیاتی دوائی لے رہے ہیں؟",
+                    "type": "CHOICE",
+                    "order": 11,
+                    "options": [("Yes -> DISQUALIFY", 1), ("No", 2)]
+                },
+                {
+                    "content": "Currently receiving psychotherapy or counselling? | کیا آپ سائیکو تھراپی حاصل کر رہے ہیں؟",
+                    "type": "CHOICE",
+                    "order": 12,
+                    "options": [("Yes -> DISQUALIFY", 1), ("No", 2)]
                 }
             ]
             self._create_questions_for_questionnaire(socio_q, socio_data)
             self.stdout.write(self.style.SUCCESS(f"Successfully seeded '{socio_title}'."))
-        else:
-            self.stdout.write(self.style.WARNING(f"'{socio_title}' already exists. Skipping."))
 
         # 2. Seed Combined Longitudinal Psychometric Battery
         battery_title = "Longitudinal Psychometric Scales"

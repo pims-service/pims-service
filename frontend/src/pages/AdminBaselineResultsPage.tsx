@@ -38,6 +38,7 @@ interface BaselineSet {
   status: string;
   started_at: string;
   completed_at: string;
+  whatsapp_number?: string;
   responses?: RawResponse[];
 }
 
@@ -253,6 +254,7 @@ const AdminBaselineResultsPage: React.FC = () => {
               <thead>
                 <tr className="bg-zinc-50 border-b border-zinc-200">
                   <th className="px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Participant</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Phone</th>
                   <th className="px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Date</th>
                   <th className="px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Group</th>
                   <th className="px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Module</th>
@@ -272,6 +274,9 @@ const AdminBaselineResultsPage: React.FC = () => {
                           <div className="text-xs text-zinc-400">@{s.username}</div>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-zinc-700">{s.whatsapp_number || 'N/A'}</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="space-y-0.5">

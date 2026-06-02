@@ -61,6 +61,10 @@ class User(AbstractUser):
     email_consent = models.BooleanField(default=False)
     whatsapp_consent = models.BooleanField(default=False)
     
+    # Disqualification state
+    is_disqualified = models.BooleanField(default=False)
+    disqualification_reason = models.TextField(blank=True)
+    
     REQUIRED_FIELDS = ['email']
 
     def __str__(self):
@@ -72,6 +76,9 @@ class User(AbstractUser):
         Calculates the user's current day in the experiment (1-indexed).
         Caches the result in Redis until next midnight to optimize speed.
         """
+        if getattr(self, 'is_disqualified', False):
+            return None
+
         if not self.baseline_completed_at:
             return None
 
@@ -82,7 +89,7 @@ class User(AbstractUser):
 
         now = timezone.now()
         # Calculate days since baseline completion
-        delta = now.date() - self.baseline_completed_at.date()
+        delta = timezone.localdate() - timezone.localtime(self.baseline_completed_at).date()
         exp_day = delta.days + 1
 
         # Cache until midnight

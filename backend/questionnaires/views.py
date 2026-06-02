@@ -71,7 +71,20 @@ class ResponseSetListCreateView(generics.ListCreateAPIView):
         except Questionnaire.DoesNotExist:
             pass
 
-        return super().create(request, *args, **kwargs)
+        from django.db import IntegrityError
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError:
+            # Handle race condition from React StrictMode double-posting
+            existing_set = ResponseSet.objects.filter(
+                user=user, 
+                questionnaire_id=questionnaire_id,
+                status='DRAFT'
+            ).first()
+            if existing_set:
+                serializer = self.get_serializer(existing_set)
+                return DRFResponse(serializer.data, status=status.HTTP_200_OK)
+            raise
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

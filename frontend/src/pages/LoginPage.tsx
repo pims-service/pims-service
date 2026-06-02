@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import api from '../services/api';
 import { useTranslation } from 'react-i18next';
-import { User, Mail, Lock, Loader2, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { User, Lock, Loader2, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
-  const navigate = useNavigate();
+  
   const location = useLocation();
   const [formData, setFormData] = useState({
     username: '',

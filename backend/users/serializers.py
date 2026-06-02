@@ -128,13 +128,24 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
         
+        # Safely handle date_of_birth if it's already a string or datetime
+        dob = self.user.date_of_birth
+        if dob:
+            from datetime import date, datetime
+            if isinstance(dob, (date, datetime)):
+                dob_str = dob.strftime('%Y-%m-%d')
+            else:
+                dob_str = str(dob)
+        else:
+            dob_str = None
+            
         # Add extra user information to the response
         data['user'] = {
             'id': self.user.pk,
             'username': self.user.username,
             'email': self.user.email,
             'full_name': self.user.full_name,
-            'date_of_birth': self.user.date_of_birth.strftime('%Y-%m-%d') if self.user.date_of_birth else None,
+            'date_of_birth': dob_str,
             'role': self.user.role.name if self.user.role else 'Participant',
             'has_completed_sociodemographic': self.user.has_completed_sociodemographic,
             'has_completed_baseline': self.user.has_completed_baseline,

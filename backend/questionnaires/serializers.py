@@ -57,13 +57,14 @@ class AdminResponseSetSerializer(serializers.ModelSerializer):
     responses = AdminResponseSerializer(many=True, read_only=True)
     full_name = serializers.CharField(source='user.display_name', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
+    whatsapp_number = serializers.CharField(source='user.whatsapp_number', read_only=True)
     questionnaire_title = serializers.CharField(source='questionnaire.title', read_only=True)
     group_name = serializers.SerializerMethodField()
 
     class Meta:
         model = ResponseSet
         fields = [
-            'id', 'user', 'full_name', 'username', 
+            'id', 'user', 'full_name', 'username', 'whatsapp_number',
             'questionnaire', 'questionnaire_title', 
             'group_name',
             'status', 'started_at', 'completed_at', 
@@ -149,6 +150,18 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
             # 4. Handle Onboarding Completions (Sociodemographic & Signup Psychometrics)
             user = instance.user
             if instance.questionnaire.assessment_type == 'SOCIODEMOGRAPHIC':
+                is_disqualified = False
+                for item in responses_data:
+                    option = item.get('selected_option')
+                    if option and 'DISQUALIFY' in option.label:
+                        is_disqualified = True
+                        break
+                
+                if is_disqualified:
+                    user.is_disqualified = True
+                    user.disqualification_reason = "Answered YES to eligibility screener."
+                    user.save(update_fields=['is_disqualified', 'disqualification_reason'])
+                
                 user.has_completed_sociodemographic = True
                 user.save(update_fields=['has_completed_sociodemographic'])
 
@@ -163,12 +176,13 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
             # Backward compatibility check for is_baseline flag
             is_legacy_baseline = instance.questionnaire.is_baseline
 
-            if (user.has_completed_sociodemographic and has_signup_scales) or is_legacy_baseline:
-                if not user.has_completed_baseline:
-                    assign_user_to_group(user)
-                    user.has_completed_baseline = True
-                    user.baseline_completed_at = timezone.now()
-                    user.save(update_fields=['has_completed_baseline', 'baseline_completed_at'])
+            if not getattr(user, 'is_disqualified', False):
+                if (user.has_completed_sociodemographic and has_signup_scales) or is_legacy_baseline:
+                    if not user.has_completed_baseline:
+                        assign_user_to_group(user)
+                        user.has_completed_baseline = True
+                        user.baseline_completed_at = timezone.now()
+                        user.save(update_fields=['has_completed_baseline', 'baseline_completed_at'])
 
             # 5. Mark post-test completed if milestone is '7_DAYS' or is_legacy_posttest
             is_legacy_posttest = instance.questionnaire.is_posttest

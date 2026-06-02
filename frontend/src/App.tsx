@@ -10,7 +10,6 @@ const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const ActivityPage = lazy(() => import('./pages/ActivityPage'));
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
-const AdminReportsPage = lazy(() => import('./pages/AdminReportsPage'));
 const GroupsManagementPage = lazy(() => import('./pages/GroupsManagementPage'));
 const GroupDetailPage = lazy(() => import('./pages/GroupDetailPage'));
 const AdminBaselineResultsPage = lazy(() => import('./pages/AdminBaselineResultsPage'));

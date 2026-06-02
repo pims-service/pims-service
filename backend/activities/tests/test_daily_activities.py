@@ -77,16 +77,16 @@ class TestDailyActivities:
         resp1 = api_client.post(submit_url, payload, format='json')
         assert resp1.status_code == status.HTTP_201_CREATED
         
-        # 2. Re-submit same day (11:59 PM) - Should succeed (Update)
-        with freeze_time("2026-04-19 23:59:59"):
+        # 2. Re-submit same day (11:59 PM PKT, which is 18:59:59 UTC) - Should succeed (Update)
+        with freeze_time("2026-04-19 18:59:59"):
             from django.core.cache import cache
             cache.clear()
             resp2 = api_client.post(submit_url, {"activity": activity.id, "content": "Updated Entry"}, format='json')
             assert resp2.status_code == status.HTTP_201_CREATED
             assert Submission.objects.get(id=resp1.data['id']).content == "Updated Entry"
             
-        # 3. Submit next day (00:01 AM)
-        with freeze_time("2026-04-20 00:00:01"):
+        # 3. Submit next day (00:01 AM PKT, which is 19:00:01 UTC)
+        with freeze_time("2026-04-19 19:00:01"):
             cache.clear()
             # Create a Day 2 activity to satisfy the new validation
             # (User is now on Day 2 because baseline was at 10:00 AM on 2026-04-19)

@@ -14,7 +14,7 @@ import {
   Download,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { questionnairesApi, API_URL } from '../services/api';
+import { questionnairesApi } from '../services/api';
 
 interface RawResponse {
   id: string;

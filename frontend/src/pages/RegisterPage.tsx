@@ -22,8 +22,8 @@ const RegisterPage: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [phase, setPhase] = useState<'details' | 'otp'>('details');
-  const [otpMessage, setOtpMessage] = useState('');
+  const [phase] = useState<'details' | 'otp'>('details');
+  const [otpMessage] = useState('');
   const { t } = useTranslation();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,27 +39,7 @@ const RegisterPage: React.FC = () => {
     }
   };
 
-  const handleSendOtp = async () => {
-    if (!formData.email) {
-      setErrors({ email: ['Email is required to send OTP.'] });
-      return;
-    }
-    setLoading(true);
-    setErrors({});
-    try {
-      const res = await api.post('/auth/send-otp/', { email: formData.email });
-      setOtpMessage(res.data.message || 'OTP sent! Please check your email.');
-      setPhase('otp');
-    } catch (err: any) {
-      if (err.response?.data?.error) {
-        setErrors({ non_field_errors: [err.response.data.error] });
-      } else {
-        setErrors({ non_field_errors: ['Failed to send OTP. Please try again.'] });
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

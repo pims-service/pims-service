@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Search, AlertCircle, HelpCircle, CheckCircle2, Clock, MoreVertical, MessageSquare, X } from 'lucide-react';
+import { Loader2, AlertCircle, HelpCircle, CheckCircle2, Clock, MessageSquare, X } from 'lucide-react';
 import api from '../services/api';
 
 const AdminSupportQueriesPage: React.FC = () => {

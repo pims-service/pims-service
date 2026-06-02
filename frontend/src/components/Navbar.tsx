@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { LogOut, User, LayoutDashboard, Settings, Menu, X, Globe, HelpCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { LogOut, User, LayoutDashboard, Settings, Menu, X, HelpCircle } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import SupportModal from './SupportModal';
 import { useTranslation } from 'react-i18next';
@@ -8,7 +8,7 @@ import api from '../services/api';
 import { useNotifications } from '../hooks/useNotifications';
 
 const Navbar: React.FC = () => {
-  const navigate = useNavigate();
+  
   const { t } = useTranslation();
   const isAuthenticated = !!localStorage.getItem('access_token');
   const userRole = localStorage.getItem('user_role');
