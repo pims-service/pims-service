@@ -29,18 +29,41 @@ const ActivityPage: React.FC = () => {
 
   const getEntryLabels = (groupName: string, lang: string) => {
     const isGroup1 = groupName === 'Group 1';
+    const isGroup2 = groupName === 'Group 2';
+
     if (lang === 'ur') {
+      if (isGroup1) {
+        return [
+          "اندراج 1: یاد 1۔ جو یاد ہے اس کی تفصیل بیان کریں۔",
+          "اندراج 2: یاد 2۔ جو یاد ہے اس کی تفصیل بیان کریں۔",
+          "اندراج 3: یاد 3۔ جو یاد ہے اس کی تفصیل بیان کریں۔"
+        ];
+      }
+      if (isGroup2) {
+        return [
+          "اندراج 1: اچھی بات 1۔ کیا ہوا، کون شامل تھا، اور یہ کیوں ہوا۔",
+          "اندراج 2: اچھی بات 2۔ کیا ہوا، کون شامل تھا، اور یہ کیوں ہوا۔",
+          "اندراج 3: اچھی بات 3۔ کیا ہوا، کون شامل تھا، اور یہ کیوں ہوا۔"
+        ];
+      }
+      return ["اندراج 1", "اندراج 2", "اندراج 3"];
+    }
+
+    if (isGroup1) {
       return [
-        isGroup1 ? "اندراج 1: یاد 1۔ جو یاد ہے اس کی تفصیل بیان کریں۔" : "اندراج 1",
-        isGroup1 ? "اندراج 2: یاد 2۔ جو یاد ہے اس کی تفصیل بیان کریں۔" : "اندراج 2",
-        isGroup1 ? "اندراج 3: یاد 3۔ جو یاد ہے اس کی تفصیل بیان کریں۔" : "اندراج 3"
+        "Entry 1: Memory 1. Describe what you remember.",
+        "Entry 2: Memory 2. Describe what you remember.",
+        "Entry 3: Memory 3. Describe what you remember."
       ];
     }
-    return [
-      isGroup1 ? "Entry 1: Memory 1. Describe what you remember." : "Entry 1",
-      isGroup1 ? "Entry 2: Memory 2. Describe what you remember." : "Entry 2",
-      isGroup1 ? "Entry 3: Memory 3. Describe what you remember." : "Entry 3"
-    ];
+    if (isGroup2) {
+      return [
+        "Entry 1: Good Thing 1. What happened, who was involved, and why it happened.",
+        "Entry 2: Good Thing 2. What happened, who was involved, and why it happened.",
+        "Entry 3: Good Thing 3. What happened, who was involved, and why it happened."
+      ];
+    }
+    return ["Entry 1", "Entry 2", "Entry 3"];
   };
 
   const countWords = (text: string): number => {
@@ -132,7 +155,7 @@ const ActivityPage: React.FC = () => {
     setSubmitting(true);
     try {
       await api.post('/activities/daily/submit/', {
-        activity: id,
+        activity: activity?.id,
         entry_1: entry1,
         entry_2: entry2,
         entry_3: entry3

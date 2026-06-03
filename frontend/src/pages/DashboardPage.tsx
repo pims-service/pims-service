@@ -23,7 +23,7 @@ const DashboardPage: React.FC = () => {
           api.get('/phases/current/').catch(() => ({ data: null })),
           api.get('/questionnaires/response-sets/').catch(() => ({ data: { results: [] } })),
           api.get('/activities/all-submissions/').catch(() => ({ data: { results: [] } })),
-          api.get('/users/me/').catch(() => ({ data: null })),
+          api.get('/users/profile/').catch(() => ({ data: null })),
           api.get('/notifications/').catch(() => ({ data: [] }))
         ]);
 
