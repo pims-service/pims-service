@@ -26,6 +26,8 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 describe('ActivityPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -171,6 +173,7 @@ describe('ActivityPage', () => {
     const errorText = Array(201).fill('word').join(' ');
     fireEvent.change(textareas[0], { target: { value: errorText } });
     expect(screen.getByText('Error: Maximum 200 words exceeded.')).toBeInTheDocument();
+    await delay(600);
   });
 
   it('enables submission only when all 3 textareas have valid word counts and submits successfully', async () => {
@@ -221,6 +224,7 @@ describe('ActivityPage', () => {
         entry_3: validText,
       });
     });
+    await delay(600);
   });
 
   it('saves draft to local storage on change and restores it on reload', async () => {
@@ -257,6 +261,7 @@ describe('ActivityPage', () => {
       const refreshedTextareas = screen.getAllByRole('textbox');
       expect((refreshedTextareas[0] as HTMLTextAreaElement).value).toBe('Draft Text for Entry 1');
     });
+    await delay(600);
   });
 
   it('renders read-only view and lock message when activity has already been submitted', async () => {
@@ -285,6 +290,66 @@ describe('ActivityPage', () => {
 
       expect(screen.getByText('Daily activity submitted and locked.')).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /Submit/i })).not.toBeInTheDocument();
+    });
+  });
+
+  it('renders Group 4 Day 2 schedule, definitions, and examples correctly in English', async () => {
+    const mockActivity = {
+      id: 14,
+      title: 'Combined Reflection',
+      description: 'Combined daily prompt instruction | اردو ہدایات',
+      group_name: 'Group 4',
+      day_number: 2, // Day 2 should show Relationships, Accomplishment, Pleasure with Gratitude
+      submitted_today: false,
+    };
+
+    (api.get as any).mockResolvedValue({ data: mockActivity });
+
+    renderComponent('14');
+
+    await waitFor(() => {
+      // Entry labels - Group 4 has Gratitude combined labels
+      expect(screen.getByText('Entry 1: Positive Relationships with Gratitude')).toBeInTheDocument();
+      expect(screen.getByText('Entry 2: Accomplishment with Gratitude')).toBeInTheDocument();
+      expect(screen.getByText('Entry 3: Pleasure with Gratitude')).toBeInTheDocument();
+
+      // Definitions & Examples - English
+      expect(screen.getByText('A meaningful interaction today that you feel grateful for. Describe what happened, why you are grateful, and what or who made it possible.')).toBeInTheDocument();
+      expect(screen.getByText(/A friend called to check on me out of nowhere/)).toBeInTheDocument();
+
+      expect(screen.getByText('Something you did well today that you feel grateful for. Describe what you accomplished, why you are grateful for it, and what or who made it possible.')).toBeInTheDocument();
+      expect(screen.getByText(/Submitted the section to my supervisor before deadline/)).toBeInTheDocument();
+
+      expect(screen.getByText('An enjoyable moment today that you feel grateful for. Describe what happened, why you are grateful for it, and what or who made it possible.')).toBeInTheDocument();
+      expect(screen.getByText(/My sister made karak chai/)).toBeInTheDocument();
+    });
+  });
+
+  it('renders Group 4 labels and definitions in Urdu when language is ur', async () => {
+    mockLanguage = 'ur';
+    const mockActivity = {
+      id: 14,
+      title: 'Combined Reflection',
+      description: 'Combined daily prompt instruction | اردو ہدایات',
+      group_name: 'Group 4',
+      day_number: 2, // Day 2
+      submitted_today: false,
+    };
+
+    (api.get as any).mockResolvedValue({ data: mockActivity });
+
+    renderComponent('14');
+
+    await waitFor(() => {
+      // Entry labels in Urdu
+      expect(screen.getByText('اندراج 1: مثبت تعلقات بمعہ شکر گزاری')).toBeInTheDocument();
+      expect(screen.getByText('اندراج 2: کامیابی بمعہ شکر گزاری')).toBeInTheDocument();
+      expect(screen.getByText('اندراج 3: لطف بمعہ شکر گزاری')).toBeInTheDocument();
+
+      // Definitions - Urdu
+      expect(screen.getByText('آج کا کوئی بامقصد رابطہ جس کے لیے آپ شکر گزار ہیں۔ بیان کریں کہ کیا ہوا، آپ کیوں شکر گزار ہیں، اور کس یا کس چیز نے اسے ممکن بنایا۔')).toBeInTheDocument();
+      expect(screen.getByText('آج کوئی ایسا کام جو آپ نے اچھا کیا اور جس کے لیے آپ شکر گزار ہیں۔ بیان کریں کہ آپ نے کیا حاصل کیا، اس کے لیے کیوں شکر گزار ہیں، اور کس یا کس چیز نے اسے ممکن بنایا۔')).toBeInTheDocument();
+      expect(screen.getByText('آج کا کوئی لطف بھرا لمحہ جس کے لیے آپ شکر گزار ہیں۔ بیان کریں کہ کیا ہوا، آپ اس کے لیے کیوں شکر گزار ہیں، اور کس یا کس چیز نے اسے ممکن بنایا۔')).toBeInTheDocument();
     });
   });
 });
