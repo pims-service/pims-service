@@ -74,6 +74,9 @@ class DailyActivityViewSet(viewsets.ModelViewSet):
             if submission:
                 data['submission_content'] = submission.content
                 data['submission_id'] = submission.id
+                data['entry_1'] = submission.entry_1
+                data['entry_2'] = submission.entry_2
+                data['entry_3'] = submission.entry_3
         
         return Response(data)
 
@@ -92,17 +95,18 @@ class DailyActivityViewSet(viewsets.ModelViewSet):
             User.objects.select_for_update().get(pk=user.user_id)
             
             # Re-check the submission state inside the lock
-            # Allow updating existing submission for today
+            # Submissions are locked once submitted. Block updates.
             today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
             existing_submission = Submission.objects.filter(user=user, submission_date__gte=today_start).first()
             
-            # Proceed with submission or update
-            current_day = user.current_experiment_day
-            
             if existing_submission:
-                serializer = DailySubmissionSerializer(existing_submission, data=request.data, context={'request': request}, partial=True)
-            else:
-                serializer = DailySubmissionSerializer(data=request.data, context={'request': request})
+                return Response(
+                    {"detail": "This day's activity has already been submitted and is locked."}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            current_day = user.current_experiment_day
+            serializer = DailySubmissionSerializer(data=request.data, context={'request': request})
             if serializer.is_valid():
                 try:
                     serializer.save(user=user, experiment_day=current_day)

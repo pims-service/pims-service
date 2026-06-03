@@ -119,11 +119,16 @@ def test_full_7_day_journey(test_phase):
             assert response.data['current_day'] == day
             assert f"Day {day} Task" in response.data['title']
 
-            # Submit for this day
             activity_id = response.data['id']
+            words_20 = "word " * 20
             submit_resp = client.post(
                 reverse('daily-activity-submit'),
-                {"activity": activity_id, "content": f"Entry for day {day}"},
+                {
+                    "activity": activity_id,
+                    "entry_1": words_20,
+                    "entry_2": words_20,
+                    "entry_3": words_20
+                },
                 format='json'
             )
             assert submit_resp.status_code == status.HTTP_201_CREATED, f"Day {day} submit: {submit_resp.data}"

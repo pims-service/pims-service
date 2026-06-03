@@ -24,6 +24,9 @@ class Submission(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='submissions')
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='submissions')
     content = models.TextField()
+    entry_1 = models.TextField(blank=True, default='')
+    entry_2 = models.TextField(blank=True, default='')
+    entry_3 = models.TextField(blank=True, default='')
     experiment_day = models.PositiveIntegerField(null=True, blank=True, db_index=True)
     submission_date = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -39,6 +42,13 @@ class Submission(models.Model):
             # Speeds up: "Did this user submit today?" — the most frequent query
             models.Index(fields=['user', 'submission_date'], name='idx_submission_user_date'),
         ]
+
+    def save(self, *args, **kwargs):
+        # Automatically update content by joining entry_1, entry_2, entry_3
+        # If entry_1, entry_2, entry_3 are not provided but content is (e.g. legacy tests), keep content as is
+        if self.entry_1 or self.entry_2 or self.entry_3:
+            self.content = f"{self.entry_1}\n\n---\n\n{self.entry_2}\n\n---\n\n{self.entry_3}"
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.user.username} - {self.activity.title}"

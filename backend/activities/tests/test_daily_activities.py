@@ -71,22 +71,33 @@ class TestDailyActivities:
         api_client.force_authenticate(user=user)
         
         submit_url = reverse('daily-activity-submit')
-        payload = {"activity": activity.id, "content": "Entry 1"}
+        words_20 = "word " * 20
+        payload = {
+            "activity": activity.id,
+            "entry_1": words_20,
+            "entry_2": words_20,
+            "entry_3": words_20
+        }
         
         # 1. First submission (10:00 AM)
         resp1 = api_client.post(submit_url, payload, format='json')
         assert resp1.status_code == status.HTTP_201_CREATED
         
-        # 2. Re-submit same day (11:59 PM PKT, which is 18:59:59 UTC) - Should succeed (Update)
+        # 2. Re-submit same day (11:59 PM PKT, which is 18:59:59 UTC) - Should be blocked (Locked)
         with freeze_time("2026-04-19 18:59:59"):
             from django.core.cache import cache
             cache.clear()
-            resp2 = api_client.post(submit_url, {"activity": activity.id, "content": "Updated Entry"}, format='json')
-            assert resp2.status_code == status.HTTP_201_CREATED
-            assert Submission.objects.get(id=resp1.data['id']).content == "Updated Entry"
+            resp2 = api_client.post(submit_url, {
+                "activity": activity.id,
+                "entry_1": words_20 + " extra",
+                "entry_2": words_20 + " extra",
+                "entry_3": words_20 + " extra"
+            }, format='json')
+            assert resp2.status_code == status.HTTP_400_BAD_REQUEST
+            assert "already been submitted and is locked" in resp2.data['detail']
             
-        # 3. Submit next day (00:01 AM PKT, which is 19:00:01 UTC)
-        with freeze_time("2026-04-19 19:00:01"):
+        # 3. Submit next day (e.g. 10:00 AM the next day, which is a new UTC day)
+        with freeze_time("2026-04-20 10:00:00"):
             cache.clear()
             # Create a Day 2 activity to satisfy the new validation
             # (User is now on Day 2 because baseline was at 10:00 AM on 2026-04-19)
@@ -98,8 +109,13 @@ class TestDailyActivities:
                 activity_type="paragraph",
                 day_number=2
             )
-            resp3 = api_client.post(submit_url, {"activity": activity_day2.id, "content": "Entry 2"}, format='json')
-            assert resp3.status_code == status.HTTP_201_CREATED
+            resp3 = api_client.post(submit_url, {
+                "activity": activity_day2.id,
+                "entry_1": words_20,
+                "entry_2": words_20,
+                "entry_3": words_20
+            }, format='json')
+            assert resp3.status_code == status.HTTP_201_CREATED, resp3.data
 
     def test_prevent_submission_for_wrong_group(self, api_client, test_setup):
         user, group, activity = test_setup
@@ -113,7 +129,13 @@ class TestDailyActivities:
         )
         
         url = reverse('daily-activity-submit')
-        payload = {"activity": other_activity.id, "content": "Sneaky"}
+        words_20 = "word " * 20
+        payload = {
+            "activity": other_activity.id,
+            "entry_1": words_20,
+            "entry_2": words_20,
+            "entry_3": words_20
+        }
         
         response = api_client.post(url, payload, format='json')
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -127,9 +149,9 @@ class TestDailyActivities:
         assert 'X-Request-ID' in response
 
     @freeze_time("2026-05-01 10:00:00")
-    def test_update_daily_submission(self, api_client, test_phase):
+    def test_block_duplicate_daily_submission(self, api_client, test_phase):
         """
-        Verify that submitting again on the same day updates the existing record.
+        Verify that submitting again on the same day is blocked because the entries are locked.
         """
         user, group, activity = self.create_context(test_phase)
         user.onboarding_completed_at = datetime(2026, 5, 1, 0, 0, tzinfo=dt_timezone.utc)
@@ -138,10 +160,17 @@ class TestDailyActivities:
         api_client.force_authenticate(user=user)
         
         url = reverse('daily-activity-submit')
-        api_client.post(url, {"activity": activity.id, "content": "Initial"}, format='json')
+        words_20 = "word " * 20
+        payload = {
+            "activity": activity.id,
+            "entry_1": words_20,
+            "entry_2": words_20,
+            "entry_3": words_20
+        }
+        api_client.post(url, payload, format='json')
         
-        # Update
-        response = api_client.post(url, {"activity": activity.id, "content": "Revised"}, format='json')
-        assert response.status_code == status.HTTP_201_CREATED
+        # Second submission should be blocked
+        response = api_client.post(url, payload, format='json')
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "already been submitted and is locked" in response.data['detail']
         assert Submission.objects.filter(user=user).count() == 1
-        assert Submission.objects.get(user=user).content == "Revised"
