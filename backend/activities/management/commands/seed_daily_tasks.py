@@ -18,8 +18,14 @@ GROUP_PROMPTS = {
         "بارے میں اس ہفتے پہلے نہ لکھا ہو۔ کل تقریباً 10 منٹ صرف کریں۔"
     ),
     'Group 2': (
-        'Before going to sleep, write down three things you are genuinely grateful for today. '
-        'They can be big or small — a person, a moment, a blessing, anything.'
+        "Today's task: Write down three things from today that you are grateful for. For each one: "
+        "describe what happened; note who was involved (a specific person, a stranger, yourself, or no one in particular); "
+        "explain why it happened, what or who made this good thing possible. Try to choose new things each day, "
+        "not repeat the same gratitude. | "
+        "آج کا کام: آج کی تین ایسی چیزیں لکھیں جن کے لیے آپ شکر گزار ہیں۔ ہر ایک کے بارے میں: "
+        "بیان کریں کہ کیا ہوا؛ یہ بتائیں کہ اس میں کون شامل تھا (کوئی مخصوص شخص، اجنبی، آپ خود، یا کوئی بھی نہیں)؛ "
+        "وضاحت کریں کہ یہ کیوں ہوا، کس یا کس چیز نے اس اچھی بات کو ممکن بنایا۔ کوشش کریں کہ ہر دن نئی چیزیں "
+        "منتخب کریں، ایک ہی شکر گزاری بار بار نہ دہرائیں۔"
     ),
     'Group 3': (
         'Before going to sleep, write down one thing from each of the following from your day:\n'

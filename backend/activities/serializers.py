@@ -1,12 +1,29 @@
+import re
 from rest_framework import serializers
 from .models import Activity, Submission
 from django.utils import timezone
+
+def clean_group_from_title(title):
+    if not title:
+        return title
+    # Replace " - Group X - " with " - "
+    cleaned = re.sub(r'\s*-\s*Group\s+\d+\s*-\s*', ' - ', title)
+    # Replace " - Group X" or "Group X - " with a space or empty string
+    cleaned = re.sub(r'\s*-\s*Group\s+\d+\s*', ' ', cleaned)
+    cleaned = re.sub(r'\bGroup\s+\d+\b', '', cleaned)
+    return re.sub(r'\s+', ' ', cleaned).strip()
 
 class ActivitySerializer(serializers.ModelSerializer):
     group_name = serializers.CharField(source='group.name', read_only=True)
     class Meta:
         model = Activity
         fields = ['id', 'title', 'description', 'activity_type', 'day_number', 'group_name']
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        if 'title' in rep and rep['title']:
+            rep['title'] = clean_group_from_title(rep['title'])
+        return rep
 
 def count_words(text):
     if not text:
@@ -56,3 +73,9 @@ class SubmissionSerializer(serializers.ModelSerializer):
         model = Submission
         fields = ['id', 'activity', 'activity_title', 'entry_1', 'entry_2', 'entry_3', 'content', 'submission_date']
         read_only_fields = ['submission_date']
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        if 'activity_title' in rep and rep['activity_title']:
+            rep['activity_title'] = clean_group_from_title(rep['activity_title'])
+        return rep

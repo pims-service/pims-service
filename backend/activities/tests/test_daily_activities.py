@@ -174,3 +174,37 @@ class TestDailyActivities:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "already been submitted and is locked" in response.data['detail']
         assert Submission.objects.filter(user=user).count() == 1
+
+    def test_current_activity_prioritizes_group_specific(self, api_client, test_phase):
+        """
+        Verify that if there is both a group-assigned activity and a global activity
+        for the same day, the group-assigned one is served to the user.
+        """
+        uid = uuid.uuid4().hex[:8]
+        group = Group.objects.create(name=f"Group_{uid}")
+        user = User.objects.create_user(
+            username=f"user_{uid}", email=f"user_{uid}@test.com", password="pwd",
+            group=group, has_completed_sociodemographic=True,
+            onboarding_completed_at=timezone.now()
+        )
+        
+        # 1. Create a generic (null group) activity for day 1
+        generic_activity = Activity.objects.create(
+            title=f"Generic_Day_1", group=None, activity_type="paragraph",
+            assigned_phase=test_phase, day_number=1
+        )
+        
+        # 2. Create a group-assigned activity for day 1
+        group_activity = Activity.objects.create(
+            title=f"Group_Specific_Day_1", group=group, activity_type="paragraph",
+            assigned_phase=test_phase, day_number=1
+        )
+        
+        api_client.force_authenticate(user=user)
+        url = reverse('daily-activity-current')
+        response = api_client.get(url)
+        
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['id'] == group_activity.id
+        assert response.data['title'] == f"Group_Specific_Day_1"
+

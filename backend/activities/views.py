@@ -8,6 +8,9 @@ from .models import Activity, Submission
 from .serializers import ActivitySerializer, DailySubmissionSerializer, SubmissionSerializer
 from users.permissions import OnboardingCompleted
 from django.contrib.auth import get_user_model
+import logging
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -39,8 +42,11 @@ class DailyActivityViewSet(viewsets.ModelViewSet):
         if current_day > 7:
             return Response({"detail": "Trial period completed."}, status=status.HTTP_200_OK)
 
-        from django.db.models import Q
-        activity = Activity.objects.filter(Q(group=user.group) | Q(group__isnull=True), day_number=current_day).first()
+        activity = None
+        if user.group:
+            activity = Activity.objects.filter(group=user.group, day_number=current_day).first()
+        if not activity:
+            activity = Activity.objects.filter(group__isnull=True, day_number=current_day).first()
         if not activity:
             return Response({"detail": f"No activity found for your group on Day {current_day}."}, status=status.HTTP_404_NOT_FOUND)
         
@@ -78,7 +84,11 @@ class DailyActivityViewSet(viewsets.ModelViewSet):
                 data['entry_2'] = submission.entry_2
                 data['entry_3'] = submission.entry_3
         
-        return Response(data)
+        response = Response(data)
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
 
     @action(detail=False, methods=['post'])
     def submit(self, request):
