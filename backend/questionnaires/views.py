@@ -181,6 +181,40 @@ class AdminT0ResponseDetailView(generics.RetrieveAPIView):
         )
 
 
+class AdminT1ResponseListView(generics.ListAPIView):
+    """
+    Researcher-only view to list all completed T1 follow-up (Day 7) psychometric assessments.
+    """
+    serializer_class = AdminResponseSetSerializer
+    permission_classes = (permissions.IsAdminUser,)
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        return ResponseSet.objects.filter(
+            milestone='7_DAYS',
+            questionnaire__assessment_type='PSYCHOMETRIC',
+            status='COMPLETED'
+        ).select_related('user', 'questionnaire').order_by('-completed_at')
+
+
+class AdminT1ResponseDetailView(generics.RetrieveAPIView):
+    """
+    Researcher-only view to inspect a specific T1 follow-up (Day 7) psychometric submission.
+    """
+    serializer_class = AdminResponseSetSerializer
+    permission_classes = (permissions.IsAdminUser,)
+
+    def get_queryset(self):
+        return ResponseSet.objects.filter(
+            milestone='7_DAYS',
+            questionnaire__assessment_type='PSYCHOMETRIC',
+            status='COMPLETED'
+        ).select_related('user', 'questionnaire').prefetch_related(
+            'responses__question',
+            'responses__selected_option'
+        )
+
+
 class DueMilestoneView(generics.GenericAPIView):
     """
     Endpoint to retrieve the user's currently due longitudinal assessment milestone.

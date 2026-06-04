@@ -84,9 +84,14 @@ export const questionnairesApi = {
 
   getAdminT0Responses: (page: number = 1) => api.get(`/questionnaires/t0-results/?page=${page}`),
   getAdminT0Detail: (id: string) => api.get(`/questionnaires/t0-results/${id}/`),
+  getAdminT1Responses: (page: number = 1) => api.get(`/questionnaires/t1-results/?page=${page}`),
+  getAdminT1Detail: (id: string) => api.get(`/questionnaires/t1-results/${id}/`),
   getDashboardAnalytics: () => api.get('/admin/tools/dashboard-analytics/'),
 
   triggerAdminT0Export: (groupName?: string) => api.post('/admin/tools/export/t0/csv/', {
+    group: groupName || 'All'
+  }),
+  triggerAdminT1Export: (groupName?: string) => api.post('/admin/tools/export/t1/csv/', {
     group: groupName || 'All'
   }),
   triggerAdminLongitudinalExport: (groupName?: string) => api.post('/admin/tools/export/longitudinal/csv/', {

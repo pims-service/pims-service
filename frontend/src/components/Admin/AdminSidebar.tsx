@@ -37,6 +37,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate }) => {
   const navItems = [
     { label: 'Overview', path: '/admin', icon: <LayoutDashboard size={18} /> },
     { label: 'T0 Results', path: '/admin/t0-data', icon: <ClipboardCheck size={18} /> },
+    { label: 'T1 Results', path: '/admin/t1-data', icon: <ClipboardCheck size={18} /> },
     { label: 'Groups Management', path: '/admin/groups', icon: <Users size={18} /> },
     { label: 'User Queries', path: '/admin/support-queries', icon: <MessageSquare size={18} />, badge: openQueriesCount },
   ];

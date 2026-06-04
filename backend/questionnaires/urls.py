@@ -9,6 +9,8 @@ from .views import (
     ResponseSetSaveDraftView,
     AdminT0ResponseListView,
     AdminT0ResponseDetailView,
+    AdminT1ResponseListView,
+    AdminT1ResponseDetailView,
     DueMilestoneView
 )
 from .analytics_views import (
@@ -21,6 +23,8 @@ urlpatterns = [
     # Admin & Research Data (Prioritized)
     path('t0-results/', AdminT0ResponseListView.as_view(), name='admin_t0_list'),
     path('t0-results/<uuid:pk>/', AdminT0ResponseDetailView.as_view(), name='admin_t0_detail'),
+    path('t1-results/', AdminT1ResponseListView.as_view(), name='admin_t1_list'),
+    path('t1-results/<uuid:pk>/', AdminT1ResponseDetailView.as_view(), name='admin_t1_detail'),
 
     path('due/', DueMilestoneView.as_view(), name='due_milestone'),
     path('', QuestionnaireListView.as_view(), name='questionnaire_list'),
