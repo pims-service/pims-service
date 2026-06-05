@@ -66,7 +66,7 @@ class ResponseSetListCreateView(generics.ListCreateAPIView):
             if q_obj.assessment_type == 'SOCIODEMOGRAPHIC' and user.has_completed_sociodemographic:
                 raise ValidationError({"detail": "You have already completed the sociodemographic assessment."})
             if q_obj.is_posttest:
-                if milestone == '7_DAYS':
+                if milestone in [None, '7_DAYS']:
                     if not user.is_posttest_due:
                         raise ValidationError({"detail": "Post-test is not available yet. Complete 7 days first."})
                     if user.has_completed_posttest:
