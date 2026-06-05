@@ -15,6 +15,8 @@ from .views import (
     AdminT2ResponseDetailView,
     AdminT3ResponseListView,
     AdminT3ResponseDetailView,
+    AdminT4ResponseListView,
+    AdminT4ResponseDetailView,
     DueMilestoneView
 )
 from .analytics_views import (
@@ -33,6 +35,8 @@ urlpatterns = [
     path('t2-results/<uuid:pk>/', AdminT2ResponseDetailView.as_view(), name='admin_t2_detail'),
     path('t3-results/', AdminT3ResponseListView.as_view(), name='admin_t3_list'),
     path('t3-results/<uuid:pk>/', AdminT3ResponseDetailView.as_view(), name='admin_t3_detail'),
+    path('t4-results/', AdminT4ResponseListView.as_view(), name='admin_t4_list'),
+    path('t4-results/<uuid:pk>/', AdminT4ResponseDetailView.as_view(), name='admin_t4_detail'),
 
     path('due/', DueMilestoneView.as_view(), name='due_milestone'),
     path('', QuestionnaireListView.as_view(), name='questionnaire_list'),
