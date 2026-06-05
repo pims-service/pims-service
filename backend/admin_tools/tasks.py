@@ -22,8 +22,8 @@ def generate_posttest_export_csv(task_id):
         from admin_tools.export_utils import (
             build_psych_item_headers_and_columns,
             append_psych_item_values,
-            append_perma_score_values,
-            extend_headers_with_perma_scores,
+            append_battery_score_values,
+            extend_headers_with_battery_scores,
         )
 
         # 1. Fetch and configure psychometric questions
@@ -33,7 +33,7 @@ def generate_posttest_export_csv(task_id):
         headers = ['ParticipantID', 'Username', 'Group', 'DateOfBirth', 'T0StartedAt', 'T0CompletedAt']
         item_headers, psy_columns = build_psych_item_headers_and_columns(psy_questions, 'SIGNUP')
         headers.extend(item_headers)
-        extend_headers_with_perma_scores(headers, 'SIGNUP')
+        extend_headers_with_battery_scores(headers, 'SIGNUP')
 
         # 3. Fetch Users who have completed the SIGNUP milestone baseline psychometrics
         User = get_user_model()
@@ -79,7 +79,7 @@ def generate_posttest_export_csv(task_id):
             ]
 
             append_psych_item_values(row, resp_map, psy_columns)
-            append_perma_score_values(row, rs_t0)
+            append_battery_score_values(row, rs_t0)
 
             writer.writerow(row)
 
@@ -110,8 +110,8 @@ def generate_longitudinal_export_csv(task_id):
     from admin_tools.export_utils import (
         build_psych_item_headers_and_columns,
         append_psych_item_values,
-        append_perma_score_values,
-        extend_headers_with_perma_scores,
+        append_battery_score_values,
+        extend_headers_with_battery_scores,
     )
 
     try:
@@ -152,7 +152,7 @@ def generate_longitudinal_export_csv(task_id):
             psy_columns.extend((q_id, milestone) for q_id in question_ids)
 
         for milestone in milestones:
-            extend_headers_with_perma_scores(headers, milestone)
+            extend_headers_with_battery_scores(headers, milestone)
 
         # 4. Fetch Users
         User = get_user_model()
@@ -219,7 +219,7 @@ def generate_longitudinal_export_csv(task_id):
                         questionnaire__assessment_type='PSYCHOMETRIC',
                         status='COMPLETED',
                     ).first()
-                    append_perma_score_values(row, rs)
+                    append_battery_score_values(row, rs)
 
                 writer.writerow(row)
 
@@ -261,8 +261,8 @@ def generate_t1_export_csv(task_id):
         from admin_tools.export_utils import (
             build_psych_item_headers_and_columns,
             append_psych_item_values,
-            append_perma_score_values,
-            extend_headers_with_perma_scores,
+            append_battery_score_values,
+            extend_headers_with_battery_scores,
         )
 
         # 1. Fetch and configure psychometric questions
@@ -272,7 +272,7 @@ def generate_t1_export_csv(task_id):
         headers = ['ParticipantID', 'Username', 'Group', 'DateOfBirth', 'T1StartedAt', 'T1CompletedAt']
         item_headers, psy_columns = build_psych_item_headers_and_columns(psy_questions, '7_DAYS')
         headers.extend(item_headers)
-        extend_headers_with_perma_scores(headers, '7_DAYS')
+        extend_headers_with_battery_scores(headers, '7_DAYS')
 
         # 3. Fetch Users who have completed the 7_DAYS milestone baseline psychometrics
         User = get_user_model()
@@ -318,7 +318,7 @@ def generate_t1_export_csv(task_id):
             ]
 
             append_psych_item_values(row, resp_map, psy_columns)
-            append_perma_score_values(row, rs_t1)
+            append_battery_score_values(row, rs_t1)
 
             writer.writerow(row)
 
@@ -354,8 +354,8 @@ def generate_t2_export_csv(task_id):
         from admin_tools.export_utils import (
             build_psych_item_headers_and_columns,
             append_psych_item_values,
-            append_perma_score_values,
-            extend_headers_with_perma_scores,
+            append_battery_score_values,
+            extend_headers_with_battery_scores,
         )
 
         # 1. Fetch psychometric questions
@@ -365,7 +365,7 @@ def generate_t2_export_csv(task_id):
         headers = ['ParticipantID', 'Username', 'Group', 'DateOfBirth', 'T2StartedAt', 'T2CompletedAt']
         item_headers, psy_columns = build_psych_item_headers_and_columns(psy_questions, '90_DAYS')
         headers.extend(item_headers)
-        extend_headers_with_perma_scores(headers, '90_DAYS')
+        extend_headers_with_battery_scores(headers, '90_DAYS')
 
         # 3. Fetch Users who have completed the 3_MONTHS milestone psychometrics
         User = get_user_model()
@@ -403,7 +403,7 @@ def generate_t2_export_csv(task_id):
                 rs_t2.completed_at.strftime('%Y-%m-%d %H:%M:%S') if rs_t2.completed_at else '',
             ]
             append_psych_item_values(row, resp_map, psy_columns)
-            append_perma_score_values(row, rs_t2)
+            append_battery_score_values(row, rs_t2)
             writer.writerow(row)
 
         file_name = f"t2_export_{task.id}.csv"
@@ -437,8 +437,8 @@ def generate_t3_export_csv(task_id):
         from admin_tools.export_utils import (
             build_psych_item_headers_and_columns,
             append_psych_item_values,
-            append_perma_score_values,
-            extend_headers_with_perma_scores,
+            append_battery_score_values,
+            extend_headers_with_battery_scores,
         )
 
         # 1. Fetch psychometric questions
@@ -448,7 +448,7 @@ def generate_t3_export_csv(task_id):
         headers = ['ParticipantID', 'Username', 'Group', 'DateOfBirth', 'T3StartedAt', 'T3CompletedAt']
         item_headers, psy_columns = build_psych_item_headers_and_columns(psy_questions, '6_MONTHS')
         headers.extend(item_headers)
-        extend_headers_with_perma_scores(headers, '6_MONTHS')
+        extend_headers_with_battery_scores(headers, '6_MONTHS')
 
         # 3. Fetch Users who have completed the 6_MONTHS milestone psychometrics
         User = get_user_model()
@@ -486,7 +486,7 @@ def generate_t3_export_csv(task_id):
                 rs_t3.completed_at.strftime('%Y-%m-%d %H:%M:%S') if rs_t3.completed_at else '',
             ]
             append_psych_item_values(row, resp_map, psy_columns)
-            append_perma_score_values(row, rs_t3)
+            append_battery_score_values(row, rs_t3)
             writer.writerow(row)
 
         file_name = f"t3_export_{task.id}.csv"
@@ -512,31 +512,24 @@ def generate_t4_export_csv(task_id):
         task.status = 'PROCESSING'
         task.save()
 
-        import re
         import io
         import csv
         from questionnaires.models import Question, ResponseSet, Response
         from django.contrib.auth import get_user_model
         from django.core.files.base import ContentFile
+        from admin_tools.export_utils import (
+            build_psych_item_headers_and_columns,
+            append_psych_item_values,
+            append_battery_score_values,
+            extend_headers_with_battery_scores,
+        )
 
         psy_questions = list(Question.objects.filter(questionnaire__assessment_type='PSYCHOMETRIC').order_by('order'))
 
         headers = ['ParticipantID', 'Username', 'Group', 'DateOfBirth', 'T4StartedAt', 'T4CompletedAt']
-        psy_columns = []
-        perma_codes = ["A1", "E1", "P1", "N1", "A2", "H1", "M1", "R1", "M2", "E2", "Lon", "H2", "P2", "N2", "A3", "N3", "E3", "H3", "R2", "M3", "R3", "P3", "Hap"]
-        tag_counters = {}
-        for q in psy_questions:
-            match = re.match(r'^\[([^\]]+)\]', q.content)
-            tag = re.sub(r'[^a-zA-Z0-9]', '', match.group(1)).upper() if match else "PSYCH"
-            tag_counters[tag] = tag_counters.get(tag, 0) + 1
-            relative_order = tag_counters[tag]
-            if tag == "PERMA":
-                code = perma_codes[relative_order - 1]
-                header_name = f"PERMA_{code.upper()}_1_YEAR"
-            else:
-                header_name = f"{tag}_Q{relative_order}_1_YEAR"
-            headers.append(header_name)
-            psy_columns.append(q.id)
+        item_headers, psy_columns = build_psych_item_headers_and_columns(psy_questions, '1_YEAR')
+        headers.extend(item_headers)
+        extend_headers_with_battery_scores(headers, '1_YEAR')
 
         User = get_user_model()
         users_qs = User.objects.filter(
@@ -572,13 +565,8 @@ def generate_t4_export_csv(task_id):
                 rs_t4.started_at.strftime('%Y-%m-%d %H:%M:%S') if rs_t4.started_at else '',
                 rs_t4.completed_at.strftime('%Y-%m-%d %H:%M:%S') if rs_t4.completed_at else '',
             ]
-            for q_id in psy_columns:
-                ans = resp_map.get(q_id)
-                if ans:
-                    val = ans.selected_option.label if ans.selected_option else (ans.text_value or '')
-                    row.append(val.replace('\n', ' '))
-                else:
-                    row.append('')
+            append_psych_item_values(row, resp_map, psy_columns)
+            append_battery_score_values(row, rs_t4)
             writer.writerow(row)
 
         file_name = f"t4_export_{task.id}.csv"

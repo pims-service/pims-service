@@ -5,8 +5,8 @@ import re
 
 from questionnaires.scoring import (
     PERMA_ITEM_CODES,
-    perma_score_column_names,
-    perma_score_row_values,
+    battery_score_column_names,
+    battery_score_row_values,
     ensure_scores,
 )
 
@@ -49,15 +49,15 @@ def append_psych_item_values(row, resp_map, question_ids):
             row.append("")
 
 
-def append_perma_score_values(row, response_set):
-    """Append computed PERMA subscale scores for a milestone response set."""
+def append_battery_score_values(row, response_set):
+    """Append computed battery scores (PERMA, PHQ-9, GAD-7, PANAS, Gratitude, SIDAS)."""
     if response_set:
         scores = ensure_scores(response_set)
-        row.extend(perma_score_row_values(scores))
+        row.extend(battery_score_row_values(scores))
     else:
-        row.extend(perma_score_row_values({}))
+        row.extend(battery_score_row_values({}))
 
 
-def extend_headers_with_perma_scores(headers, milestone_suffix):
-    """Add PERMA subscale score column headers after item columns."""
-    headers.extend(perma_score_column_names(milestone_suffix))
+def extend_headers_with_battery_scores(headers, milestone_suffix):
+    """Add computed battery score column headers after item columns."""
+    headers.extend(battery_score_column_names(milestone_suffix))

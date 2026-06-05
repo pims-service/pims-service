@@ -1,6 +1,11 @@
 """
 Psychometric scoring for the longitudinal battery.
-PERMA Profiler subscales use item means (0-10); N and Lon are not reverse-scored.
+
+PERMA: subscale means (0-10); N and Lon are not reverse-scored.
+PHQ-9 / GAD-7: sum of items.
+PANAS: PA and NA subscale sums (independent dimensions).
+Gratitude: GtO, GtA, and total sums.
+SIDAS: sum with item 2 (controllability) reverse-scored at the scoring layer.
 """
 from .models import Response
 
@@ -21,6 +26,29 @@ PERMA_EXPORT_SCORES = [
     ("PERMA_LON", "PERMA_Loneliness"),
     ("PERMA_OVERALL", "PERMA_Overall"),
 ]
+
+BATTERY_EXPORT_SCORES = PERMA_EXPORT_SCORES + [
+    ("PHQ9_TOTAL", "PHQ9_Total"),
+    ("GAD7_TOTAL", "GAD7_Total"),
+    ("PANAS_PA", "PANAS_PositiveAffect"),
+    ("PANAS_NA", "PANAS_NegativeAffect"),
+    ("GRAT_GTO", "Gratitude_GtO"),
+    ("GRAT_GTA", "Gratitude_GtA"),
+    ("GRAT_TOTAL", "Gratitude_Total"),
+    ("SIDAS_TOTAL", "SIDAS_Total"),
+]
+
+
+def battery_score_column_names(milestone_suffix):
+    """CSV header names for all computed battery scores at a given milestone."""
+    return [f"{label}_{milestone_suffix}" for _, label in BATTERY_EXPORT_SCORES]
+
+
+def battery_score_row_values(scores):
+    """Ordered battery score values for a CSV row; empty string if missing."""
+    if not scores:
+        return [""] * len(BATTERY_EXPORT_SCORES)
+    return [scores.get(key, "") for key, _ in BATTERY_EXPORT_SCORES]
 
 
 def perma_score_column_names(milestone_suffix):
