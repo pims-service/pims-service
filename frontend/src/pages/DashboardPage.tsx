@@ -143,9 +143,9 @@ const DashboardPage: React.FC = () => {
                   };
                 case '1_YEAR':
                   return {
-                    title: 'Month 12 Follow-Up Available',
-                    description: 'Please complete the Month 12 follow-up assessment.',
-                    buttonText: 'Start Month 12 Assessment',
+                    title: 'T4 Month 12 Follow-Up Available',
+                    description: 'Please complete the T4 12-month follow-up assessment (PERMA, PHQ-9, GAD-7, PANAS, Gratitude, SIDAS).',
+                    buttonText: 'Start T4 Assessment',
                     colorClass: 'from-indigo-50 to-white border-indigo-200 text-indigo-600 bg-indigo-600 hover:bg-indigo-700'
                   };
                 default:
