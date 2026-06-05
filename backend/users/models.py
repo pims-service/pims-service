@@ -148,11 +148,20 @@ class User(AbstractUser):
         due = None
 
         # Evaluate timeline sequentially
+        
+        # 1. 7_DAYS (T1 post-test)
         if '7_DAYS' not in completed_milestones:
-            if self.current_experiment_day is not None and self.current_experiment_day >= 8:
-                due = '7_DAYS'
-        else:
-            # Find T1 completion time
+            due_date = self.onboarding_completed_at + timezone.timedelta(days=7)
+            if now >= due_date:
+                if now - due_date >= timezone.timedelta(days=14):
+                    # 7_DAYS has expired. Move on.
+                    pass
+                else:
+                    due = '7_DAYS'
+
+        # If 7_DAYS has been completed or expired, check subsequent milestones
+        if due is None:
+            # Find reference T1 date
             t1_completed_at = self.posttest_completed_at
             if not t1_completed_at:
                 t1_rs = ResponseSet.objects.filter(user=self, status='COMPLETED', milestone='7_DAYS').first()
@@ -160,13 +169,39 @@ class User(AbstractUser):
                     t1_completed_at = t1_rs.completed_at
             
             if t1_completed_at:
-                days_since_t1 = (now.date() - t1_completed_at.date()).days
-                if '3_MONTHS' not in completed_milestones and days_since_t1 >= 90:
-                    due = '3_MONTHS'
-                elif '6_MONTHS' not in completed_milestones and days_since_t1 >= 180:
-                    due = '6_MONTHS'
-                elif '1_YEAR' not in completed_milestones and days_since_t1 >= 365:
-                    due = '1_YEAR'
+                ref_date = t1_completed_at
+            else:
+                ref_date = self.onboarding_completed_at + timezone.timedelta(days=7)
+
+            # 2. 3_MONTHS (T2 follow-up)
+            if '3_MONTHS' not in completed_milestones:
+                due_date = ref_date + timezone.timedelta(days=90)
+                if now >= due_date:
+                    if now - due_date >= timezone.timedelta(days=14):
+                        # 3_MONTHS has expired.
+                        pass
+                    else:
+                        due = '3_MONTHS'
+
+            # 3. 6_MONTHS (T3 follow-up)
+            if due is None and '6_MONTHS' not in completed_milestones:
+                due_date = ref_date + timezone.timedelta(days=180)
+                if now >= due_date:
+                    if now - due_date >= timezone.timedelta(days=14):
+                        # 6_MONTHS has expired.
+                        pass
+                    else:
+                        due = '6_MONTHS'
+
+            # 4. 1_YEAR (T4 follow-up)
+            if due is None and '1_YEAR' not in completed_milestones:
+                due_date = ref_date + timezone.timedelta(days=365)
+                if now >= due_date:
+                    if now - due_date >= timezone.timedelta(days=14):
+                        # 1_YEAR has expired.
+                        pass
+                    else:
+                        due = '1_YEAR'
 
         # Cache until midnight
         tomorrow = (now + timezone.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
@@ -205,6 +240,105 @@ class User(AbstractUser):
         cache.set(cache_key, final_rate, timeout=300)
         
         return final_rate
+
+    @property
+    def has_consecutive_misses(self):
+        """
+        Returns True if the user has missed submitting daily activities on 2 consecutive days
+        during their active week (Days 1 to 7) and has not yet gotten back on track.
+        """
+        current_day = self.current_experiment_day
+        if not current_day or not self.onboarding_completed_at:
+            return False
+
+        from activities.models import Submission
+        # Find which days the user has submitted daily activities
+        submitted_days = set(
+            Submission.objects.filter(user=self, experiment_day__lte=7)
+            .values_list('experiment_day', flat=True)
+        )
+
+        # If they already submitted today's activity, they are back on track today.
+        if current_day in submitted_days:
+            return False
+
+        # Scan backwards from yesterday (current_day - 1) to determine the most recent status.
+        # If we hit two consecutive missed days before hitting any completed days, they are flagged.
+        # If we hit a completed day first, then they got back on track and are not flagged.
+        consecutive_miss_count = 0
+        for day in range(current_day - 1, 0, -1):
+            if day > 7:
+                continue
+            if day not in submitted_days:
+                consecutive_miss_count += 1
+                if consecutive_miss_count >= 2:
+                    return True
+            else:
+                # Met a submitted day, the streak of misses is broken
+                break
+        return False
+
+    @property
+    def consecutive_misses_message(self):
+        if self.has_consecutive_misses:
+            return "We noticed you missed your reflection for a couple of days. Research shows consistency is key to benefit from the intervention. Let's get back on track today!"
+        return ""
+
+    @property
+    def has_two_consecutive_missed_waves(self):
+        """
+        Returns True if the last two milestone waves that should have been completed were missed
+        (overdue by >= 14 days and no completed response set exists).
+        """
+        from questionnaires.models import ResponseSet
+        completed_milestones = set(
+            ResponseSet.objects.filter(user=self, status='COMPLETED', milestone__isnull=False)
+            .values_list('milestone', flat=True)
+        )
+        if self.has_completed_posttest:
+            completed_milestones.add('7_DAYS')
+
+        if not self.onboarding_completed_at:
+            return False
+
+        now = timezone.now()
+        
+        # Calculate ref_date
+        t1_completed_at = self.posttest_completed_at
+        if not t1_completed_at:
+            t1_rs = ResponseSet.objects.filter(user=self, status='COMPLETED', milestone='7_DAYS').first()
+            if t1_rs:
+                t1_completed_at = t1_rs.completed_at
+        if t1_completed_at:
+            ref_date = t1_completed_at
+        else:
+            ref_date = self.onboarding_completed_at + timezone.timedelta(days=7)
+
+        # Waves and their due dates
+        waves = [
+            ('7_DAYS', self.onboarding_completed_at + timezone.timedelta(days=7)),
+            ('3_MONTHS', ref_date + timezone.timedelta(days=90)),
+            ('6_MONTHS', ref_date + timezone.timedelta(days=180)),
+            ('1_YEAR', ref_date + timezone.timedelta(days=365)),
+        ]
+
+        # Check waves that are past the 14-day expiry window
+        missed_flags = []
+        for milestone, due_date in waves:
+            expiry_date = due_date + timezone.timedelta(days=14)
+            if now >= expiry_date:
+                # Wave has expired. Was it completed?
+                is_completed = milestone in completed_milestones
+                missed_flags.append(not is_completed)
+            else:
+                # This and subsequent waves are not yet past expiry
+                break
+
+        # Check if last two in the list of past/expired waves are both True (missed)
+        if len(missed_flags) >= 2:
+            return missed_flags[-1] and missed_flags[-2]
+        return False
+
 
 class UserConsent(models.Model):
     """

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api, { questionnairesApi } from '../services/api';
 import { useTranslation } from 'react-i18next';
-import { Calendar, CheckCircle2, Clock, ArrowRight, Bell, FileText, ClipboardCheck } from 'lucide-react';
+import { Calendar, CheckCircle2, Clock, ArrowRight, Bell, FileText, ClipboardCheck, AlertTriangle } from 'lucide-react';
 
 const DashboardPage: React.FC = () => {
   const [activities, setActivities] = useState<any[]>([]);
@@ -106,6 +106,18 @@ const DashboardPage: React.FC = () => {
           </span>
         </div>
       </header>
+
+      {userProfile?.has_consecutive_misses && (
+        <section className="border-2 border-amber-200 rounded-xl p-5 bg-amber-50 text-amber-900 shadow-sm flex items-start gap-4 animate-in slide-in-from-top duration-300">
+          <div className="w-10 h-10 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0">
+            <AlertTriangle size={20} />
+          </div>
+          <div>
+            <h3 className="font-bold text-amber-950">Consistency Nudge</h3>
+            <p className="text-sm text-amber-800 mt-1 font-medium">{userProfile.consecutive_misses_message}</p>
+          </div>
+        </section>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">

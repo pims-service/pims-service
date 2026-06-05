@@ -274,6 +274,14 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(hour=18, minute=0),
         'args': ('evening',),
     },
+    'tier3-daily-evaluation': {
+        'task': 'notifications.tasks.run_tier3_daily_evaluation',
+        'schedule': crontab(hour=1, minute=0),
+    },
+    'assessment-graduated-reminders': {
+        'task': 'notifications.tasks.run_assessment_graduated_reminders',
+        'schedule': crontab(hour=2, minute=0),
+    },
 }
 # Spectacular Settings
 SPECTACULAR_SETTINGS = {

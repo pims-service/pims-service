@@ -11,6 +11,17 @@ class SupportTicketViewSet(viewsets.ModelViewSet):
             return SupportTicket.objects.all()
         return SupportTicket.objects.filter(user=self.request.user)
     
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if request.user.is_staff or (request.user.role and request.user.role.name == 'Admin'):
+            queryset = queryset.exclude(subject__icontains="Call Protocol")
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     def get_permissions(self):
         if self.action in ['create', 'list', 'retrieve', 'mark_read', 'unread_count']:
             permission_classes = [permissions.IsAuthenticated]
@@ -40,6 +51,17 @@ class SupportTicketViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAdminUser])
     def open_count(self, request):
-        count = SupportTicket.objects.filter(status__in=['Open', 'In Progress']).count()
+        count = SupportTicket.objects.filter(status__in=['Open', 'In Progress']).exclude(subject__icontains="Call Protocol").count()
         return Response({'count': count})
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAdminUser])
+    def follow_ups(self, request):
+        tickets = SupportTicket.objects.filter(subject__icontains="Call Protocol")
+        page = self.paginate_queryset(tickets)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(tickets, many=True)
+        return Response(serializer.data)
+
 

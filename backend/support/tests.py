@@ -82,10 +82,12 @@ def test_participant_can_list_own_tickets(auth_client, participant_user):
 @pytest.mark.django_db
 def test_admin_can_list_tickets(admin_client, participant_user):
     SupportTicket.objects.create(user=participant_user, subject='Test', message='Msg')
+    # Call Protocol ticket (should be excluded from standard list)
+    SupportTicket.objects.create(user=participant_user, subject='Call Protocol: High daily activity miss', message='Requires follow-up call')
+    
     response = admin_client.get('/api/support/tickets/')
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    # DRF could use pagination
     results = data.get('results', data) if isinstance(data, dict) else data
     assert len(results) == 1
     assert results[0]['subject'] == 'Test'
@@ -135,6 +137,8 @@ def test_open_count(admin_client, participant_user):
     SupportTicket.objects.create(user=participant_user, subject='Test1', message='Msg1', status='Open')
     SupportTicket.objects.create(user=participant_user, subject='Test2', message='Msg2', status='In Progress')
     SupportTicket.objects.create(user=participant_user, subject='Test3', message='Msg3', status='Resolved')
+    # Call Protocol ticket (should be excluded from standard open_count)
+    SupportTicket.objects.create(user=participant_user, subject='Call Protocol: Assessment Overdue', message='Call required', status='Open')
     
     response = admin_client.get('/api/support/tickets/open_count/')
     assert response.status_code == status.HTTP_200_OK
@@ -147,3 +151,36 @@ def test_mark_read(auth_client, participant_user):
     assert response.status_code == status.HTTP_200_OK
     ticket.refresh_from_db()
     assert ticket.is_read_by_user is True
+
+
+@pytest.mark.django_db
+def test_admin_can_access_follow_ups(admin_client, participant_user):
+    # 1. Create a ticket under Call Protocol
+    t1 = SupportTicket.objects.create(
+        user=participant_user,
+        subject='Call Protocol: High Daily Activity Miss Rate (Tier 3)',
+        message='Requires follow-up call'
+    )
+    # 2. Create a generic support ticket
+    t2 = SupportTicket.objects.create(
+        user=participant_user,
+        subject='Login Issue',
+        message='General login issue'
+    )
+
+    response = admin_client.get('/api/support/tickets/follow_ups/')
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    results = data.get('results', data) if isinstance(data, dict) else data
+
+    # Verify only the Call Protocol ticket is returned
+    assert len(results) == 1
+    assert results[0]['subject'] == 'Call Protocol: High Daily Activity Miss Rate (Tier 3)'
+    assert results[0]['user_whatsapp_number'] == participant_user.whatsapp_number
+
+
+@pytest.mark.django_db
+def test_participant_cannot_access_follow_ups(auth_client):
+    response = auth_client.get('/api/support/tickets/follow_ups/')
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+

@@ -5,6 +5,7 @@ class Notification(models.Model):
     TYPES = (
         ('email', 'Email'),
         ('whatsapp', 'WhatsApp'),
+        ('sms', 'SMS'),
     )
     STATUS = (
         ('pending', 'Pending'),
