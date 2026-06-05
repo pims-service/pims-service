@@ -77,3 +77,33 @@ def test_current_experiment_day_caching(test_user):
     day = test_user.current_experiment_day
     assert day == 2
     assert cache.get(cache_key) == 2
+
+
+@pytest.mark.django_db
+def test_is_t2_due(test_user):
+    from django.utils import timezone
+    from datetime import timedelta
+
+    test_user.has_completed_sociodemographic = True
+    
+    # 1. When onboarding completed at is not set, is_t2_due should be False
+    test_user.onboarding_completed_at = None
+    test_user.has_completed_t2 = False
+    test_user.save()
+    assert test_user.is_t2_due is False
+
+    # 2. When onboarding completed at is set, but < 90 days ago, is_t2_due should be False
+    test_user.onboarding_completed_at = timezone.now() - timedelta(days=89)
+    test_user.save()
+    assert test_user.is_t2_due is False
+
+    # 3. When onboarding completed at is set and >= 90 days ago, is_t2_due should be True
+    test_user.onboarding_completed_at = timezone.now() - timedelta(days=90)
+    test_user.save()
+    assert test_user.is_t2_due is True
+
+    # 4. When already completed, is_t2_due should be False
+    test_user.has_completed_t2 = True
+    test_user.save()
+    assert test_user.is_t2_due is False
+

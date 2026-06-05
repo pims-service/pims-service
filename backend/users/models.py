@@ -55,8 +55,9 @@ class User(AbstractUser):
     # Post-test state (Day 7 reassessment)
     has_completed_posttest = models.BooleanField(default=False)
     posttest_completed_at = models.DateTimeField(null=True, blank=True)
-
-    # Original consents (migrated/supported for now)
+    # T2 follow‑up state (90‑day assessment)
+    has_completed_t2 = models.BooleanField(default=False)
+    t2_completed_at = models.DateTimeField(null=True, blank=True)  # Original consents (migrated/supported for now)
     email_consent = models.BooleanField(default=False)
     whatsapp_consent = models.BooleanField(default=False)
     
@@ -105,6 +106,15 @@ class User(AbstractUser):
         if not self.has_completed_sociodemographic or self.has_completed_posttest:
             return False
         return self.current_experiment_day is not None and self.current_experiment_day >= 8
+
+    @property
+    def is_t2_due(self):
+        """Returns True if the user is 90 days past onboarding and hasn't completed T2."""
+        if not self.onboarding_completed_at or self.has_completed_t2:
+            return False
+        now = timezone.now()
+        days_since_onboarding = (now.date() - self.onboarding_completed_at.date()).days
+        return days_since_onboarding >= 90
 
     @property
     def get_due_milestone(self):

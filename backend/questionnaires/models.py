@@ -82,6 +82,7 @@ class ResponseSet(models.Model):
         ('3_MONTHS', '3 Months'),
         ('6_MONTHS', '6 Months'),
         ('1_YEAR', '1 Year'),
+        ('90_DAYS', '90 Days'),
     )
     milestone = models.CharField(max_length=15, choices=MILESTONES, db_index=True, null=True, blank=True)
     scores = models.JSONField(default=dict, blank=True, help_text="Calculated subscale and total scores on submission")

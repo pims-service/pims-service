@@ -45,12 +45,14 @@ class ResponseSetListCreateView(generics.ListCreateAPIView):
         from .serializers import ResponseSetSerializer
         
         questionnaire_id = request.data.get('questionnaire')
+        milestone = request.data.get('milestone')
         user = self.request.user
         
-        # Check for existing DRAFT response set for this user/questionnaire
+        # Check for existing DRAFT response set for this user/questionnaire/milestone
         existing_set = ResponseSet.objects.filter(
             user=user, 
             questionnaire_id=questionnaire_id,
+            milestone=milestone,
             status='DRAFT'
         ).first()
         
@@ -64,13 +66,19 @@ class ResponseSetListCreateView(generics.ListCreateAPIView):
             if q_obj.assessment_type == 'SOCIODEMOGRAPHIC' and user.has_completed_sociodemographic:
                 raise ValidationError({"detail": "You have already completed the sociodemographic assessment."})
             if q_obj.is_posttest:
-                milestone = request.data.get('milestone')
-                # If requested milestone is SIGNUP, skip posttest timing validation checks since T0 signup is always due
-                if milestone != 'SIGNUP':
+                if milestone == '7_DAYS':
                     if not user.is_posttest_due:
                         raise ValidationError({"detail": "Post-test is not available yet. Complete 7 days first."})
                     if user.has_completed_posttest:
                         raise ValidationError({"detail": "You have already completed the post-test."})
+                elif milestone in ['3_MONTHS', '6_MONTHS', '1_YEAR']:
+                    if not user.has_completed_posttest:
+                        raise ValidationError({"detail": "You must complete the 7-day post-test first."})
+                    if user.get_due_milestone != milestone:
+                        if ResponseSet.objects.filter(user=user, status='COMPLETED', milestone=milestone).exists():
+                            raise ValidationError({"detail": f"You have already completed the {milestone} assessment."})
+                        else:
+                            raise ValidationError({"detail": f"The {milestone} assessment is not available yet."})
         except Questionnaire.DoesNotExist:
             pass
 
@@ -207,6 +215,74 @@ class AdminT1ResponseDetailView(generics.RetrieveAPIView):
     def get_queryset(self):
         return ResponseSet.objects.filter(
             milestone='7_DAYS',
+            questionnaire__assessment_type='PSYCHOMETRIC',
+            status='COMPLETED'
+        ).select_related('user', 'questionnaire').prefetch_related(
+            'responses__question',
+            'responses__selected_option'
+        )
+
+
+class AdminT2ResponseListView(generics.ListAPIView):
+    """
+    Researcher-only view to list all completed T2 follow-up (Day 90) psychometric assessments.
+    """
+    serializer_class = AdminResponseSetSerializer
+    permission_classes = (permissions.IsAdminUser,)
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        return ResponseSet.objects.filter(
+            milestone='3_MONTHS',
+            questionnaire__assessment_type='PSYCHOMETRIC',
+            status='COMPLETED'
+        ).select_related('user', 'questionnaire').order_by('-completed_at')
+
+
+class AdminT2ResponseDetailView(generics.RetrieveAPIView):
+    """
+    Researcher-only view to inspect a specific T2 follow-up (Day 90) psychometric submission.
+    """
+    serializer_class = AdminResponseSetSerializer
+    permission_classes = (permissions.IsAdminUser,)
+
+    def get_queryset(self):
+        return ResponseSet.objects.filter(
+            milestone='3_MONTHS',
+            questionnaire__assessment_type='PSYCHOMETRIC',
+            status='COMPLETED'
+        ).select_related('user', 'questionnaire').prefetch_related(
+            'responses__question',
+            'responses__selected_option'
+        )
+
+
+class AdminT3ResponseListView(generics.ListAPIView):
+    """
+    Researcher-only view to list all completed T3 follow-up (Month 6) psychometric assessments.
+    """
+    serializer_class = AdminResponseSetSerializer
+    permission_classes = (permissions.IsAdminUser,)
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        return ResponseSet.objects.filter(
+            milestone='6_MONTHS',
+            questionnaire__assessment_type='PSYCHOMETRIC',
+            status='COMPLETED'
+        ).select_related('user', 'questionnaire').order_by('-completed_at')
+
+
+class AdminT3ResponseDetailView(generics.RetrieveAPIView):
+    """
+    Researcher-only view to inspect a specific T3 follow-up (Month 6) psychometric submission.
+    """
+    serializer_class = AdminResponseSetSerializer
+    permission_classes = (permissions.IsAdminUser,)
+
+    def get_queryset(self):
+        return ResponseSet.objects.filter(
+            milestone='6_MONTHS',
             questionnaire__assessment_type='PSYCHOMETRIC',
             status='COMPLETED'
         ).select_related('user', 'questionnaire').prefetch_related(

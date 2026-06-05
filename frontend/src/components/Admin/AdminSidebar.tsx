@@ -38,6 +38,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate }) => {
     { label: 'Overview', path: '/admin', icon: <LayoutDashboard size={18} /> },
     { label: 'T0 Results', path: '/admin/t0-data', icon: <ClipboardCheck size={18} /> },
     { label: 'T1 Results', path: '/admin/t1-data', icon: <ClipboardCheck size={18} /> },
+    { label: 'T2 Results', path: '/admin/t2-data', icon: <ClipboardCheck size={18} /> },
+    { label: 'T3 Results', path: '/admin/t3-data', icon: <ClipboardCheck size={18} /> },
     { label: 'Groups Management', path: '/admin/groups', icon: <Users size={18} /> },
     { label: 'User Queries', path: '/admin/support-queries', icon: <MessageSquare size={18} />, badge: openQueriesCount },
   ];
