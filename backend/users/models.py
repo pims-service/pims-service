@@ -88,8 +88,9 @@ class User(AbstractUser):
             return cached_day
 
         now = timezone.now()
-        # Calculate days since onboarding completion
-        delta = timezone.localdate() - timezone.localtime(self.onboarding_completed_at).date()
+        onboard_date = timezone.localtime(self.onboarding_completed_at).date() if timezone.is_aware(self.onboarding_completed_at) else self.onboarding_completed_at.date()
+        today_date = timezone.localdate() if timezone.is_aware(now) else now.date()
+        delta = today_date - onboard_date
         exp_day = delta.days + 1
 
         # Cache until midnight
@@ -112,8 +113,9 @@ class User(AbstractUser):
         """Returns True if the user is 90 days past onboarding and hasn't completed T2."""
         if not self.onboarding_completed_at or self.has_completed_t2:
             return False
-        now = timezone.now()
-        days_since_onboarding = (now.date() - self.onboarding_completed_at.date()).days
+        today_date = timezone.localdate()
+        onboard_date = timezone.localtime(self.onboarding_completed_at).date()
+        days_since_onboarding = (today_date - onboard_date).days
         return days_since_onboarding >= 90
 
     @property
@@ -254,6 +256,9 @@ class User(AbstractUser):
         """
         current_day = self.current_experiment_day
         if not current_day or not self.onboarding_completed_at:
+            return False
+
+        if current_day > 7:
             return False
 
         from activities.models import Submission

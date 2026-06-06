@@ -7,6 +7,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-psych_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-psych_pass}
       PGDATA: /var/lib/postgresql/data/pgdata
+      TZ: Asia/Karachi
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -42,6 +43,7 @@ services:
       DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@pims.local}
       DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-admin}
       DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-admin}
+      TZ: Asia/Karachi
     depends_on:
       db:
         condition: service_healthy
@@ -63,6 +65,7 @@ services:
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
       DATABASE_URL: ${DATABASE_URL:-postgres://psych_user:psych_pass@db:5432/psych_db}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      TZ: Asia/Karachi
     depends_on:
       db:
         condition: service_healthy
@@ -83,6 +86,7 @@ services:
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
       DATABASE_URL: ${DATABASE_URL:-postgres://psych_user:psych_pass@db:5432/psych_db}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      TZ: Asia/Karachi
     depends_on:
       db:
         condition: service_healthy

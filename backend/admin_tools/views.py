@@ -187,7 +187,7 @@ class AdminDashboardAnalyticsView(APIView):
         from phases.models import Phase
 
         now = timezone.now()
-        local_now = timezone.localtime(now)
+        local_now = timezone.localtime(now) if timezone.is_aware(now) else now
         seven_days_ago = now - datetime.timedelta(days=7)
 
         user_qs = User.objects.filter(is_superuser=False)

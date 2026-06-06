@@ -255,6 +255,7 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = False
 
 # Celery Test Settings
 if 'test' in sys.argv or 'pytest' in sys.modules:

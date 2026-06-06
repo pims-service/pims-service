@@ -239,7 +239,9 @@ def run_assessment_graduated_reminders():
             continue
             
         # Compute overdue days (since the start of the due date, day-based)
-        overdue_days = (now.date() - due_date.date()).days
+        today_date = timezone.localdate()
+        due_date_local = timezone.localtime(due_date).date()
+        overdue_days = (today_date - due_date_local).days
         
         if overdue_days <= 0:
             continue

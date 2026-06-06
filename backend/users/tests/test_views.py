@@ -85,7 +85,7 @@ def test_signup_age_validation(api_client, db):
     }
 
     # Too young (e.g., 5 years old)
-    today = timezone.now().date()
+    today = timezone.localdate()
     too_young = today.replace(year=today.year - 5)
     payload = base_payload.copy()
     payload["date_of_birth"] = too_young.strftime('%Y-%m-%d')

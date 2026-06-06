@@ -67,7 +67,7 @@ class SignupSerializer(serializers.ModelSerializer):
         if not value:
             raise serializers.ValidationError("Date of birth is mandatory.")
         
-        today = timezone.now().date()
+        today = timezone.localdate()
         age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
         
         if age < 15 or age > 80:

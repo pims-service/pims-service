@@ -53,20 +53,21 @@ class DailyActivityViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(activity)
         
         # Check if already submitted today using Redis caching
-        cache_key = f"user_{user.user_id}_submitted_{timezone.now().date()}"
+        today_date = timezone.localdate()
+        cache_key = f"user_{user.user_id}_submitted_{today_date}"
         submitted_today = cache.get(cache_key)
         
         if submitted_today is None:
             # Fallback to DB and populate cache
-            today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            now_local = timezone.localtime(timezone.now())
+            today_start = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
             submitted_today = Submission.objects.filter(
                 user=user,
                 submission_date__gte=today_start
             ).exists()
             # Cache until end of day
-            now = timezone.now()
-            tomorrow = (now + timezone.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-            timeout = int((tomorrow - now).total_seconds())
+            tomorrow = (now_local + timezone.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+            timeout = int((tomorrow - now_local).total_seconds())
             if timeout > 0:
                 cache.set(cache_key, submitted_today, timeout=timeout)
         
@@ -75,7 +76,8 @@ class DailyActivityViewSet(viewsets.ModelViewSet):
         data['current_day'] = current_day
         
         if submitted_today:
-            today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            now_local = timezone.localtime(timezone.now())
+            today_start = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
             submission = Submission.objects.filter(user=user, submission_date__gte=today_start).first()
             if submission:
                 data['submission_content'] = submission.content
@@ -106,7 +108,8 @@ class DailyActivityViewSet(viewsets.ModelViewSet):
             
             # Re-check the submission state inside the lock
             # Submissions are locked once submitted. Block updates.
-            today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            now_local = timezone.localtime(timezone.now())
+            today_start = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
             existing_submission = Submission.objects.filter(user=user, submission_date__gte=today_start).first()
             
             if existing_submission:
@@ -127,10 +130,11 @@ class DailyActivityViewSet(viewsets.ModelViewSet):
                     )
                 
                 # Update Redis cache to reflect submission
-                cache_key = f"user_{user.user_id}_submitted_{timezone.now().date()}"
-                now = timezone.now()
-                tomorrow = (now + timezone.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-                timeout = int((tomorrow - now).total_seconds())
+                today_date = timezone.localdate()
+                cache_key = f"user_{user.user_id}_submitted_{today_date}"
+                now_local = timezone.localtime(timezone.now())
+                tomorrow = (now_local + timezone.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+                timeout = int((tomorrow - now_local).total_seconds())
                 if timeout > 0:
                     cache.set(cache_key, True, timeout=timeout)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
