@@ -90,13 +90,13 @@ class Command(BaseCommand):
                     "content": "Currently taking psychotropic medication? | کیا آپ نفسیاتی دوائی لے رہے ہیں؟",
                     "type": "CHOICE",
                     "order": 11,
-                    "options": [("Yes -> DISQUALIFY", 1), ("No", 2)]
+                    "options": [("Yes", 1), ("No", 2)]
                 },
                 {
                     "content": "Currently receiving psychotherapy or counselling? | کیا آپ سائیکو تھراپی حاصل کر رہے ہیں؟",
                     "type": "CHOICE",
                     "order": 12,
-                    "options": [("Yes -> DISQUALIFY", 1), ("No", 2)]
+                    "options": [("Yes", 1), ("No", 2)]
                 }
             ]
             self._create_questions_for_questionnaire(socio_q, socio_data)

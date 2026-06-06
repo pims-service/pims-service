@@ -3,7 +3,6 @@ import { NavLink } from 'react-router-dom';
 import {
   Users,
   LayoutDashboard,
-  Database,
   ClipboardCheck,
   MessageSquare,
   PhoneCall,

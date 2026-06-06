@@ -131,7 +131,12 @@ class User(AbstractUser):
         # Fetch completed milestones to prevent double-serving
         from questionnaires.models import ResponseSet
         completed_milestones = set(
-            ResponseSet.objects.filter(user=self, status='COMPLETED', milestone__isnull=False)
+            ResponseSet.objects.filter(
+                user=self,
+                status='COMPLETED',
+                milestone__isnull=False,
+                questionnaire__assessment_type='PSYCHOMETRIC'
+            )
             .values_list('milestone', flat=True)
         )
         if self.has_completed_posttest:
@@ -292,7 +297,12 @@ class User(AbstractUser):
         """
         from questionnaires.models import ResponseSet
         completed_milestones = set(
-            ResponseSet.objects.filter(user=self, status='COMPLETED', milestone__isnull=False)
+            ResponseSet.objects.filter(
+                user=self,
+                status='COMPLETED',
+                milestone__isnull=False,
+                questionnaire__assessment_type='PSYCHOMETRIC'
+            )
             .values_list('milestone', flat=True)
         )
         if self.has_completed_posttest:

@@ -95,7 +95,8 @@ def check_and_trigger_risk_protocol(response_set):
                 scheduled_time=timezone.now(),
                 status='pending'
             )
-            send_notification.delay(p_email.id)
+            from django.db import transaction
+            transaction.on_commit(lambda: send_notification.delay(p_email.id))
             
             p_whatsapp = Notification.objects.create(
                 user=user,
@@ -104,7 +105,7 @@ def check_and_trigger_risk_protocol(response_set):
                 scheduled_time=timezone.now(),
                 status='pending'
             )
-            send_notification.delay(p_whatsapp.id)
+            transaction.on_commit(lambda: send_notification.delay(p_whatsapp.id))
             
             # 2. Notify admins
             User = get_user_model()
@@ -121,10 +122,10 @@ def check_and_trigger_risk_protocol(response_set):
                     scheduled_time=timezone.now(),
                     status='pending'
                 )
-                send_notification.delay(admin_notif.id)
+                transaction.on_commit(lambda admin_notif_id=admin_notif.id: send_notification.delay(admin_notif_id))
 
             from .tasks import refresh_suicide_risk_admin_cache_task
-            refresh_suicide_risk_admin_cache_task.delay()
+            transaction.on_commit(lambda: refresh_suicide_risk_admin_cache_task.delay())
 
 
 class OptionSerializer(serializers.ModelSerializer):
@@ -274,15 +275,19 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
             instance.completed_at = timezone.now()
             instance.save()
 
-            # 4. Handle Onboarding Completions (Sociodemographic)
             user = instance.user
             if instance.questionnaire.assessment_type == 'SOCIODEMOGRAPHIC':
                 is_disqualified = False
                 for item in responses_data:
                     option = item.get('selected_option')
-                    if option and 'DISQUALIFY' in option.label:
-                        is_disqualified = True
-                        break
+                    question = item.get('question')
+                    if option:
+                        if 'DISQUALIFY' in option.label:
+                            is_disqualified = True
+                            break
+                        if question and question.order in (11, 12) and option.numeric_value == 1:
+                            is_disqualified = True
+                            break
                 
                 if is_disqualified:
                     user.is_disqualified = True

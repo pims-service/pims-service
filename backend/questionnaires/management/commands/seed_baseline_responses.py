@@ -65,7 +65,10 @@ class Command(BaseCommand):
                     options = list(question.options.all())
                     if options:
                         # Prevent seeding disqualifying responses so dummy users stay active
-                        valid_options = [opt for opt in options if 'DISQUALIFY' not in opt.label]
+                        if question.order in (11, 12):
+                            valid_options = [opt for opt in options if opt.numeric_value != 1]
+                        else:
+                            valid_options = [opt for opt in options if 'DISQUALIFY' not in opt.label]
                         selected_opt = random.choice(valid_options) if valid_options else random.choice(options)
                         Response.objects.create(
                             response_set=rs_socio,

@@ -12,6 +12,7 @@ const OnboardingGuard: React.FC<OnboardingGuardProps> = ({ children, requireAdmi
   // Get fresh auth status from localStorage
   const isAuthenticated = !!localStorage.getItem('access_token');
   const userRole = localStorage.getItem('user_role');
+  const isDisqualified = localStorage.getItem('is_disqualified') === 'true';
   const hasCompletedSociodemographic = localStorage.getItem('has_completed_sociodemographic') === 'true';
 
   if (!isAuthenticated) {
@@ -21,6 +22,13 @@ const OnboardingGuard: React.FC<OnboardingGuardProps> = ({ children, requireAdmi
 
   // Admin Exception: Admins can bypass baseline requirements for management
   if (userRole === 'Admin') {
+    return <>{children}</>;
+  }
+
+  if (isDisqualified) {
+    if (location.pathname !== '/dashboard') {
+      return <Navigate to="/dashboard" replace />;
+    }
     return <>{children}</>;
   }
 

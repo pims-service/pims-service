@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { questionnairesApi } from '../services/api';
+import api, { questionnairesApi } from '../services/api';
 import LikertSlider from '../components/Questionnaire/LikertSlider';
 import SociodemographicForm from '../components/Questionnaire/SociodemographicForm';
 import SafetyPanelModal from '../components/Questionnaire/SafetyPanelModal';
@@ -296,24 +296,48 @@ const QuestionnairePage: React.FC = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
-
   const completeSubmissionWorkflow = () => {
     if (questionnaire?.assessment_type === 'SOCIODEMOGRAPHIC') {
-      localStorage.setItem('has_completed_sociodemographic', 'true');
-      questionnairesApi.list().then(qRes => {
-        const qList = Array.isArray(qRes.data) ? qRes.data : qRes.data?.results || [];
-        const battery = qList.find((q: any) => q.is_active && q.assessment_type === 'PSYCHOMETRIC');
-        if (battery) {
-          setCompleted(true);
-          setTimeout(() => {
-            setCompleted(false);
-            navigate(`/questionnaire/${battery.id}?milestone=SIGNUP`, { replace: true });
-            window.location.reload();
-          }, 3000);
-        }
-      }).catch(e => {
-        console.error("Failed to find psychometric battery questionnaire", e);
-      });
+      api.get('/users/profile/')
+        .then(profileRes => {
+          const profile = profileRes.data;
+          if (profile) {
+            localStorage.setItem('is_disqualified', String(profile.is_disqualified || false));
+            localStorage.setItem('has_completed_sociodemographic', String(profile.has_completed_sociodemographic));
+            localStorage.setItem('due_milestone', profile.due_milestone || '');
+
+            if (profile.is_disqualified) {
+              setCompleted(true);
+              setTimeout(() => {
+                setCompleted(false);
+                window.location.href = '/dashboard';
+              }, 3000);
+              return;
+            }
+          }
+
+          // If not disqualified, fetch next battery
+          localStorage.setItem('has_completed_sociodemographic', 'true');
+          questionnairesApi.list().then(qRes => {
+            const qList = Array.isArray(qRes.data) ? qRes.data : qRes.data?.results || [];
+            const battery = qList.find((q: any) => q.is_active && q.assessment_type === 'PSYCHOMETRIC');
+            if (battery) {
+              setCompleted(true);
+              setTimeout(() => {
+                setCompleted(false);
+                window.location.href = `/questionnaire/${battery.id}?milestone=SIGNUP`;
+              }, 3000);
+            }
+          }).catch(e => {
+            console.error("Failed to find psychometric battery questionnaire", e);
+          });
+        })
+        .catch(err => {
+          console.error("Failed to fetch user profile after sociodemographic submit", err);
+          // Fallback
+          localStorage.setItem('has_completed_sociodemographic', 'true');
+          window.location.href = '/dashboard';
+        });
       return;
     }
 

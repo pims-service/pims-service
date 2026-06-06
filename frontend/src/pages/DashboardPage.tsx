@@ -87,6 +87,40 @@ const DashboardPage: React.FC = () => {
     return 'Action Required';
   };
 
+  if (userProfile?.is_disqualified) {
+    return (
+      <div className="max-w-2xl mx-auto py-12 px-4">
+        <div className="bg-white border border-zinc-200 rounded-2xl p-8 md:p-12 shadow-sm text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
+          <div className="w-16 h-16 bg-zinc-50 border border-zinc-200 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+            <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+          </div>
+          
+          <div className="space-y-4">
+            <h1 className="text-3xl font-bold text-zinc-900 leading-tight">Thank You / شکریہ</h1>
+            
+            <div className="border-t border-zinc-100 my-6"></div>
+            
+            <div className="space-y-6 text-left">
+              <div className="space-y-2">
+                <span className="text-xs font-black uppercase tracking-wider text-zinc-400">English</span>
+                <p className="text-zinc-650 font-medium leading-relaxed">
+                  Thank you for your interest in our study. Based on your responses, you do not meet the inclusion criteria for this research experiment. We sincerely appreciate your time and willingness to participate.
+                </p>
+              </div>
+              
+              <div className="space-y-2 text-right" dir="rtl">
+                <span className="text-xs font-black uppercase tracking-wider text-zinc-400 block text-left md:text-right" dir="ltr">Urdu</span>
+                <p className="text-zinc-650 font-medium leading-relaxed font-urdu text-lg">
+                  ہمارے مطالعے میں دلچسپی لینے کا شکریہ۔ آپ کے جوابات کی بنیاد پر، آپ اس تحقیقی تجربے میں شمولیت کے معیار پر پورا نہیں اترتے۔ ہم شرکت کے لیے آپ کے وقت اور آمادگی کی تہہ دل سے تعریف کرتے ہیں۔
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
