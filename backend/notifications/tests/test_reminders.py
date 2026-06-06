@@ -209,7 +209,7 @@ class TestMissedDayProtocol:
             group=test_group, has_completed_sociodemographic=True,
             onboarding_completed_at=timezone.now() - timedelta(days=7)
         )
-        assert user.current_experiment_day == 8
+        assert user.current_experiment_day is None
 
         # With 0 submissions (<= 2), the user should trigger Tier 3 Call Protocol
         result = run_tier3_daily_evaluation()
@@ -218,7 +218,7 @@ class TestMissedDayProtocol:
         ticket = SupportTicket.objects.filter(user=user).first()
         assert ticket is not None
         assert "Call Protocol" in ticket.subject
-        assert "Tier 3" in ticket.subject
+        assert "(PRE_T1)" in ticket.subject
         assert ticket.status == 'Open'
 
     def test_tier4_assessment_milestone_expiration(self, test_group):

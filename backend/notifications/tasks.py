@@ -161,26 +161,34 @@ def run_tier3_daily_evaluation():
     # Only active participants who completed onboarding
     users = User.objects.filter(is_active=True, has_completed_sociodemographic=True)
     
+    from activities.timeline import get_waves_for_tier3_evaluation, WAVE_LABELS
+
     tickets_created = 0
     for user in users:
-        day = user.current_experiment_day
-        if day and day >= 8:
-            # Count unique daily reflections submitted in days 1 to 7
-            sub_count = Submission.objects.filter(user=user, experiment_day__lte=7).values('experiment_day').distinct().count()
-            if sub_count <= 2:
-                # Check if a Tier 3 ticket already exists for this user to prevent duplicate creation
-                exists = SupportTicket.objects.filter(
-                    user=user, 
-                    subject__icontains="Call Protocol: High Daily Activity Miss Rate"
-                ).exists()
-                if not exists:
-                    SupportTicket.objects.create(
-                        user=user,
-                        subject="Call Protocol: High Daily Activity Miss Rate (Tier 3)",
-                        message=f"Participant {user.full_name or user.username} has reached Day 8 but only completed {sub_count} daily activities out of 7. Please place a call within 72 hours using the supportive script.",
-                        status='Open'
-                    )
-                    tickets_created += 1
+        for wave in get_waves_for_tier3_evaluation(user):
+            sub_count = Submission.objects.filter(
+                user=user, activity_wave=wave, experiment_day__lte=7
+            ).values('experiment_day').distinct().count()
+            if sub_count > 2:
+                continue
+
+            subject = f"Call Protocol: High Daily Activity Miss Rate ({wave})"
+            exists = SupportTicket.objects.filter(user=user, subject=subject).exists()
+            if exists:
+                continue
+
+            wave_label = WAVE_LABELS.get(wave, wave)
+            SupportTicket.objects.create(
+                user=user,
+                subject=subject,
+                message=(
+                    f"Participant {user.full_name or user.username} completed the {wave_label} "
+                    f"activity block with only {sub_count} daily activities out of 7. "
+                    "Please place a call within 72 hours using the supportive script."
+                ),
+                status='Open',
+            )
+            tickets_created += 1
     return f"Tier 3 evaluation completed. Created {tickets_created} tickets."
 
 

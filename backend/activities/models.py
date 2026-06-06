@@ -21,12 +21,20 @@ class Activity(models.Model):
         return self.title
 
 class Submission(models.Model):
+    ACTIVITY_WAVE_CHOICES = (
+        ('PRE_T1', 'Pre T1'),
+        ('PRE_T2', 'Pre T2'),
+        ('PRE_T3', 'Pre T3'),
+        ('PRE_T4', 'Pre T4'),
+    )
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='submissions')
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='submissions')
     content = models.TextField()
     entry_1 = models.TextField(blank=True, default='')
     entry_2 = models.TextField(blank=True, default='')
     entry_3 = models.TextField(blank=True, default='')
+    activity_wave = models.CharField(max_length=10, choices=ACTIVITY_WAVE_CHOICES, default='PRE_T1', db_index=True)
     experiment_day = models.PositiveIntegerField(null=True, blank=True, db_index=True)
     submission_date = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -34,8 +42,8 @@ class Submission(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'experiment_day'],
-                name='unique_user_experiment_day'
+                fields=['user', 'activity_wave', 'experiment_day'],
+                name='unique_user_wave_experiment_day'
             )
         ]
         indexes = [
@@ -59,6 +67,7 @@ from django.core.cache import cache
 
 @receiver(post_save, sender=Submission)
 def invalidate_user_completion_cache(sender, instance, **kwargs):
-    """Clears the completion_rate cache for a user when they make a submission."""
-    cache_key = f"user_{instance.user_id}_completion_rate"
-    cache.delete(cache_key)
+    """Clears activity-related caches for a user when they make a submission."""
+    cache.delete(f"user_{instance.user_id}_completion_rate")
+    cache.delete(f"user_{instance.user_id}_exp_day")
+    cache.delete(f"user_{instance.user_id}_activity_state")

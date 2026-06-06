@@ -60,7 +60,7 @@ class TestTimelineAndCaching:
         tomorrow = timezone.now() + timedelta(days=1)
         with freeze_time(tomorrow):
             # Clear cache for the test to ensure fresh calculation or verify cache behavior
-            cache.delete(f"user_{user.user_id}_exp_day")
+            cache.delete(f"user_{user.user_id}_activity_state")
             
             response = api_client.get(reverse('daily-activity-current'))
             assert response.status_code == status.HTTP_200_OK
@@ -68,21 +68,23 @@ class TestTimelineAndCaching:
             assert response.data['current_day'] == 2
 
     def test_redis_caching_of_experiment_day(self, timeline_setup):
-        """Verify that the experimental day is cached in Redis."""
+        """Verify that the activity state is cached in Redis."""
         user, group, act1, act2 = timeline_setup
         
         # First call calculates and caches
         day = user.current_experiment_day
         assert day == 1
         
-        cache_key = f"user_{user.user_id}_exp_day"
-        assert cache.get(cache_key) == 1
+        cache_key = f"user_{user.user_id}_activity_state"
+        cached_state = cache.get(cache_key)
+        assert cached_state is not None
+        assert cached_state.day_in_block == 1
         
         # Manually change the date in DB but keep cache - should still return 1
         user.onboarding_completed_at = user.onboarding_completed_at - timedelta(days=5)
         user.save()
         
-        assert user.current_experiment_day == 1 # Hits cache
+        assert user.current_experiment_day == 1  # Hits cache
 
     def test_submission_persists_experiment_day(self, api_client, timeline_setup, test_phase):
         """Verify that submissions store the chronological day of the experiment."""
@@ -225,4 +227,71 @@ class TestTimelineAndCaching:
         
         # Cache should be populated
         assert cache.get(f"user_{user.user_id}_submitted_{timezone.now().date()}") is True
-        assert cache.get(f"user_{user.user_id}_exp_day") == 1
+        assert user.current_experiment_day == 1
+        assert cache.get(f"user_{user.user_id}_activity_state").wave == 'PRE_T1'
+
+
+@pytest.mark.django_db
+class TestPreAssessmentWaves:
+    """Verify the same 7-day activities repeat before T2/T3/T4."""
+
+    def test_pre_t2_wave_serves_day_one_activity(self, api_client, test_phase):
+        group = Group.objects.create(name="PreT2 Group")
+        t1_completed = timezone.now() - timedelta(days=83)
+        user = User.objects.create_user(
+            username="pret2_user", email="pret2@test.com", password="pwd",
+            group=group, has_completed_sociodemographic=True,
+            onboarding_completed_at=timezone.now() - timedelta(days=200),
+            has_completed_posttest=True,
+            posttest_completed_at=t1_completed,
+        )
+        act1 = Activity.objects.create(
+            title="Day 1 Task", description="Task 1",
+            assigned_phase=test_phase, group=group,
+            activity_type="task", day_number=1
+        )
+
+        cache.clear()
+        api_client.force_authenticate(user=user)
+        response = api_client.get(reverse('daily-activity-current'))
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['id'] == act1.id
+        assert response.data['current_day'] == 1
+        assert response.data['activity_wave'] == 'PRE_T2'
+
+    def test_pre_t2_allows_resubmission_for_same_experiment_day(self, api_client, test_phase):
+        group = Group.objects.create(name="PreT2 Resubmit Group")
+        t1_completed = timezone.now() - timedelta(days=83)
+        user = User.objects.create_user(
+            username="pret2_resubmit", email="pret2r@test.com", password="pwd",
+            group=group, has_completed_sociodemographic=True,
+            onboarding_completed_at=timezone.now() - timedelta(days=200),
+            has_completed_posttest=True,
+            posttest_completed_at=t1_completed,
+        )
+        act1 = Activity.objects.create(
+            title="Day 1 Task", description="Task 1",
+            assigned_phase=test_phase, group=group,
+            activity_type="task", day_number=1
+        )
+        prior_submission = Submission.objects.create(
+            user=user, activity=act1, content="prior wave",
+            experiment_day=1, activity_wave='PRE_T1',
+        )
+        Submission.objects.filter(pk=prior_submission.pk).update(
+            submission_date=timezone.now() - timedelta(days=100),
+        )
+
+        cache.clear()
+        api_client.force_authenticate(user=user)
+        words_20 = "word " * 20
+        response = api_client.post(reverse('daily-activity-submit'), {
+            "activity": act1.id,
+            "entry_1": words_20,
+            "entry_2": words_20,
+            "entry_3": words_20,
+        }, format='json')
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert Submission.objects.filter(user=user, activity_wave='PRE_T2', experiment_day=1).exists()

@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db import transaction, IntegrityError
@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.core.cache import cache
 from .models import Activity, Submission
 from .serializers import ActivitySerializer, DailySubmissionSerializer, SubmissionSerializer
+from .timeline import WAVE_LABELS
 from users.permissions import OnboardingCompleted
 from django.contrib.auth import get_user_model
 import logging
@@ -34,13 +35,16 @@ class DailyActivityViewSet(viewsets.ModelViewSet):
         Uses Redis to cache the current day and submission status for maximum performance.
         """
         user = request.user
-        current_day = user.current_experiment_day
+        activity_state = user.current_activity_state
 
-        if not current_day:
+        if not user.onboarding_completed_at:
             return Response({"detail": "Baseline not completed."}, status=status.HTTP_404_NOT_FOUND)
-        
-        if current_day > 7:
-            return Response({"detail": "Trial period completed."}, status=status.HTTP_200_OK)
+
+        if not activity_state:
+            return Response({"detail": "No active activity period."}, status=status.HTTP_200_OK)
+
+        current_day = activity_state.day_in_block
+        activity_wave = activity_state.wave
 
         activity = None
         if user.group:
@@ -74,6 +78,8 @@ class DailyActivityViewSet(viewsets.ModelViewSet):
         data = serializer.data
         data['submitted_today'] = submitted_today
         data['current_day'] = current_day
+        data['activity_wave'] = activity_wave
+        data['activity_wave_label'] = WAVE_LABELS.get(activity_wave, activity_wave)
         
         if submitted_today:
             now_local = timezone.localtime(timezone.now())
@@ -118,11 +124,21 @@ class DailyActivityViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            current_day = user.current_experiment_day
+            activity_state = user.current_activity_state
+            if not activity_state:
+                return Response(
+                    {"detail": "No active activity period."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             serializer = DailySubmissionSerializer(data=request.data, context={'request': request})
             if serializer.is_valid():
                 try:
-                    serializer.save(user=user, experiment_day=current_day)
+                    serializer.save(
+                        user=user,
+                        experiment_day=activity_state.day_in_block,
+                        activity_wave=activity_state.wave,
+                    )
                 except IntegrityError:
                     return Response(
                         {"detail": "You have already made a submission for today or for this experiment day."}, 
@@ -169,5 +185,11 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
-        current_day = user.current_experiment_day
-        serializer.save(user=user, experiment_day=current_day)
+        activity_state = user.current_activity_state
+        if not activity_state:
+            raise serializers.ValidationError("No active activity period.")
+        serializer.save(
+            user=user,
+            experiment_day=activity_state.day_in_block,
+            activity_wave=activity_state.wave,
+        )

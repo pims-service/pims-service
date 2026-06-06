@@ -26,12 +26,16 @@ def test_activity_list_current_phase(baseline_client, test_phase):
     assert len(response.data) == 1
 
 @pytest.mark.django_db
-def test_submission_create(baseline_client, test_phase):
+def test_submission_create(baseline_client, baseline_user, test_phase):
+    baseline_user.onboarding_completed_at = timezone.now()
+    baseline_user.save()
+
     activity = Activity.objects.create(
         title="Test Submission",
         description="Desc",
         assigned_phase=test_phase,
-        activity_type="paragraph"
+        activity_type="paragraph",
+        day_number=1,
     )
     url = reverse('submission_create')
     data = {
@@ -138,5 +142,5 @@ def test_full_7_day_journey(test_phase):
         cache.clear()
         response = client.get(reverse('daily-activity-current'))
         assert response.status_code == status.HTTP_200_OK
-        assert response.data.get('detail') == 'Trial period completed.'
+        assert response.data.get('detail') == 'No active activity period.'
 

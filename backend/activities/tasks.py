@@ -17,17 +17,27 @@ def sync_user_experiment_state(user_id):
     try:
         user = User.objects.get(pk=user_id)
         
-        # 1. Sync current experiment day
+        # 1. Sync current activity state and experiment day
         if user.onboarding_completed_at:
+            from activities.timeline import get_active_activity_state
+
             now = timezone.localtime(timezone.now())
-            delta = now.date() - timezone.localtime(user.onboarding_completed_at).date()
-            exp_day = delta.days + 1
-            
-            cache_key_day = f"user_{user.user_id}_exp_day"
+            state = get_active_activity_state(user)
             tomorrow = (now + timezone.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
             timeout = int((tomorrow - now).total_seconds())
+
+            cache_key_state = f"user_{user.user_id}_activity_state"
+            cache_key_day = f"user_{user.user_id}_exp_day"
             if timeout > 0:
-                cache.set(cache_key_day, exp_day, timeout=timeout)
+                cache.set(
+                    cache_key_state,
+                    "NONE" if state is None else state,
+                    timeout=timeout,
+                )
+                if state is not None:
+                    cache.set(cache_key_day, state.day_in_block, timeout=timeout)
+                else:
+                    cache.delete(cache_key_day)
 
         # 2. Sync submission status for today
         today_date = timezone.localdate()

@@ -71,12 +71,12 @@ def test_current_experiment_day_caching(test_user):
     test_user.onboarding_completed_at = timezone.now() - timezone.timedelta(days=1) # Day 2
     test_user.save()
 
-    cache_key = f"user_{test_user.user_id}_exp_day"
+    cache_key = f"user_{test_user.user_id}_activity_state"
     cache.delete(cache_key)
 
     day = test_user.current_experiment_day
     assert day == 2
-    assert cache.get(cache_key) == 2
+    assert cache.get(cache_key).day_in_block == 2
 
 
 @pytest.mark.django_db

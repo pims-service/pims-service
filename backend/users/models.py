@@ -71,42 +71,55 @@ class User(AbstractUser):
         return self.username
 
     @property
-    def current_experiment_day(self):
+    def current_activity_state(self):
         """
-        Calculates the user's current day in the experiment (1-indexed).
-        Caches the result in Redis until next midnight to optimize speed.
+        Returns the active pre-assessment activity wave state, cached until midnight.
         """
-        if getattr(self, 'is_disqualified', False):
+        if getattr(self, 'is_disqualified', False) or not self.onboarding_completed_at:
             return None
 
-        if not self.onboarding_completed_at:
-            return None
+        cache_key = f"user_{self.user_id}_activity_state"
+        cached_state = cache.get(cache_key)
+        if cached_state is not None:
+            return None if cached_state == "NONE" else cached_state
 
-        cache_key = f"user_{self.user_id}_exp_day"
-        cached_day = cache.get(cache_key)
-        if cached_day is not None:
-            return cached_day
+        from activities.timeline import get_active_activity_state
 
+        state = get_active_activity_state(self)
         now = timezone.now()
-        onboard_date = timezone.localtime(self.onboarding_completed_at).date() if timezone.is_aware(self.onboarding_completed_at) else self.onboarding_completed_at.date()
-        today_date = timezone.localdate() if timezone.is_aware(now) else now.date()
-        delta = today_date - onboard_date
-        exp_day = delta.days + 1
-
-        # Cache until midnight
         tomorrow = (now + timezone.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
         seconds_until_midnight = int((tomorrow - now).total_seconds())
         if seconds_until_midnight > 0:
-            cache.set(cache_key, exp_day, timeout=seconds_until_midnight)
+            cache.set(
+                cache_key,
+                "NONE" if state is None else state,
+                timeout=seconds_until_midnight,
+            )
+        return state
 
-        return exp_day
+    @property
+    def current_activity_wave(self):
+        state = self.current_activity_state
+        return state.wave if state else None
+
+    @property
+    def current_experiment_day(self):
+        """
+        Day within the current 7-day pre-assessment activity block (1-7), or None
+        when the user is between waves.
+        """
+        state = self.current_activity_state
+        return state.day_in_block if state else None
 
     @property
     def is_posttest_due(self):
-        """Returns True if the user has reached Day 8+ (7 days after onboarding completion) and hasn't completed the post-test."""
+        """Returns True once the PRE_T1 activity block has ended and T1 is still outstanding."""
         if not self.has_completed_sociodemographic or self.has_completed_posttest:
             return False
-        return self.current_experiment_day is not None and self.current_experiment_day >= 8
+        if not self.onboarding_completed_at:
+            return False
+        due_date = self.onboarding_completed_at + timezone.timedelta(days=7)
+        return timezone.now() >= due_date
 
     @property
     def is_t2_due(self):
@@ -233,11 +246,15 @@ class User(AbstractUser):
         if cached_rate is not None:
             return cached_rate
 
-        # Max out at 7 days for calculation
         effective_day = min(current_day, 7)
-        
+        wave = self.current_activity_wave
+        if not wave:
+            return 0
+
         from activities.models import Submission
-        submissions_count = Submission.objects.filter(user=self).values('experiment_day').distinct().count()
+        submissions_count = Submission.objects.filter(
+            user=self, activity_wave=wave
+        ).values('experiment_day').distinct().count()
         
         # Avoid division by zero
         rate = int((submissions_count / effective_day) * 100) if effective_day > 0 else 0
@@ -255,16 +272,13 @@ class User(AbstractUser):
         during their active week (Days 1 to 7) and has not yet gotten back on track.
         """
         current_day = self.current_experiment_day
-        if not current_day or not self.onboarding_completed_at:
-            return False
-
-        if current_day > 7:
+        wave = self.current_activity_wave
+        if not current_day or not wave or not self.onboarding_completed_at:
             return False
 
         from activities.models import Submission
-        # Find which days the user has submitted daily activities
         submitted_days = set(
-            Submission.objects.filter(user=self, experiment_day__lte=7)
+            Submission.objects.filter(user=self, activity_wave=wave, experiment_day__lte=7)
             .values_list('experiment_day', flat=True)
         )
 
