@@ -66,6 +66,7 @@ export const groupsApi = {
   list: () => api.get('/groups/'),
   getDetail: (groupId: number) => api.get(`/groups/${groupId}/`),
   toggleActive: (groupId: number) => api.post(`/groups/${groupId}/toggle_active/`),
+  update: (groupId: number, data: { name: string; description: string }) => api.patch(`/groups/${groupId}/`, data),
 };
 
 export const questionnairesApi = {
@@ -127,5 +128,6 @@ export const activitiesApi = {
 // Aliases for compatibility with upstream UI components
 export const getGroups = groupsApi.list;
 export const getGroupDetail = groupsApi.getDetail;
+export const updateGroup = groupsApi.update;
 
 export default api;
