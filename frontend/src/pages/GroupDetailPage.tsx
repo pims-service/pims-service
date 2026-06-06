@@ -9,9 +9,9 @@ import {
   Edit3, 
   Save, 
   X,
-  Trash2
+  ArrowLeft
 } from 'lucide-react';
-import { getGroupDetail } from '../services/api';
+import { getGroupDetail, updateGroup } from '../services/api';
 
 interface Participant {
   user_id: number;
@@ -20,6 +20,7 @@ interface Participant {
   submission_count: number;
   has_completed_sociodemographic: boolean;
   current_experiment_day: number | null;
+  is_disqualified: boolean;
 }
 
 interface Group {
@@ -66,9 +67,15 @@ const GroupDetailPage: React.FC = () => {
   }, [id]);
 
   const handleUpdate = async () => {
-    setIsEditing(false);
-    if (group) {
-        setGroup({ ...group, ...editForm });
+    if (!id || !group) return;
+    try {
+      await updateGroup(parseInt(id), editForm);
+      setGroup({ ...group, ...editForm });
+      setIsEditing(false);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to update group', err);
+      setError('Failed to save changes. Please try again.');
     }
   };
 
@@ -93,7 +100,14 @@ const GroupDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 pt-0">
+    <div className="space-y-6 animate-in fade-in duration-700 pt-0">
+      <button 
+        onClick={() => navigate('/admin/groups')}
+        className="inline-flex items-center gap-2 text-zinc-500 hover:text-zinc-900 transition-colors text-sm font-medium"
+      >
+        <ArrowLeft size={16} /> Back to Groups
+      </button>
+
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-zinc-200 pb-8">
         <div className="space-y-3 flex-grow max-w-2xl">
           <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium mb-1">
@@ -116,9 +130,17 @@ const GroupDetailPage: React.FC = () => {
           ) : (
             <div>
               <h1 className="text-4xl font-bold text-zinc-900 tracking-tight">{group.name}</h1>
-              <p className="text-zinc-500 font-medium text-sm mt-2">{group.description || 'No descriptive metadata provided for this experimental segment.'}</p>
+              <p className="text-zinc-500 font-medium text-sm mt-2">{group.description || 'No description provided.'}</p>
             </div>
           )}
+
+          {/* Meta chips */}
+          <div className="flex items-center gap-3 pt-1">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-zinc-100 rounded-md text-xs font-medium text-zinc-600">
+              <Users size={11} /> {group.member_count} members
+            </span>
+            <span className="text-[11px] text-zinc-400">Created {new Date(group.created_at).toLocaleDateString()}</span>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -145,42 +167,18 @@ const GroupDetailPage: React.FC = () => {
               >
                 <Edit3 size={16} /> Edit
               </button>
-              <button className="px-5 py-2.5 bg-white border border-zinc-200 text-red-600 rounded-lg font-medium text-sm hover:bg-red-50 hover:border-red-100 transition-all flex items-center gap-2">
-                <Trash2 size={16} /> Purge
-              </button>
             </div>
           )}
         </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm">
-            <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-6 border-b border-zinc-100 pb-2 text-center">Group Vitals</h4>
-            <div className="space-y-6">
-               <div className="text-center">
-                  <div className="text-3xl font-bold text-zinc-900">{group.member_count}</div>
-                  <div className="text-xs text-zinc-400 font-medium mt-1">Total Members</div>
-               </div>
-               <div className="text-center">
-                  <div className="text-3xl font-bold text-zinc-900">
-                    {Math.round((group.participants.filter(p => p.has_completed_sociodemographic).length / (group.member_count || 1)) * 100)}%
-                  </div>
-                  <div className="text-xs text-zinc-400 font-medium mt-1 uppercase tracking-tight">Onboarding Health</div>
-               </div>
-               <div className="pt-4 border-t border-zinc-100 text-[10px] text-zinc-400 text-center">
-                  Created on {new Date(group.created_at).toLocaleDateString()}
-               </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="lg:col-span-3">
+      <div>
           <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
-            <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
+            <div className="px-6 py-4 border-b border-zinc-100 bg-zinc-50/50 flex items-center justify-between">
                <h2 className="text-sm font-bold text-zinc-800 uppercase tracking-wider">Participant Roster</h2>
-               <div className="text-[10px] font-bold py-1 px-3 bg-zinc-800 text-white rounded-full flex items-center gap-1.5 uppercase tracking-widest">
-                  <CheckCircle2 size={10} /> Active Segment
+               <div className="flex items-center gap-2 text-xs text-zinc-500 font-medium">
+                 <CheckCircle2 size={13} className="text-emerald-500" />
+                 {group.participants.filter(p => p.has_completed_sociodemographic && !p.is_disqualified).length} / {group.member_count} onboarded
                </div>
             </div>
             
@@ -190,9 +188,8 @@ const GroupDetailPage: React.FC = () => {
                   <tr className="bg-zinc-50/30 border-b border-zinc-100">
                     <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Participant</th>
                     <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Day Number</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Exp. Delta</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Daily Submissions</th>
                     <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
@@ -210,34 +207,34 @@ const GroupDetailPage: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                           <div className="w-8 h-8 rounded-full bg-zinc-800 text-white flex items-center justify-center text-[10px] font-bold">
-                              {p.current_experiment_day || 0}
-                           </div>
-                           <span className="text-xs font-medium text-zinc-500 uppercase">Day</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <div className="text-sm font-bold text-zinc-800">{p.submission_count}</div>
-                          <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider">Submissions</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        {p.has_completed_sociodemographic ? (
-                           <div className="flex items-center gap-1.5 text-zinc-700 text-xs font-semibold">
-                              <CheckCircle2 size={14} className="text-zinc-400" /> Terminal Ready
-                           </div>
+                        {p.is_disqualified ? (
+                          <span className="text-zinc-400 text-xs font-medium">—</span>
                         ) : (
-                           <div className="flex items-center gap-1.5 text-zinc-400 text-xs font-medium">
-                              <Clock size={14} /> Pending Sync
-                           </div>
+                          <div className="flex items-center gap-2">
+                             <div className="w-8 h-8 rounded-full bg-zinc-800 text-white flex items-center justify-center text-[10px] font-bold">
+                                {p.current_experiment_day || 0}
+                             </div>
+                             <span className="text-xs font-medium text-zinc-500 uppercase">Day</span>
+                          </div>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-right">
-                         <button className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 hover:text-zinc-900 transition-all">
-                            Purge
-                         </button>
+                      <td className="px-6 py-4 text-sm font-semibold text-zinc-800">
+                        {p.submission_count}
+                      </td>
+                      <td className="px-6 py-4">
+                        {p.is_disqualified ? (
+                           <div className="flex items-center gap-1.5 text-red-600 text-xs font-semibold">
+                              <AlertTriangle size={14} className="text-red-500" /> Disqualified
+                           </div>
+                        ) : p.has_completed_sociodemographic ? (
+                           <div className="flex items-center gap-1.5 text-emerald-700 text-xs font-semibold">
+                              <CheckCircle2 size={14} className="text-emerald-500" /> Active
+                           </div>
+                        ) : (
+                           <div className="flex items-center gap-1.5 text-zinc-500 text-xs font-medium">
+                              <Clock size={14} className="text-zinc-400" /> Pending Onboarding
+                           </div>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -252,7 +249,6 @@ const GroupDetailPage: React.FC = () => {
               </table>
             </div>
           </div>
-        </div>
       </div>
     </div>
   );

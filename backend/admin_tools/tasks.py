@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 
-@shared_task
+@shared_task(time_limit=300, soft_time_limit=240)
 def generate_posttest_export_csv(task_id):
     try:
         task = ExportTask.objects.get(id=task_id)
@@ -100,7 +100,7 @@ def generate_posttest_export_csv(task_id):
         raise e
 
 
-@shared_task
+@shared_task(time_limit=300, soft_time_limit=240)
 def generate_longitudinal_export_csv(task_id):
     import tempfile
     import os
@@ -248,7 +248,7 @@ def generate_longitudinal_export_csv(task_id):
         raise e
 
 
-@shared_task
+@shared_task(time_limit=300, soft_time_limit=240)
 def generate_t1_export_csv(task_id):
     try:
         task = ExportTask.objects.get(id=task_id)
@@ -339,7 +339,7 @@ def generate_t1_export_csv(task_id):
         raise e
 
 
-@shared_task
+@shared_task(time_limit=300, soft_time_limit=240)
 def generate_t2_export_csv(task_id):
     try:
         task = ExportTask.objects.get(id=task_id)
@@ -422,7 +422,7 @@ def generate_t2_export_csv(task_id):
         raise e
 
 
-@shared_task
+@shared_task(time_limit=300, soft_time_limit=240)
 def generate_t3_export_csv(task_id):
     try:
         task = ExportTask.objects.get(id=task_id)
@@ -505,7 +505,7 @@ def generate_t3_export_csv(task_id):
         raise e
 
 
-@shared_task
+@shared_task(time_limit=300, soft_time_limit=240)
 def generate_t4_export_csv(task_id):
     try:
         task = ExportTask.objects.get(id=task_id)
