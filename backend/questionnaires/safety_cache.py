@@ -43,10 +43,9 @@ def _serialize_case(response_set):
 
 
 def fetch_flagged_cases_from_db():
-    """Optimized query for all completed, suicide-risk-flagged response sets."""
+    """Optimized query for all suicide-risk-flagged response sets (both draft and completed)."""
     return (
         ResponseSet.objects.filter(
-            status="COMPLETED",
             suicide_risk_triggered=True,
         )
         .select_related("user", "user__group")

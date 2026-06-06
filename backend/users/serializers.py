@@ -23,12 +23,12 @@ class UserSerializer(serializers.ModelSerializer):
             'has_completed_sociodemographic',
             'has_completed_posttest', 'is_posttest_due', 'due_milestone',
             'completion_rate', 'has_consecutive_misses', 'consecutive_misses_message',
-            'has_two_consecutive_missed_waves',
+            'has_two_consecutive_missed_waves', 'is_disqualified',
         )
         read_only_fields = (
             'created_at', 'has_completed_sociodemographic', 'has_completed_posttest',
             'is_posttest_due', 'due_milestone', 'completion_rate', 'has_consecutive_misses',
-            'consecutive_misses_message', 'has_two_consecutive_missed_waves',
+            'consecutive_misses_message', 'has_two_consecutive_missed_waves', 'is_disqualified',
         )
 
 class SignupSerializer(serializers.ModelSerializer):
@@ -144,7 +144,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         else:
             dob_str = None
             
-        # Add extra user information to the response
         data['user'] = {
             'id': self.user.pk,
             'username': self.user.username,
@@ -156,6 +155,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'has_completed_posttest': self.user.has_completed_posttest,
             'is_posttest_due': self.user.is_posttest_due,
             'due_milestone': self.user.get_due_milestone,
+            'is_disqualified': self.user.is_disqualified,
         }
         
         return data

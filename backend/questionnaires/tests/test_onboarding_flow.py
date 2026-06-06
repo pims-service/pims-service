@@ -149,6 +149,48 @@ def test_sociodemographic_disqualification(fresh_client, fresh_user, test_group)
     assert fresh_user.group is None
 
 @pytest.mark.django_db
+def test_sociodemographic_disqualification_by_order(fresh_client, fresh_user, test_group):
+    """
+    Submitting a sociodemographic response set with a question of order 11/12
+    having option of numeric_value=1 (e.g. Yes) marks user as disqualified.
+    """
+    test_group.is_active = True
+    test_group.save()
+
+    # Create socio form
+    socio = Questionnaire.objects.create(
+        title="Socio Form",
+        assessment_type='SOCIODEMOGRAPHIC',
+        is_active=True
+    )
+    # Question with order 11
+    q_socio = Question.objects.create(questionnaire=socio, content="Taking medication?", type="CHOICE", order=11)
+    opt_yes = Option.objects.create(question=q_socio, label="Yes", numeric_value=1, order=1)
+
+    rs = ResponseSet.objects.create(
+        user=fresh_user,
+        questionnaire=socio,
+        milestone='SIGNUP',
+        status='DRAFT'
+    )
+
+    url = reverse('response_set_submit', kwargs={'pk': rs.pk})
+    payload = {
+        "responses_data": [
+            {"question_id": q_socio.id, "selected_option_id": opt_yes.id}
+        ]
+    }
+    
+    response = fresh_client.post(url, payload, format='json')
+    assert response.status_code == status.HTTP_200_OK
+
+    fresh_user.refresh_from_db()
+    assert fresh_user.is_disqualified is True
+    assert fresh_user.disqualification_reason != ""
+    assert fresh_user.has_completed_sociodemographic is False
+    assert fresh_user.group is None
+
+@pytest.mark.django_db
 def test_7_days_milestone_completion_marks_posttest(fresh_client, fresh_user):
     """
     Submitting the psychometric battery for the 7_DAYS milestone
