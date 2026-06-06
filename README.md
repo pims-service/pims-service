@@ -5,8 +5,8 @@ A comprehensive, full-stack platform designed to facilitate phased psychological
 ## Core Features & Technical Highlights
 
 - **Automated Participant Flow**: Registration and onboarding flow with JWT-based authentication (SimpleJWT), digital consent management, and automated baseline/post-test questionnaire administration.
-- **Dynamic Group Management**: Custom assignment algorithm (`groups/services.py`) that handles intelligent, balanced participant distribution into experimental control and treatment groups based on current capacity.
-- **Longitudinal Daily Activities**: Timeline logic engine that serves phase-specific activities dynamically based on `experiment_day`. Features strict midnight-reset validation and Redis-backed caching for state management.
+- **Dynamic Group Management**: Custom assignment algorithm (`groups/services.py`) that handles intelligent, balanced participant distribution into experimental control and treatment groups once the baseline (T0 SIGNUP) assessment is completed.
+- **Longitudinal Daily Activities**: Timeline logic engine that serves phase-specific activities dynamically based on `experiment_day`. Features strict midnight-reset validation (standardized on Asia/Karachi time) and Redis-backed caching for state management.
 - **Multilingual UI (i18n)**: Fully integrated localization (English and Urdu) via `react-i18next` with logic for Right-to-Left (RTL) styling and logical CSS properties.
 - **Asynchronous Task Processing**: Celery-backed architecture for non-blocking operations, including CSV data exports (baseline/post-test analytics) and batch notifications.
 - **Support Ticketing System**: Two-way communication channel with real-time polling logic for unread notification badges.
@@ -57,7 +57,7 @@ Before running the application, you must configure a `.env` file at the root of 
 - **Django Settings**: `SECRET_KEY`, `DEBUG` (set to `False` in production), `ALLOWED_HOSTS`.
 - **Database (PostgreSQL)**: `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`.
 - **Third-Party Integrations**:
-  - **SendGrid**: `SENDGRID_API_KEY` (Required for transactional emails like password resets and notifications).
+  - **Mailjet**: `MAILJET_API_KEY`, `MAILJET_SECRET_KEY`, `MAILJET_SENDER_EMAIL` (Required for verification OTP emails and notifications).
   - **Twilio**: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_NUMBER` (Required for WhatsApp notifications).
 - **Frontend Variables**: `VITE_API_URL` pointing to the backend API endpoint.
 
@@ -114,3 +114,12 @@ The application architecture is optimized for high concurrency environments:
 - **Query Optimization**: Extensive use of Django's `select_related` and `prefetch_related` within ViewSets to prevent N+1 query problems, particularly in analytic views.
 - **State Caching**: Redis is utilized heavily by the `activities` app to cache the current `experiment_day` and submission state per user, drastically reducing database load during daily peak usage.
 - **Asynchronous Workers**: Resource-intensive tasks, such as generating large CSV datasets, are offloaded to Celery to prevent blocking the WSGI workers.
+
+## Comprehensive System Documentation
+
+Additional detailed documentation regarding system design, architectures, and operations is available inside the `/docs` folder:
+- **[System Architecture](file:///c:/Users/elmir/Desktop/experiment/psych_experiment_platform/docs/architecture.md)**: Network port mappings and sequence flows.
+- **[Database & Cache Schema](file:///c:/Users/elmir/Desktop/experiment/psych_experiment_platform/docs/database_schema.md)**: PostgreSQL ERD and Redis keys definitions.
+- **[Participant Timeline & Flow](file:///c:/Users/elmir/Desktop/experiment/psych_experiment_platform/docs/participant_flow.md)**: Experiment Day calculations, state machine, and suicide risk protocols.
+- **[API Reference](file:///c:/Users/elmir/Desktop/experiment/psych_experiment_platform/docs/api_reference.md)**: REST endpoints request payloads and response definitions.
+- **[Deployment & Operations](file:///c:/Users/elmir/Desktop/experiment/psych_experiment_platform/docs/deployment_and_ops.md)**: Production guide, database backups, and Celery beat crontab lists.
