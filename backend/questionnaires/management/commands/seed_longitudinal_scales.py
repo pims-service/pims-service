@@ -7,15 +7,18 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write("Seeding Longitudinal Scale Questionnaires...")
 
-        # Delete legacy questionnaires that are no longer used
-        self.stdout.write("Clearing legacy questionnaires...")
-        Questionnaire.objects.exclude(title__in=["Sociodemographic Survey", "Longitudinal Psychometric Scales"]).delete()
+        # Delete legacy questionnaires that are no longer used (only if they have no response sets)
+        self.stdout.write("Checking for legacy questionnaires...")
+        legacy_qs = Questionnaire.objects.exclude(title__in=["Sociodemographic Survey", "Longitudinal Psychometric Scales"])
+        for legacy_q in legacy_qs:
+            if not legacy_q.attempts.exists():
+                self.stdout.write(f"Deleting unused legacy questionnaire: {legacy_q.title}")
+                legacy_q.delete()
+            else:
+                self.stdout.write(self.style.WARNING(f"Keeping legacy questionnaire '{legacy_q.title}' because it has active response data."))
 
         # 1. Seed Sociodemographic Form
         socio_title = "Sociodemographic Survey"
-        
-        # Always recreate the sociodemographic form to ensure it matches the 12-item schema
-        Questionnaire.objects.filter(title=socio_title).delete()
         
         if not Questionnaire.objects.filter(title=socio_title).exists():
             socio_q = Questionnaire.objects.create(
@@ -104,9 +107,6 @@ class Command(BaseCommand):
 
         # 2. Seed Combined Longitudinal Psychometric Battery
         battery_title = "Longitudinal Psychometric Scales"
-        
-        # Always recreate the battery to update questions and options correctly
-        Questionnaire.objects.filter(title=battery_title).delete()
         
         # Ensure no other questionnaire is marked as the post-test to avoid conflicts
         Questionnaire.objects.filter(is_posttest=True).update(is_posttest=False)

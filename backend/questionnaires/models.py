@@ -71,7 +71,7 @@ class ResponseSet(models.Model):
     )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='response_sets')
-    questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE, related_name='attempts')
+    questionnaire = models.ForeignKey(Questionnaire, on_delete=models.SET_NULL, null=True, blank=True, related_name='attempts')
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='DRAFT')
     started_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
@@ -103,7 +103,7 @@ class ResponseSet(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.user.username} - {self.questionnaire.title} ({self.status})"
+        return f"{self.user.username} - {self.questionnaire.title if self.questionnaire else 'Deleted Questionnaire'} ({self.status})"
 
 class Response(models.Model):
     """
@@ -111,9 +111,15 @@ class Response(models.Model):
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     response_set = models.ForeignKey(ResponseSet, on_delete=models.CASCADE, related_name='responses')
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.SET_NULL, null=True, blank=True)
     selected_option = models.ForeignKey(Option, on_delete=models.SET_NULL, null=True, blank=True)
     text_value = models.TextField(null=True, blank=True)
+    
+    # Denormalized fields to preserve answer history if questions/options are edited/deleted
+    question_text = models.TextField(null=True, blank=True)
+    question_order = models.PositiveIntegerField(null=True, blank=True)
+    selected_option_value = models.IntegerField(null=True, blank=True)
+    selected_option_label = models.CharField(max_length=200, null=True, blank=True)
 
     class Meta:
         constraints = [

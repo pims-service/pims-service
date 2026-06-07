@@ -267,10 +267,20 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
             instance.responses.all().delete()
             
             # 2. Bulk create new responses
-            responses_to_create = [
-                Response(response_set=instance, **item)
-                for item in responses_data
-            ]
+            responses_to_create = []
+            for item in responses_data:
+                q = item.get('question')
+                opt = item.get('selected_option')
+                responses_to_create.append(Response(
+                    response_set=instance,
+                    question=q,
+                    selected_option=opt,
+                    text_value=item.get('text_value'),
+                    question_text=q.content if q else None,
+                    question_order=q.order if q else None,
+                    selected_option_value=opt.numeric_value if opt else None,
+                    selected_option_label=opt.label if opt else None
+                ))
             Response.objects.bulk_create(responses_to_create)
             
             # 3. Mark as COMPLETED
@@ -381,10 +391,20 @@ class ResponseSetDraftSerializer(serializers.ModelSerializer):
             instance.responses.all().delete()
             
             # Bulk create responses to minimize database hits
-            responses_to_create = [
-                Response(response_set=instance, **item)
-                for item in responses_data
-            ]
+            responses_to_create = []
+            for item in responses_data:
+                q = item.get('question')
+                opt = item.get('selected_option')
+                responses_to_create.append(Response(
+                    response_set=instance,
+                    question=q,
+                    selected_option=opt,
+                    text_value=item.get('text_value'),
+                    question_text=q.content if q else None,
+                    question_order=q.order if q else None,
+                    selected_option_value=opt.numeric_value if opt else None,
+                    selected_option_label=opt.label if opt else None
+                ))
             Response.objects.bulk_create(responses_to_create)
             
             # Note: We do NOT mark status = 'COMPLETED' or set completed_at

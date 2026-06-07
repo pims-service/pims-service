@@ -142,8 +142,11 @@ def calculate_and_save_scores(response_set):
 
     val_map = {}
     for response in responses:
-        if response.question and response.selected_option is not None:
-            val_map[response.question.order] = response.selected_option.numeric_value
+        # Use database field values if the foreign key relations were deleted/SET_NULL
+        order = response.question.order if response.question else response.question_order
+        val = response.selected_option.numeric_value if response.selected_option else response.selected_option_value
+        if order is not None and val is not None:
+            val_map[order] = val
 
     scores = calculate_scores(val_map)
     if not scores:
