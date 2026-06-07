@@ -135,7 +135,7 @@ services:
     restart: unless-stopped
     logging: *default-logging
     ports:
-      - "4756:80"
+      - "${NGINX_PORT:-80}:80"
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
