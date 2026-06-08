@@ -89,6 +89,8 @@ export const questionnairesApi = {
   getAdminT0Detail: (id: string) => api.get(`/questionnaires/t0-results/${id}/`),
   getAdminT1Responses: (page: number = 1) => api.get(`/questionnaires/t1-results/?page=${page}`),
   getAdminT1Detail: (id: string) => api.get(`/questionnaires/t1-results/${id}/`),
+  getAdminTFirstMonthResponses: (page: number = 1) => api.get(`/questionnaires/t-first-month-results/?page=${page}`),
+  getAdminTFirstMonthDetail: (id: string) => api.get(`/questionnaires/t-first-month-results/${id}/`),
   getAdminT2Responses: (page: number = 1) => api.get(`/questionnaires/t2-results/?page=${page}`),
   getAdminT2Detail: (id: string) => api.get(`/questionnaires/t2-results/${id}/`),
   getAdminT3Responses: (page: number = 1) => api.get(`/questionnaires/t3-results/?page=${page}`),
@@ -101,6 +103,9 @@ export const questionnairesApi = {
     group: groupName || 'All'
   }),
   triggerAdminT1Export: (groupName?: string) => api.post('/admin/tools/export/t1/csv/', {
+    group: groupName || 'All'
+  }),
+  triggerAdminTFirstMonthExport: (groupName?: string) => api.post('/admin/tools/export/t-first-month/csv/', {
     group: groupName || 'All'
   }),
   triggerAdminT2Export: (groupName?: string) => api.post('/admin/tools/export/t2/csv/', {
