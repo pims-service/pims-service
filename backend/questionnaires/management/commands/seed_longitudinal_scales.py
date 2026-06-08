@@ -116,7 +116,7 @@ class Command(BaseCommand):
                 title=battery_title,
                 description="Standardized psychological scales (PERMA + PHQ-9 + GAD-7 + PANAS + GQ-6 + SIDAS) administered at specific milestones.",
                 is_active=True,
-                is_posttest=True,
+                is_posttest=False,
                 assessment_type='PSYCHOMETRIC'
             )
 
