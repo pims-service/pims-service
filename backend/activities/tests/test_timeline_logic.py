@@ -245,6 +245,10 @@ class TestPreAssessmentWaves:
             has_completed_posttest=True,
             posttest_completed_at=t1_completed,
         )
+        from questionnaires.models import ResponseSet, Questionnaire
+        q = Questionnaire.objects.create(title="1M", assessment_type='PSYCHOMETRIC')
+        ResponseSet.objects.create(user=user, questionnaire=q, milestone='1_MONTH', status='COMPLETED', completed_at=timezone.now() - timedelta(days=60))
+        
         act1 = Activity.objects.create(
             title="Day 1 Task", description="Task 1",
             assigned_phase=test_phase, group=group,
@@ -270,6 +274,10 @@ class TestPreAssessmentWaves:
             has_completed_posttest=True,
             posttest_completed_at=t1_completed,
         )
+        from questionnaires.models import ResponseSet, Questionnaire
+        q = Questionnaire.objects.create(title="1M", assessment_type='PSYCHOMETRIC')
+        ResponseSet.objects.create(user=user, questionnaire=q, milestone='1_MONTH', status='COMPLETED', completed_at=timezone.now() - timedelta(days=60))
+
         act1 = Activity.objects.create(
             title="Day 1 Task", description="Task 1",
             assigned_phase=test_phase, group=group,
@@ -303,7 +311,7 @@ class TestPreAssessmentWaves:
             group=group, has_completed_sociodemographic=True,
             onboarding_completed_at=timezone.now() - timedelta(days=30),
             has_completed_posttest=True,
-            posttest_completed_at=timezone.now() - timedelta(days=23),
+            posttest_completed_at=timezone.now() - timedelta(days=16),
         )
         act1 = Activity.objects.create(
             title="Day 1 Task", description="Task 1",
@@ -327,7 +335,7 @@ class TestPreAssessmentWaves:
             group=group, has_completed_sociodemographic=True,
             onboarding_completed_at=timezone.now() - timedelta(days=30),
             has_completed_posttest=True,
-            posttest_completed_at=timezone.now() - timedelta(days=23),
+            posttest_completed_at=timezone.now() - timedelta(days=16),
         )
         act1 = Activity.objects.create(
             title="Day 1 Task", description="Task 1",
