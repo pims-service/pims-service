@@ -170,6 +170,13 @@ const DashboardPage: React.FC = () => {
                     buttonText: 'Start Post-Test',
                     colorClass: 'from-emerald-50 to-white border-emerald-200 text-emerald-600 bg-emerald-600 hover:bg-emerald-700'
                   };
+                case '1_MONTH':
+                  return {
+                    title: '1-Month Follow-Up Available',
+                    description: 'Please complete the 1-Month follow-up assessment.',
+                    buttonText: 'Start Month 1 Assessment',
+                    colorClass: 'from-teal-50 to-white border-teal-200 text-teal-600 bg-teal-600 hover:bg-teal-700'
+                  };
                 case '3_MONTHS':
                   return {
                     title: 'Month 3 Follow-Up Available',

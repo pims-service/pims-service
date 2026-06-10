@@ -79,6 +79,7 @@ class ResponseSet(models.Model):
     MILESTONES = (
         ('SIGNUP', 'Signup Baseline'),
         ('7_DAYS', '7 Days Post-Test'),
+        ('1_MONTH', '1 Month'),
         ('3_MONTHS', '3 Months'),
         ('6_MONTHS', '6 Months'),
         ('1_YEAR', '1 Year'),

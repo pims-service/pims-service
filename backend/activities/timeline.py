@@ -6,6 +6,7 @@ from django.utils import timezone
 
 ACTIVITY_WAVES = (
     'PRE_T1',
+    'PRE_T_1M',
     'PRE_T2',
     'PRE_T3',
     'PRE_T4',
@@ -15,6 +16,7 @@ ACTIVITY_WAVE_CHOICES = tuple((wave, wave.replace('_', ' ')) for wave in ACTIVIT
 
 WAVE_LABELS = {
     'PRE_T1': 'pre Week 1 assessment',
+    'PRE_T_1M': 'pre 1-month assessment',
     'PRE_T2': 'pre 3-month assessment',
     'PRE_T3': 'pre 6-month assessment',
     'PRE_T4': 'pre 1-year assessment',
@@ -22,19 +24,22 @@ WAVE_LABELS = {
 
 MILESTONE_BY_WAVE = {
     'PRE_T1': '7_DAYS',
+    'PRE_T_1M': '1_MONTH',
     'PRE_T2': '3_MONTHS',
     'PRE_T3': '6_MONTHS',
     'PRE_T4': '1_YEAR',
 }
 
 WAVE_PREREQUISITES = {
-    'PRE_T2': '7_DAYS',
+    'PRE_T_1M': '7_DAYS',
+    'PRE_T2': '1_MONTH',
     'PRE_T3': '3_MONTHS',
     'PRE_T4': '6_MONTHS',
 }
 
 ASSESSMENT_OFFSETS = {
     'PRE_T1': 7,
+    'PRE_T_1M': 23,
     'PRE_T2': 90,
     'PRE_T3': 180,
     'PRE_T4': 365,

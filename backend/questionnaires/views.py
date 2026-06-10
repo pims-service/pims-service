@@ -74,13 +74,13 @@ class ResponseSetListCreateView(generics.ListCreateAPIView):
             q_obj = Questionnaire.objects.get(id=questionnaire_id)
             if q_obj.assessment_type == 'SOCIODEMOGRAPHIC' and user.has_completed_sociodemographic:
                 raise ValidationError({"detail": "You have already completed the sociodemographic assessment."})
-            if q_obj.is_posttest:
+            if q_obj.is_posttest or (q_obj.assessment_type == 'PSYCHOMETRIC' and milestone != 'SIGNUP'):
                 if milestone in [None, '7_DAYS']:
                     if not user.is_posttest_due:
                         raise ValidationError({"detail": "Post-test is not available yet. Complete 7 days first."})
                     if user.has_completed_posttest:
                         raise ValidationError({"detail": "You have already completed the post-test."})
-                elif milestone in ['3_MONTHS', '6_MONTHS', '1_YEAR']:
+                elif milestone in ['1_MONTH', '3_MONTHS', '6_MONTHS', '1_YEAR']:
                     if not user.has_completed_posttest:
                         raise ValidationError({"detail": "You must complete the 7-day post-test first."})
                     if user.get_due_milestone != milestone:
@@ -247,6 +247,40 @@ class AdminT1ResponseDetailView(generics.RetrieveAPIView):
     def get_queryset(self):
         return ResponseSet.objects.filter(
             milestone='7_DAYS',
+            questionnaire__assessment_type='PSYCHOMETRIC',
+            status='COMPLETED'
+        ).select_related('user', 'questionnaire').prefetch_related(
+            'responses__question',
+            'responses__selected_option'
+        )
+
+
+class AdminTFirstMonthResponseListView(generics.ListAPIView):
+    """
+    Researcher-only view to list all completed T-First-Month follow-up (Day 30) psychometric assessments.
+    """
+    serializer_class = AdminResponseSetSerializer
+    permission_classes = (permissions.IsAdminUser,)
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        return ResponseSet.objects.filter(
+            milestone='1_MONTH',
+            questionnaire__assessment_type='PSYCHOMETRIC',
+            status='COMPLETED'
+        ).select_related('user', 'questionnaire').order_by('-completed_at')
+
+
+class AdminTFirstMonthResponseDetailView(generics.RetrieveAPIView):
+    """
+    Researcher-only view to inspect a specific T-First-Month follow-up (Day 30) psychometric submission.
+    """
+    serializer_class = AdminResponseSetSerializer
+    permission_classes = (permissions.IsAdminUser,)
+
+    def get_queryset(self):
+        return ResponseSet.objects.filter(
+            milestone='1_MONTH',
             questionnaire__assessment_type='PSYCHOMETRIC',
             status='COMPLETED'
         ).select_related('user', 'questionnaire').prefetch_related(

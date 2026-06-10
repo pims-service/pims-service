@@ -14,6 +14,7 @@ CACHE_TTL_SECONDS = 60 * 60 * 26  # slightly over 24h so daily beat never serves
 MILESTONE_LABELS = {
     "SIGNUP": "T0 (Signup)",
     "7_DAYS": "T1 (7 Days)",
+    "1_MONTH": "T-First-Month (1 Month)",
     "3_MONTHS": "T2 (3 Months)",
     "6_MONTHS": "T3 (6 Months)",
     "1_YEAR": "T4 (1 Year)",

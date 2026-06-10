@@ -144,7 +144,7 @@ def generate_longitudinal_export_csv(task_id):
 
         # Map tuples of (question_id, milestone) to columns
         psy_columns = []
-        milestones = ['SIGNUP', '7_DAYS', '3_MONTHS', '6_MONTHS', '1_YEAR']
+        milestones = ['SIGNUP', '7_DAYS', '1_MONTH', '3_MONTHS', '6_MONTHS', '1_YEAR']
 
         for milestone in milestones:
             item_headers, question_ids = build_psych_item_headers_and_columns(psy_questions, milestone)
@@ -329,6 +329,89 @@ def generate_t1_export_csv(task_id):
         
     except Exception as e:
         logger.error(f"Error generating T1 export CSV for task {task_id}: {e}")
+        try:
+            task = ExportTask.objects.get(id=task_id)
+            task.status = 'FAILED'
+            task.error_message = str(e)
+            task.save()
+        except Exception as task_update_error:
+            logger.error(f"Failed to update task {task_id} status to FAILED: {task_update_error}")
+        raise e
+
+
+@shared_task(time_limit=300, soft_time_limit=240)
+def generate_t_first_month_export_csv(task_id):
+    try:
+        task = ExportTask.objects.get(id=task_id)
+        task.status = 'PROCESSING'
+        task.save()
+
+        import io
+        import csv
+        from questionnaires.models import Question, ResponseSet, Response
+        from django.contrib.auth import get_user_model
+        from django.core.files.base import ContentFile
+        from admin_tools.export_utils import (
+            build_psych_item_headers_and_columns,
+            append_psych_item_values,
+            append_battery_score_values,
+            extend_headers_with_battery_scores,
+        )
+
+        # 1. Fetch psychometric questions
+        psy_questions = list(Question.objects.filter(questionnaire__assessment_type='PSYCHOMETRIC').order_by('order'))
+
+        # 2. Build CSV Headers
+        headers = ['ParticipantID', 'Username', 'Group', 'DateOfBirth', 'TFirstMonthStartedAt', 'TFirstMonthCompletedAt']
+        item_headers, psy_columns = build_psych_item_headers_and_columns(psy_questions, '1_MONTH')
+        headers.extend(item_headers)
+        extend_headers_with_battery_scores(headers, '1_MONTH')
+
+        # 3. Fetch Users who have completed the 1_MONTH milestone psychometrics
+        User = get_user_model()
+        users_qs = User.objects.filter(
+            is_active=True,
+            response_sets__milestone='1_MONTH',
+            response_sets__questionnaire__assessment_type='PSYCHOMETRIC',
+            response_sets__status='COMPLETED'
+        ).select_related('group').distinct().order_by('user_id')
+        group_name = task.filters.get('group')
+        if group_name and group_name != 'All':
+            users_qs = users_qs.filter(group__name=group_name)
+
+        output = io.StringIO()
+        writer = csv.writer(output, quoting=csv.QUOTE_ALL)
+        writer.writerow(headers)
+
+        for user in users_qs.iterator(chunk_size=1000):
+            rs_1m = ResponseSet.objects.filter(
+                user=user,
+                milestone='1_MONTH',
+                questionnaire__assessment_type='PSYCHOMETRIC',
+                status='COMPLETED'
+            ).first()
+            if not rs_1m:
+                continue
+            responses = Response.objects.filter(response_set=rs_1m).select_related('question', 'selected_option')
+            resp_map = {r.question_id: r for r in responses}
+            row = [
+                user.user_id,
+                user.username,
+                user.group.name if user.group else 'None',
+                user.date_of_birth.strftime('%Y-%m-%d') if user.date_of_birth else '',
+                rs_1m.started_at.strftime('%Y-%m-%d %H:%M:%S') if rs_1m.started_at else '',
+                rs_1m.completed_at.strftime('%Y-%m-%d %H:%M:%S') if rs_1m.completed_at else '',
+            ]
+            append_psych_item_values(row, resp_map, psy_columns)
+            append_battery_score_values(row, rs_1m)
+            writer.writerow(row)
+
+        file_name = f"t_first_month_export_{task.id}.csv"
+        task.file.save(file_name, ContentFile(output.getvalue().encode('utf-8')))
+        task.status = 'SUCCESS'
+        task.save()
+    except Exception as e:
+        logger.error(f"Error generating T-First-Month export CSV for task {task_id}: {e}")
         try:
             task = ExportTask.objects.get(id=task_id)
             task.status = 'FAILED'
