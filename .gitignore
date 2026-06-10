@@ -44,10 +44,12 @@ dist-ssr
 *.pem
 
 # Project Specific
-psych_experiment_platform/backend/static/
-psych_experiment_platform/backend/media/
+backend/static/
+backend/media/
+backend/staticfiles/
 backend/logs/
-test_output*.txt
+backend/celerybeat-schedule
+celerybeat-schedule
 
 # Local temporary/scratch files
 scratch/
