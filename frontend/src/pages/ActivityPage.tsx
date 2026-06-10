@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { Save, CheckCircle, ArrowLeft, Loader2 } from 'lucide-react';
@@ -82,6 +82,16 @@ const ActivityPage: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { i18n, t } = useTranslation();
+
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const [activity, setActivity] = useState<any>(null);
   const [entry1, setEntry1] = useState('');
@@ -232,8 +242,12 @@ const ActivityPage: React.FC = () => {
     };
     localStorage.setItem(`activity_draft_${id}`, JSON.stringify(draft));
 
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
     // Simulate short save status toggle
-    setTimeout(() => setSaving(false), 500);
+    saveTimeoutRef.current = setTimeout(() => setSaving(false), 500);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

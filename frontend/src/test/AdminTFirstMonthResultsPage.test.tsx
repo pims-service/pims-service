@@ -49,10 +49,10 @@ describe.sequential('AdminTFirstMonthResultsPage', () => {
     );
 
     // Verify loading indicator is shown
-    expect(screen.getByText('Loading T-First-Month follow-up data...')).toBeInTheDocument();
+    expect(screen.getByText('Loading 1-month assessment data...')).toBeInTheDocument();
 
     // Wait for the data to load and verify columns and row details
-    expect(await screen.findByText('T-First-Month Post-Test Results')).toBeInTheDocument();
+    expect(await screen.findByText('1-Month Assessment Results')).toBeInTheDocument();
     expect(await screen.findByText('Noman R.')).toBeInTheDocument();
     expect(await screen.findByText('@noman')).toBeInTheDocument();
     expect((await screen.findAllByText('Group B')).length).toBeGreaterThan(0);
@@ -69,7 +69,7 @@ describe.sequential('AdminTFirstMonthResultsPage', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('T-First-Month Post-Test Results')).toBeInTheDocument();
+      expect(screen.getByText('1-Month Assessment Results')).toBeInTheDocument();
     });
 
     const exportBtn = screen.getByRole('button', { name: /Export CSV/i });
@@ -129,7 +129,7 @@ describe.sequential('AdminTFirstMonthResultsPage', () => {
     expect(questionnairesApi.getAdminTFirstMonthDetail).toHaveBeenCalledWith('tfm-sub-1');
 
     await waitFor(() => {
-      expect(screen.getByText('T-First-Month Response Detail')).toBeInTheDocument();
+      expect(screen.getByText('1-Month Assessment Response Detail')).toBeInTheDocument();
       expect(screen.getByText('Did you feel energetic?')).toBeInTheDocument();
       expect(screen.getByText('Moderately')).toBeInTheDocument();
     });

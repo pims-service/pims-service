@@ -47,8 +47,8 @@ describe.sequential('AdminT4ResultsPage', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('Loading T4 follow-up data...')).toBeInTheDocument();
-    expect(await screen.findByText('T4 Month 12 Results')).toBeInTheDocument();
+    expect(screen.getByText('Loading 1-year assessment data...')).toBeInTheDocument();
+    expect(await screen.findByText('1-Year Assessment Results')).toBeInTheDocument();
     expect(await screen.findByText('John Doe')).toBeInTheDocument();
     expect(await screen.findByText(/johndoe/i)).toBeInTheDocument();
     expect((await screen.findAllByText('Group A')).length).toBeGreaterThan(0);
@@ -65,7 +65,7 @@ describe.sequential('AdminT4ResultsPage', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('T4 Month 12 Results')).toBeInTheDocument();
+      expect(screen.getByText('1-Year Assessment Results')).toBeInTheDocument();
     });
 
     const exportBtn = screen.getByRole('button', { name: /Export CSV/i });
@@ -125,7 +125,7 @@ describe.sequential('AdminT4ResultsPage', () => {
     expect(questionnairesApi.getAdminT4Detail).toHaveBeenCalledWith('t4-sub-1');
 
     await waitFor(() => {
-      expect(screen.getByText('T4 Response Detail')).toBeInTheDocument();
+      expect(screen.getByText('1-Year Assessment Response Detail')).toBeInTheDocument();
       expect(screen.getByText('How satisfied are you?')).toBeInTheDocument();
       expect(screen.getByText('Very satisfied')).toBeInTheDocument();
     });
