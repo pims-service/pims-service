@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import { useTranslation } from 'react-i18next';
-import { User, Mail, Phone, Lock, Calendar, ArrowRight, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { User, Mail, Phone, Lock, Calendar, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Loader2, Key, RefreshCw } from 'lucide-react';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -22,8 +22,9 @@ const RegisterPage: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [phase] = useState<'details' | 'otp'>('details');
-  const [otpMessage] = useState('');
+  const [phase, setPhase] = useState<'details' | 'otp'>('details');
+  const [otpMessage, setOtpMessage] = useState('');
+  const [resending, setResending] = useState(false);
   const [showConsentModal, setShowConsentModal] = useState(false);
   const { t } = useTranslation();
 
@@ -40,10 +41,86 @@ const RegisterPage: React.FC = () => {
     }
   };
 
+  const handleSendOTP = async (isResend: boolean = false) => {
+    if (isResend) {
+      setResending(true);
+    } else {
+      setLoading(true);
+    }
+    setErrors({});
+    setOtpMessage('');
 
+    // Local validation before calling send-otp
+    if (!formData.username.trim()) {
+      setErrors({ username: ['Username is required'] });
+      setLoading(false);
+      setResending(false);
+      return;
+    }
+    if (!formData.email.trim()) {
+      setErrors({ email: ['Email is required'] });
+      setLoading(false);
+      setResending(false);
+      return;
+    }
+    if (!formData.password || formData.password.length < 8) {
+      setErrors({ password: ['Password must be at least 8 characters'] });
+      setLoading(false);
+      setResending(false);
+      return;
+    }
+    if (formData.password !== formData.confirm_password) {
+      setErrors({ confirm_password: ["Password fields didn't match"] });
+      setLoading(false);
+      setResending(false);
+      return;
+    }
+    if (!formData.consent_agreed) {
+      setErrors({ consent_agreed: ['You must agree to the Informed Consent Form.'] });
+      setLoading(false);
+      setResending(false);
+      return;
+    }
+
+    try {
+      const response = await api.post('/auth/send-otp/', { email: formData.email });
+      if (response.status === 200) {
+        setPhase('otp');
+        setOtpMessage(isResend ? 'A new verification code has been sent to your email.' : 'Verification code sent to your email.');
+      }
+    } catch (err: any) {
+      if (err.response?.data) {
+        const data = err.response.data;
+        if (typeof data === 'string') {
+          setErrors({ non_field_errors: [data] });
+        } else if (typeof data === 'object') {
+          const normalized: Record<string, string[]> = {};
+          for (const [key, val] of Object.entries(data)) {
+            normalized[key] = Array.isArray(val) ? val.map(String) : [String(val)];
+          }
+          setErrors(normalized);
+        }
+      } else {
+        setErrors({ non_field_errors: ['Failed to send verification code. Please check your email and try again.'] });
+      }
+    } finally {
+      setLoading(false);
+      setResending(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (phase === 'details') {
+      await handleSendOTP(false);
+      return;
+    }
+
+    if (!formData.otp.trim()) {
+      setErrors({ otp: ['Verification code is required'] });
+      return;
+    }
+
     setLoading(true);
     setErrors({});
 
@@ -62,14 +139,9 @@ const RegisterPage: React.FC = () => {
         if (typeof data === 'string') {
           setErrors({ non_field_errors: [data] });
         } else if (typeof data === 'object' && !Array.isArray(data)) {
-          // Normalize: ensure each value is an array of strings
           const normalized: Record<string, string[]> = {};
           for (const [key, val] of Object.entries(data)) {
-            if (Array.isArray(val)) {
-              normalized[key] = val.map(String);
-            } else {
-              normalized[key] = [String(val)];
-            }
+            normalized[key] = Array.isArray(val) ? val.map(String) : [String(val)];
           }
           setErrors(normalized);
         } else {
@@ -123,172 +195,192 @@ const RegisterPage: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-zinc-700" htmlFor="username">{t('register.username')}</label>
-              <div className="relative">
-                <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  required
-                  placeholder={t('register.username_placeholder')}
-                  className={`input-minimal !ps-10 ${errors.username ? 'border-black border-2 ring-0' : ''}`}
-                  value={formData.username}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
+          {phase === 'details' ? (
+            <>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-zinc-700" htmlFor="username">{t('register.username')}</label>
+                  <div className="relative">
+                    <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                    <input
+                      id="username"
+                      name="username"
+                      type="text"
+                      required
+                      placeholder={t('register.username_placeholder')}
+                      className={`input-minimal !ps-10 ${errors.username ? 'border-black border-2 ring-0' : ''}`}
+                      value={formData.username}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-zinc-700" htmlFor="full_name">{t('register.full_name')}</label>
-              <div className="relative">
-                <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                <input
-                  id="full_name"
-                  name="full_name"
-                  type="text"
-                  required
-                  placeholder={t('register.full_name_placeholder')}
-                  className={`input-minimal !ps-10 ${errors.full_name ? 'border-black border-2 ring-0' : ''}`}
-                  value={formData.full_name}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-zinc-700" htmlFor="full_name">{t('register.full_name')}</label>
+                  <div className="relative">
+                    <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                    <input
+                      id="full_name"
+                      name="full_name"
+                      type="text"
+                      required
+                      placeholder={t('register.full_name_placeholder')}
+                      className={`input-minimal !ps-10 ${errors.full_name ? 'border-black border-2 ring-0' : ''}`}
+                      value={formData.full_name}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-zinc-700" htmlFor="email">{t('register.email')}</label>
-              <div className="relative">
-                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  placeholder={t('register.email_placeholder')}
-                  className={`input-minimal !ps-10 ${errors.email ? 'border-black border-2 ring-0' : ''}`}
-                  value={formData.email}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-zinc-700" htmlFor="email">{t('register.email')}</label>
+                  <div className="relative">
+                    <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      placeholder={t('register.email_placeholder')}
+                      className={`input-minimal !ps-10 ${errors.email ? 'border-black border-2 ring-0' : ''}`}
+                      value={formData.email}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-zinc-700" htmlFor="whatsapp_number">{t('register.whatsapp_number')}</label>
-              <div className="relative">
-                <Phone className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                <input
-                  id="whatsapp_number"
-                  name="whatsapp_number"
-                  type="text"
-                  required
-                  placeholder={t('register.whatsapp_number_placeholder')}
-                  className={`input-minimal !ps-10 ${errors.whatsapp_number ? 'border-black border-2 ring-0' : ''}`}
-                  value={formData.whatsapp_number}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-zinc-700" htmlFor="whatsapp_number">{t('register.whatsapp_number')}</label>
+                  <div className="relative">
+                    <Phone className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                    <input
+                      id="whatsapp_number"
+                      name="whatsapp_number"
+                      type="text"
+                      required
+                      placeholder={t('register.whatsapp_number_placeholder')}
+                      className={`input-minimal !ps-10 ${errors.whatsapp_number ? 'border-black border-2 ring-0' : ''}`}
+                      value={formData.whatsapp_number}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-zinc-700" htmlFor="date_of_birth">{t('register.date_of_birth')}</label>
-              <div className="relative">
-                <Calendar className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                <input
-                  id="date_of_birth"
-                  name="date_of_birth"
-                  type="date"
-                  required
-                  className={`input-minimal !ps-10 ${errors.date_of_birth ? 'border-black border-2 ring-0' : ''}`}
-                  value={formData.date_of_birth}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-zinc-700" htmlFor="date_of_birth">{t('register.date_of_birth')}</label>
+                  <div className="relative">
+                    <Calendar className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                    <input
+                      id="date_of_birth"
+                      name="date_of_birth"
+                      type="date"
+                      required
+                      className={`input-minimal !ps-10 ${errors.date_of_birth ? 'border-black border-2 ring-0' : ''}`}
+                      value={formData.date_of_birth}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-zinc-700" htmlFor="password">{t('register.password')}</label>
-                <div className="relative">
-                  <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    required
-                    placeholder={t('register.password_placeholder')}
-                    className={`input-minimal !ps-10 ${errors.password ? 'border-black border-2 ring-0' : ''}`}
-                    value={formData.password}
-                    onChange={handleChange}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-zinc-700" htmlFor="password">{t('register.password')}</label>
+                    <div className="relative">
+                      <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                      <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        required
+                        placeholder={t('register.password_placeholder')}
+                        className={`input-minimal !ps-10 ${errors.password ? 'border-black border-2 ring-0' : ''}`}
+                        value={formData.password}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-zinc-700" htmlFor="confirm_password">{t('register.confirm_password')}</label>
+                    <div className="relative">
+                      <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                      <input
+                        id="confirm_password"
+                        name="confirm_password"
+                        type="password"
+                        required
+                        placeholder={t('register.confirm_password_placeholder')}
+                        className={`input-minimal !ps-10 ${errors.password ? 'border-black border-2 ring-0' : ''}`}
+                        value={formData.confirm_password}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
+
+              <div className="flex items-start gap-3 py-2">
+                <input
+                  id="consent_agreed"
+                  name="consent_agreed"
+                  type="checkbox"
+                  required
+                  className="mt-1 w-4 h-4 rounded border-2 border-black text-black focus:ring-black cursor-pointer"
+                  checked={formData.consent_agreed}
+                  onChange={handleChange}
+                />
+                <label htmlFor="consent_agreed" className="text-xs text-zinc-700 leading-tight font-medium select-none">
+                  {t('register.consent_checkbox_label')}{' '}
+                  <button
+                    type="button"
+                    onClick={() => setShowConsentModal(true)}
+                    className="text-black font-bold underline hover:text-zinc-800 cursor-pointer"
+                  >
+                    {t('register.consent_link')}
+                  </button>
+                </label>
+              </div>
+            </>
+          ) : (
+            <div className="space-y-6">
+              <div className="p-4 bg-zinc-50 border-2 border-black space-y-2 text-zinc-800">
+                <div className="flex items-center gap-2 font-bold uppercase tracking-tight text-sm">
+                  <Mail className="w-5 h-5 text-black" />
+                  <span>Verify your email</span>
+                </div>
+                <p className="text-xs leading-relaxed">
+                  We've sent a 6-digit verification code to <strong className="text-black">{formData.email}</strong>. 
+                  Please check your inbox and enter the code below to complete your registration.
+                </p>
+              </div>
+
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-zinc-700" htmlFor="confirm_password">{t('register.confirm_password')}</label>
+                <label className="text-sm font-medium text-zinc-700" htmlFor="otp">Verification Code</label>
                 <div className="relative">
-                  <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <Key className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                   <input
-                    id="confirm_password"
-                    name="confirm_password"
-                    type="password"
+                    id="otp"
+                    name="otp"
+                    type="text"
                     required
-                    placeholder={t('register.confirm_password_placeholder')}
-                    className={`input-minimal !ps-10 ${errors.password ? 'border-black border-2 ring-0' : ''}`}
-                    value={formData.confirm_password}
+                    placeholder="Enter 6-digit code"
+                    className={`input-minimal !ps-10 tracking-[0.25em] text-center font-mono font-bold text-lg ${
+                      errors.otp ? 'border-black border-2 ring-0' : 'border-zinc-300'
+                    }`}
+                    value={formData.otp}
                     onChange={handleChange}
+                    maxLength={6}
                   />
                 </div>
+                {otpMessage && <p className="text-xs text-emerald-600 font-medium italic mt-1">{otpMessage}</p>}
               </div>
-            </div>
-          </div>
 
-          <div className="flex items-start gap-3 py-2">
-            <input
-              id="consent_agreed"
-              name="consent_agreed"
-              type="checkbox"
-              required
-              className="mt-1 w-4 h-4 rounded border-2 border-black text-black focus:ring-black cursor-pointer"
-              checked={formData.consent_agreed}
-              onChange={handleChange}
-            />
-            <label htmlFor="consent_agreed" className="text-xs text-zinc-700 leading-tight font-medium select-none">
-              {t('register.consent_checkbox_label')}{' '}
-              <button
-                type="button"
-                onClick={() => setShowConsentModal(true)}
-                className="text-black font-bold underline hover:text-zinc-800 cursor-pointer"
-              >
-                {t('register.consent_link')}
-              </button>
-            </label>
-          </div>
 
-          {phase === 'otp' && (
-            <div className="space-y-1.5 pt-2 border-t border-zinc-100">
-              <label className="text-sm font-medium text-emerald-700 font-bold" htmlFor="otp">Verification Code</label>
-              <input
-                id="otp"
-                name="otp"
-                type="text"
-                required
-                placeholder="6-digit code from email"
-                className={`input-minimal ${errors.otp ? 'border-black border-2 ring-0' : 'border-emerald-200 bg-emerald-50'}`}
-                value={formData.otp}
-                onChange={handleChange}
-                maxLength={6}
-              />
-              <p className="text-xs text-emerald-600">{otpMessage}</p>
-            </div>
-          )}
 
           <button
             type="submit"
-            disabled={loading || !formData.consent_agreed}
+            disabled={loading || (phase === 'details' && !formData.consent_agreed)}
             className={`btn-minimal w-full flex items-center justify-center gap-2 group py-2.5 transition-all duration-200 ${
-              (!formData.consent_agreed || loading)
+              (phase === 'details' && !formData.consent_agreed) || loading
                 ? 'bg-zinc-200 text-zinc-400 cursor-not-allowed border-zinc-300'
                 : 'bg-black text-white hover:bg-zinc-800 border-black'
             }`}
@@ -297,7 +389,8 @@ const RegisterPage: React.FC = () => {
               <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
             ) : (
               <>
-                {t('register.sign_up')} <ArrowRight className="w-4 h-4 rtl:rotate-180 rtl:group-hover:-translate-x-0.5 group-hover:translate-x-0.5 transition-transform" />
+                {phase === 'details' ? 'Send Verification Code' : 'Verify & Sign Up'}{' '}
+                <ArrowRight className="w-4 h-4 rtl:rotate-180 rtl:group-hover:-translate-x-0.5 group-hover:translate-x-0.5 transition-transform" />
               </>
             )}
           </button>

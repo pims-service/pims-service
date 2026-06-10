@@ -48,3 +48,7 @@ psych_experiment_platform/backend/static/
 psych_experiment_platform/backend/media/
 backend/logs/
 test_output*.txt
+
+# Local temporary/scratch files
+scratch/
+questions/

@@ -39,6 +39,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate }) => {
     { label: 'Overview', path: '/admin', icon: <LayoutDashboard size={18} /> },
     { label: 'T0 Results', path: '/admin/t0-data', icon: <ClipboardCheck size={18} /> },
     { label: 'T1 Results', path: '/admin/t1-data', icon: <ClipboardCheck size={18} /> },
+    { label: 'T-First-Month Results', path: '/admin/t-first-month-data', icon: <ClipboardCheck size={18} /> },
     { label: 'T2 Results', path: '/admin/t2-data', icon: <ClipboardCheck size={18} /> },
     { label: 'T3 Results', path: '/admin/t3-data', icon: <ClipboardCheck size={18} /> },
     { label: 'T4 Results', path: '/admin/t4-data', icon: <ClipboardCheck size={18} /> },

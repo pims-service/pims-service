@@ -135,7 +135,7 @@ class User(AbstractUser):
     def get_due_milestone(self):
         """
         Calculates and returns the user's currently due assessment milestone:
-        'SIGNUP', '7_DAYS', '3_MONTHS', '6_MONTHS', '1_YEAR', or None.
+        'SIGNUP', '7_DAYS', '1_MONTH', '3_MONTHS', '6_MONTHS', '1_YEAR', or None.
         Caches the result in Redis until next midnight to optimize speed.
         """
         cache_key = f"user_{self.user_id}_due_milestone"
@@ -193,8 +193,18 @@ class User(AbstractUser):
             else:
                 ref_date = self.onboarding_completed_at + timezone.timedelta(days=7)
 
+            # 1.5. 1_MONTH (T-First-Month follow-up)
+            if '1_MONTH' not in completed_milestones:
+                due_date = ref_date + timezone.timedelta(days=23)  # 30 days total since onboarding
+                if now >= due_date:
+                    if now - due_date >= timezone.timedelta(days=14):
+                        # 1_MONTH has expired.
+                        pass
+                    else:
+                        due = '1_MONTH'
+
             # 2. 3_MONTHS (T2 follow-up)
-            if '3_MONTHS' not in completed_milestones:
+            if due is None and '3_MONTHS' not in completed_milestones:
                 due_date = ref_date + timezone.timedelta(days=90)
                 if now >= due_date:
                     if now - due_date >= timezone.timedelta(days=14):
@@ -346,6 +356,7 @@ class User(AbstractUser):
         # Waves and their due dates
         waves = [
             ('7_DAYS', self.onboarding_completed_at + timezone.timedelta(days=7)),
+            ('1_MONTH', ref_date + timezone.timedelta(days=23)),
             ('3_MONTHS', ref_date + timezone.timedelta(days=90)),
             ('6_MONTHS', ref_date + timezone.timedelta(days=180)),
             ('1_YEAR', ref_date + timezone.timedelta(days=365)),

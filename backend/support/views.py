@@ -1,10 +1,25 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from .models import SupportTicket
 from .serializers import SupportTicketSerializer, AdminSupportTicketSerializer
 
+class SupportTicketPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+    def get_paginated_response(self, data):
+        return Response({
+            'next': self.get_next_link(),
+            'previous': self.get_previous_link(),
+            'count': self.page.paginator.count,
+            'results': data
+        })
+
 class SupportTicketViewSet(viewsets.ModelViewSet):
+    pagination_class = SupportTicketPagination
     
     def get_queryset(self):
         if self.request.user.is_staff or (self.request.user.role and self.request.user.role.name == 'Admin'):

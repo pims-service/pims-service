@@ -9,6 +9,8 @@ import {
   CheckCircle2,
   XCircle,
   HelpCircle,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -38,11 +40,17 @@ const AdminSuicideRiskPage: React.FC = () => {
     opt_in_count: 0,
   });
 
-  const fetchCases = useCallback(async (filter: 'opt_in' | 'all' = showFilter) => {
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrev, setHasPrev] = useState(false);
+
+  const fetchCases = useCallback(async (filter: 'opt_in' | 'all' = showFilter, page: number = 1) => {
     try {
       setLoading(true);
       const res = await api.get('/questionnaires/admin/suicide-risk-follow-ups/', {
-        params: { show: filter },
+        params: { show: filter, page },
       });
       setCases(res.data.cases || []);
       setMeta({
@@ -50,6 +58,10 @@ const AdminSuicideRiskPage: React.FC = () => {
         total_flagged: res.data.total_flagged ?? 0,
         opt_in_count: res.data.opt_in_count ?? 0,
       });
+      setTotalCount(res.data.count ?? 0);
+      setHasNext(!!res.data.next);
+      setHasPrev(!!res.data.previous);
+      setCurrentPage(page);
       setError(null);
     } catch {
       setError('Failed to load suicide risk follow-up data.');
@@ -59,7 +71,7 @@ const AdminSuicideRiskPage: React.FC = () => {
   }, [showFilter]);
 
   useEffect(() => {
-    fetchCases(showFilter);
+    fetchCases(showFilter, 1);
   }, [showFilter, fetchCases]);
 
   const optInBadge = (optIn: boolean | null) => {
@@ -190,6 +202,34 @@ const AdminSuicideRiskPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          {totalCount > 0 && (
+            <div className="px-6 py-3 bg-zinc-50 border-t border-zinc-150 flex items-center justify-between">
+              <div className="text-xs text-zinc-500">
+                Showing <span className="font-medium text-zinc-700">{cases.length}</span> of <span className="font-medium text-zinc-700">{totalCount}</span> results
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => fetchCases(showFilter, currentPage - 1)}
+                  disabled={!hasPrev || loading}
+                  className={`p-1.5 border border-zinc-200 rounded-lg transition-all ${!hasPrev ? 'opacity-30 cursor-not-allowed' : 'hover:bg-zinc-100'}`}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <div className="px-3 py-1.5 border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 bg-white">
+                  Page {currentPage}
+                </div>
+                <button
+                  onClick={() => fetchCases(showFilter, currentPage + 1)}
+                  disabled={!hasNext || loading}
+                  className={`p-1.5 border border-zinc-200 rounded-lg transition-all ${!hasNext ? 'opacity-30 cursor-not-allowed' : 'hover:bg-zinc-100'}`}
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

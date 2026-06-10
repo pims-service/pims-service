@@ -54,6 +54,8 @@ class SendOTPView(generics.CreateAPIView):
         from .tasks import send_otp_email_task
         send_otp_email_task.delay(email, otp)
         
+        return Response({'message': 'Verification code sent to your email.'}, status=status.HTTP_200_OK)
+        
 
 class HealthCheckView(APIView):
     permission_classes = (permissions.AllowAny,)

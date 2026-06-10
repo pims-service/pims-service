@@ -268,6 +268,7 @@ CELERY_ENABLE_UTC = False
 if 'test' in sys.argv or 'pytest' in sys.modules:
     CELERY_TASK_ALWAYS_EAGER = True
     CELERY_TASK_EAGER_PROPAGATES = True
+    EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 
 # Celery Beat Schedule
 from celery.schedules import crontab
@@ -303,10 +304,14 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
 }
 
-# Mailjet API Integration
-MAILJET_API_KEY = env('MAILJET_API_KEY', default='mock_api_key_for_local_dev')
-MAILJET_SECRET_KEY = env('MAILJET_SECRET_KEY', default='mock_secret_key_for_local_dev')
-MAILJET_SENDER_EMAIL = env('MAILJET_SENDER_EMAIL', default='no-reply@localhost.com')
+# Email Configuration
+EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = env('EMAIL_HOST', default='smtp-relay.brevo.com')
+EMAIL_PORT = env.int('EMAIL_PORT', default=587)
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='no-reply@psycheversity.com')
 
 # Ensure logs directory exists
 os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)

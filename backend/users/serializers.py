@@ -88,6 +88,24 @@ class SignupSerializer(serializers.ModelSerializer):
         if not attrs.get('date_of_birth'):
             raise serializers.ValidationError({"date_of_birth": "Date of birth is mandatory."})
 
+        # OTP Verification
+        otp = attrs.get('otp')
+        email = attrs.get('email')
+        if not otp:
+            raise serializers.ValidationError({"otp": "OTP verification code is required."})
+
+        from .models import EmailVerificationOTP
+        otp_record = EmailVerificationOTP.objects.filter(
+            email=email,
+            is_verified=False
+        ).order_by('-created_at').first()
+
+        if not otp_record or otp_record.otp != otp:
+            raise serializers.ValidationError({"otp": "Invalid verification code."})
+
+        if not otp_record.is_valid():
+            raise serializers.ValidationError({"otp": "Verification code has expired."})
+
         # Django built-in password validation
         from django.contrib.auth.password_validation import validate_password
         from django.core.exceptions import ValidationError as DjangoValidationError
@@ -104,7 +122,15 @@ class SignupSerializer(serializers.ModelSerializer):
         validated_data.pop('confirm_password')
         consent_agreed = validated_data.pop('consent_agreed')
         consent_version = validated_data.pop('consent_version')
-        validated_data.pop('otp', None)
+        otp = validated_data.pop('otp', None)
+        
+        # Mark OTP as verified
+        if otp:
+            from .models import EmailVerificationOTP
+            EmailVerificationOTP.objects.filter(
+                email=validated_data['email'],
+                otp=otp
+            ).update(is_verified=True)
         
         # Ensure default Role (Participant) exists
         role, _ = Role.objects.get_or_create(

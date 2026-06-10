@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, AlertCircle, HelpCircle, CheckCircle2, Clock, MessageSquare, X } from 'lucide-react';
+import { Loader2, AlertCircle, HelpCircle, CheckCircle2, Clock, MessageSquare, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../services/api';
 
 const AdminSupportQueriesPage: React.FC = () => {
@@ -11,11 +11,33 @@ const AdminSupportQueriesPage: React.FC = () => {
   const [adminReply, setAdminReply] = useState('');
   const [statusUpdating, setStatusUpdating] = useState(false);
 
-  const fetchTickets = async () => {
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrev, setHasPrev] = useState(false);
+
+  const fetchTickets = async (page: number = 1) => {
     try {
       setLoading(true);
-      const res = await api.get('/support/tickets/');
-      setTickets(Array.isArray(res.data) ? res.data : res.data?.results || []);
+      const res = await api.get('/support/tickets/', {
+        params: { page }
+      });
+      const data = res.data;
+      if (data && typeof data === 'object' && 'results' in data && Array.isArray(data.results)) {
+        setTickets(data.results);
+        setTotalCount(data.count || 0);
+        setHasNext(!!data.next);
+        setHasPrev(!!data.previous);
+      } else if (Array.isArray(data)) {
+        setTickets(data);
+        setTotalCount(data.length);
+        setHasNext(false);
+        setHasPrev(false);
+      } else {
+        setTickets([]);
+      }
+      setCurrentPage(page);
       setError(null);
     } catch (err: any) {
       setError('Failed to load support queries.');
@@ -25,14 +47,14 @@ const AdminSupportQueriesPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchTickets();
+    fetchTickets(1);
   }, []);
 
   const handleUpdateTicket = async (id: number, status: string, notes: string, reply: string) => {
     setStatusUpdating(true);
     try {
       await api.patch(`/support/tickets/${id}/`, { status, admin_notes: notes, admin_reply: reply });
-      await fetchTickets();
+      await fetchTickets(currentPage);
       setSelectedTicket(null);
     } catch (err: any) {
       alert('Failed to update ticket.');
@@ -128,6 +150,34 @@ const AdminSupportQueriesPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          {totalCount > 0 && (
+            <div className="px-6 py-3 bg-zinc-50 border-t border-zinc-100 flex items-center justify-between">
+              <div className="text-xs text-zinc-500">
+                Showing <span className="font-medium text-zinc-700">{tickets.length}</span> of <span className="font-medium text-zinc-700">{totalCount}</span> results
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => fetchTickets(currentPage - 1)}
+                  disabled={!hasPrev || loading}
+                  className={`p-1.5 border border-zinc-200 rounded-lg transition-all ${!hasPrev ? 'opacity-30 cursor-not-allowed' : 'hover:bg-zinc-100'}`}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <div className="px-3 py-1.5 border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 bg-white">
+                  Page {currentPage}
+                </div>
+                <button
+                  onClick={() => fetchTickets(currentPage + 1)}
+                  disabled={!hasNext || loading}
+                  className={`p-1.5 border border-zinc-200 rounded-lg transition-all ${!hasNext ? 'opacity-30 cursor-not-allowed' : 'hover:bg-zinc-100'}`}
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

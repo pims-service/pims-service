@@ -23,6 +23,7 @@ class Activity(models.Model):
 class Submission(models.Model):
     ACTIVITY_WAVE_CHOICES = (
         ('PRE_T1', 'Pre T1'),
+        ('PRE_T_1M', 'Pre T 1M'),
         ('PRE_T2', 'Pre T2'),
         ('PRE_T3', 'Pre T3'),
         ('PRE_T4', 'Pre T4'),

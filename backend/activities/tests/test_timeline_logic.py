@@ -245,6 +245,10 @@ class TestPreAssessmentWaves:
             has_completed_posttest=True,
             posttest_completed_at=t1_completed,
         )
+        from questionnaires.models import ResponseSet, Questionnaire
+        q = Questionnaire.objects.create(title="1M", assessment_type='PSYCHOMETRIC')
+        ResponseSet.objects.create(user=user, questionnaire=q, milestone='1_MONTH', status='COMPLETED', completed_at=timezone.now() - timedelta(days=60))
+        
         act1 = Activity.objects.create(
             title="Day 1 Task", description="Task 1",
             assigned_phase=test_phase, group=group,
@@ -270,6 +274,10 @@ class TestPreAssessmentWaves:
             has_completed_posttest=True,
             posttest_completed_at=t1_completed,
         )
+        from questionnaires.models import ResponseSet, Questionnaire
+        q = Questionnaire.objects.create(title="1M", assessment_type='PSYCHOMETRIC')
+        ResponseSet.objects.create(user=user, questionnaire=q, milestone='1_MONTH', status='COMPLETED', completed_at=timezone.now() - timedelta(days=60))
+
         act1 = Activity.objects.create(
             title="Day 1 Task", description="Task 1",
             assigned_phase=test_phase, group=group,
@@ -295,3 +303,62 @@ class TestPreAssessmentWaves:
 
         assert response.status_code == status.HTTP_201_CREATED
         assert Submission.objects.filter(user=user, activity_wave='PRE_T2', experiment_day=1).exists()
+
+    def test_pre_t_1m_wave_serves_day_one_activity(self, api_client, test_phase):
+        group = Group.objects.create(name="PreT1M Group")
+        user = User.objects.create_user(
+            username="pret1m_user", email="pret1m@test.com", password="pwd",
+            group=group, has_completed_sociodemographic=True,
+            onboarding_completed_at=timezone.now() - timedelta(days=30),
+            has_completed_posttest=True,
+            posttest_completed_at=timezone.now() - timedelta(days=16),
+        )
+        act1 = Activity.objects.create(
+            title="Day 1 Task", description="Task 1",
+            assigned_phase=test_phase, group=group,
+            activity_type="task", day_number=1
+        )
+
+        cache.clear()
+        api_client.force_authenticate(user=user)
+        response = api_client.get(reverse('daily-activity-current'))
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['id'] == act1.id
+        assert response.data['current_day'] == 1
+        assert response.data['activity_wave'] == 'PRE_T_1M'
+
+    def test_pre_t_1m_allows_resubmission_for_same_experiment_day(self, api_client, test_phase):
+        group = Group.objects.create(name="PreT1M Resubmit Group")
+        user = User.objects.create_user(
+            username="pret1m_resubmit", email="pret1mr@test.com", password="pwd",
+            group=group, has_completed_sociodemographic=True,
+            onboarding_completed_at=timezone.now() - timedelta(days=30),
+            has_completed_posttest=True,
+            posttest_completed_at=timezone.now() - timedelta(days=16),
+        )
+        act1 = Activity.objects.create(
+            title="Day 1 Task", description="Task 1",
+            assigned_phase=test_phase, group=group,
+            activity_type="task", day_number=1
+        )
+        prior_submission = Submission.objects.create(
+            user=user, activity=act1, content="prior wave",
+            experiment_day=1, activity_wave='PRE_T1',
+        )
+        Submission.objects.filter(pk=prior_submission.pk).update(
+            submission_date=timezone.now() - timedelta(days=23),
+        )
+
+        cache.clear()
+        api_client.force_authenticate(user=user)
+        words_20 = "word " * 20
+        response = api_client.post(reverse('daily-activity-submit'), {
+            "activity": act1.id,
+            "entry_1": words_20,
+            "entry_2": words_20,
+            "entry_3": words_20,
+        }, format='json')
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert Submission.objects.filter(user=user, activity_wave='PRE_T_1M', experiment_day=1).exists()

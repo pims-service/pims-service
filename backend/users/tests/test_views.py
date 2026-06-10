@@ -65,8 +65,8 @@ def test_signup_without_otp(api_client, db):
     }
     response = api_client.post(url, payload)
 
-    assert response.status_code == status.HTTP_201_CREATED
-    assert User.objects.filter(username="nootpuser").exists()
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "otp" in response.data
 
 @pytest.mark.django_db
 def test_signup_age_validation(api_client, db):
@@ -81,7 +81,7 @@ def test_signup_age_validation(api_client, db):
         "whatsapp_number": "+1234567890",
         "consent_agreed": True,
         "consent_version": "1.0",
-        "otp": ""
+        "otp": "123456"
     }
 
     # Too young (e.g., 5 years old)
@@ -89,6 +89,7 @@ def test_signup_age_validation(api_client, db):
     too_young = today.replace(year=today.year - 5)
     payload = base_payload.copy()
     payload["date_of_birth"] = too_young.strftime('%Y-%m-%d')
+    create_valid_otp("age@example.com")
     response = api_client.post(url, payload)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "date_of_birth" in response.data
@@ -97,6 +98,7 @@ def test_signup_age_validation(api_client, db):
     # Too old (e.g., 90 years old)
     too_old = today.replace(year=today.year - 90)
     payload["date_of_birth"] = too_old.strftime('%Y-%m-%d')
+    create_valid_otp("age@example.com")
     response = api_client.post(url, payload)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "date_of_birth" in response.data
@@ -105,6 +107,7 @@ def test_signup_age_validation(api_client, db):
     # Just right (e.g., 20 years old)
     just_right = today.replace(year=today.year - 20)
     payload["date_of_birth"] = just_right.strftime('%Y-%m-%d')
+    create_valid_otp("age@example.com")
     response = api_client.post(url, payload)
     assert response.status_code == status.HTTP_201_CREATED
 
@@ -185,13 +188,16 @@ def test_signup_duplicate_username(api_client, db):
         "date_of_birth": "1990-01-01",
         "consent_agreed": True,
         "consent_version": "1.0",
-        "otp": ""
+        "otp": "123456"
     }
     # First signup
+    create_valid_otp("user1@example.com")
     api_client.post(url, payload)
     
     # Second signup with same username but different email
     payload["email"] = "user2@example.com"
+    payload["otp"] = "123456"
+    create_valid_otp("user2@example.com")
     response = api_client.post(url, payload)
     
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -246,8 +252,9 @@ def test_signup_weak_password(api_client, db):
         "date_of_birth": "1990-01-01",
         "consent_agreed": True,
         "consent_version": "1.0",
-        "otp": ""
+        "otp": "123456"
     }
+    create_valid_otp("weak@example.com")
     response = api_client.post(url, payload)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "password" in response.data
@@ -255,6 +262,7 @@ def test_signup_weak_password(api_client, db):
     # Test common password
     payload["password"] = "password"
     payload["confirm_password"] = "password"
+    create_valid_otp("weak@example.com")
     response = api_client.post(url, payload)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "password" in response.data

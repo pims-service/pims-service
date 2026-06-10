@@ -97,7 +97,29 @@ class TestTimelineScheduler:
             cache.clear()
             assert onboarded_user.get_due_milestone is None
 
-        # Day 96: 3_MONTHS is not due yet
+        # Day 29: 1_MONTH is not due yet (offset is 23 days after T1 completion = Day 30)
+        cache.clear()
+        with freeze_time(base_time + timedelta(days=29)):
+            assert onboarded_user.get_due_milestone is None
+
+        # Day 30: 1_MONTH is due
+        cache.clear()
+        with freeze_time(base_time + timedelta(days=30)):
+            assert onboarded_user.get_due_milestone == '1_MONTH'
+            
+            # Submit 1_MONTH completion
+            ResponseSet.objects.create(
+                user=onboarded_user,
+                questionnaire=questionnaire,
+                status='COMPLETED',
+                milestone='1_MONTH',
+                completed_at=timezone.now()
+            )
+            cache.delete(f"user_{onboarded_user.id}_due_milestone")
+            cache.clear()
+            assert onboarded_user.get_due_milestone is None
+
+        # Day 96: 3_MONTHS is not due yet (T1 completion + 90 days = Day 97)
         cache.clear()
         with freeze_time(base_time + timedelta(days=96)):
             assert onboarded_user.get_due_milestone is None

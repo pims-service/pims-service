@@ -106,7 +106,7 @@ def send_longitudinal_milestone_reminders():
         due_milestone = user.get_due_milestone
         
         # We only remind for longitudinal post-baseline milestones
-        if due_milestone not in ['7_DAYS', '3_MONTHS', '6_MONTHS', '1_YEAR']:
+        if due_milestone not in ['7_DAYS', '1_MONTH', '3_MONTHS', '6_MONTHS', '1_YEAR']:
             continue
 
         # Prevent double-reminding for the same milestone (cached for 15 days, since milestone window is 14 days)
@@ -117,6 +117,7 @@ def send_longitudinal_milestone_reminders():
         # Map milestone to custom reminder message
         milestone_labels = {
             '7_DAYS': '7-day post-test',
+            '1_MONTH': '1-month follow-up',
             '3_MONTHS': '3-month follow-up',
             '6_MONTHS': '6-month follow-up',
             '1_YEAR': '1-year follow-up',
@@ -237,6 +238,8 @@ def run_assessment_graduated_reminders():
             
         if due_milestone == '7_DAYS':
             due_date = user.onboarding_completed_at + timezone.timedelta(days=7)
+        elif due_milestone == '1_MONTH':
+            due_date = ref_date + timezone.timedelta(days=23)
         elif due_milestone == '3_MONTHS':
             due_date = ref_date + timezone.timedelta(days=90)
         elif due_milestone == '6_MONTHS':
@@ -259,6 +262,7 @@ def run_assessment_graduated_reminders():
         
         milestone_labels = {
             '7_DAYS': '7-day post-test',
+            '1_MONTH': '1-month follow-up',
             '3_MONTHS': '3-month follow-up',
             '6_MONTHS': '6-month follow-up',
             '1_YEAR': '1-year follow-up',
