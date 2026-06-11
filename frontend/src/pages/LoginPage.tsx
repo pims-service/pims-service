@@ -91,8 +91,8 @@ const LoginPage: React.FC = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-zinc-700" htmlFor="username">
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-zinc-700" htmlFor="username">
                   {t('login.username')}
                 </label>
                 <div className="relative">
@@ -109,9 +109,9 @@ const LoginPage: React.FC = () => {
                   />
                 </div>
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-zinc-700" htmlFor="password">
+                  <label className="block text-sm font-medium text-zinc-700" htmlFor="password">
                     {t('login.password')}
                   </label>
                   <Link to="/forgot-password" className="text-xs text-zinc-500 hover:text-zinc-900 transition-colors">

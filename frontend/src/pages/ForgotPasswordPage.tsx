@@ -163,8 +163,8 @@ const ForgotPasswordPage: React.FC = () => {
           {phase === 'request' && (
             /* Phase 1: Request Password Reset Form */
             <form onSubmit={handleRequestSubmit} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-zinc-700" htmlFor="reset-email">
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-zinc-700" htmlFor="reset-email">
                   {t('forgot_password.email_label')}
                 </label>
                 <div className="relative">
@@ -210,8 +210,8 @@ const ForgotPasswordPage: React.FC = () => {
           {phase === 'verify' && (
             /* Phase 2: OTP Verification Form */
             <form onSubmit={handleVerifySubmit} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-zinc-700" htmlFor="reset-otp">
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-zinc-700" htmlFor="reset-otp">
                   {t('forgot_password.otp_label')}
                 </label>
                 <div className="relative">
@@ -272,8 +272,8 @@ const ForgotPasswordPage: React.FC = () => {
             <form onSubmit={handleResetSubmit} className="space-y-4">
               <div className="space-y-4">
                 {/* Password */}
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-zinc-700" htmlFor="reset-password">
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-zinc-700" htmlFor="reset-password">
                     {t('forgot_password.new_password_label')}
                   </label>
                   <div className="relative">
@@ -293,8 +293,8 @@ const ForgotPasswordPage: React.FC = () => {
                 </div>
 
                 {/* Confirm Password */}
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-zinc-700" htmlFor="reset-confirm-password">
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-zinc-700" htmlFor="reset-confirm-password">
                     {t('forgot_password.confirm_password_label')}
                   </label>
                   <div className="relative">

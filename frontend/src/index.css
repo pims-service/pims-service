@@ -30,6 +30,15 @@ html[lang^="ur"] :where(button, .btn-minimal) {
   line-height: 1.25;
 }
 
+html[lang^="ur"] label {
+  display: block;
+  line-height: 2.25;
+  min-height: 2rem;
+  margin-bottom: 0.375rem;
+  position: relative;
+  z-index: 1;
+}
+
 html[lang^="ur"] textarea:not(.input-minimal) {
   line-height: 1.75;
 }

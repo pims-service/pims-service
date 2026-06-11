@@ -199,8 +199,8 @@ const RegisterPage: React.FC = () => {
           {phase === 'details' ? (
             <>
               <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-zinc-700" htmlFor="username">{t('register.username')}</label>
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-zinc-700" htmlFor="username">{t('register.username')}</label>
                   <div className="relative">
                     <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                     <input
@@ -216,8 +216,8 @@ const RegisterPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-zinc-700" htmlFor="full_name">{t('register.full_name')}</label>
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-zinc-700" htmlFor="full_name">{t('register.full_name')}</label>
                   <div className="relative">
                     <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                     <input
@@ -233,8 +233,8 @@ const RegisterPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-zinc-700" htmlFor="email">{t('register.email')}</label>
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-zinc-700" htmlFor="email">{t('register.email')}</label>
                   <div className="relative">
                     <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                     <input
@@ -250,8 +250,8 @@ const RegisterPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-zinc-700" htmlFor="whatsapp_number">{t('register.whatsapp_number')}</label>
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-zinc-700" htmlFor="whatsapp_number">{t('register.whatsapp_number')}</label>
                   <div className="relative">
                     <Phone className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                     <input
@@ -267,8 +267,8 @@ const RegisterPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-zinc-700" htmlFor="date_of_birth">{t('register.date_of_birth')}</label>
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-zinc-700" htmlFor="date_of_birth">{t('register.date_of_birth')}</label>
                   <div className="relative">
                     <Calendar className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                     <input
@@ -284,8 +284,8 @@ const RegisterPage: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-zinc-700" htmlFor="password">{t('register.password')}</label>
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-zinc-700" htmlFor="password">{t('register.password')}</label>
                     <PasswordInput
                       id="password"
                       name="password"
@@ -296,8 +296,8 @@ const RegisterPage: React.FC = () => {
                       onChange={handleChange}
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-zinc-700" htmlFor="confirm_password">{t('register.confirm_password')}</label>
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-zinc-700" htmlFor="confirm_password">{t('register.confirm_password')}</label>
                     <PasswordInput
                       id="confirm_password"
                       name="confirm_password"
@@ -346,8 +346,8 @@ const RegisterPage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-zinc-700" htmlFor="otp">Verification Code</label>
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-zinc-700" htmlFor="otp">Verification Code</label>
                 <div className="relative">
                   <Key className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                   <input
