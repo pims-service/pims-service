@@ -7,7 +7,9 @@ import LoadingSpinner from './components/Common/LoadingSpinner';
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+
 const ActivityPage = lazy(() => import('./pages/ActivityPage'));
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
 const GroupsManagementPage = lazy(() => import('./pages/GroupsManagementPage'));
@@ -54,6 +56,11 @@ const App: React.FC = () => {
                 path="/register"
                 element={<div className="container mx-auto px-4 py-8 flex-grow">{checkAuth() ? (isAdminUser() ? <Navigate to="/admin" /> : <Navigate to="/dashboard" />) : <RegisterPage />}</div>}
               />
+              <Route
+                path="/forgot-password"
+                element={<div className="container mx-auto px-4 py-8 flex-grow">{checkAuth() ? (isAdminUser() ? <Navigate to="/admin" /> : <Navigate to="/dashboard" />) : <ForgotPasswordPage />}</div>}
+              />
+
 
               {/* Participant Routes - Wrapped in Container */}
               <Route element={<div className="container mx-auto px-4 py-8 flex-grow"><AuthOnboardingGuard><Outlet /></AuthOnboardingGuard></div>}>

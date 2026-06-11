@@ -161,6 +161,15 @@ class SignupSerializer(serializers.ModelSerializer):
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
+        username = attrs.get('username')
+        if username:
+            from django.db.models import Q
+            try:
+                user = User.objects.get(Q(username__iexact=username) | Q(email__iexact=username))
+                attrs['username'] = user.username
+            except User.DoesNotExist:
+                pass
+
         data = super().validate(attrs)
         
         # Safely handle date_of_birth if it's already a string or datetime
@@ -189,3 +198,92 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         }
         
         return data
+
+
+class ForgotPasswordRequestSerializer(serializers.Serializer):
+    """
+    Validates incoming email for password reset requests.
+    """
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("User with this email does not exist.")
+        return value
+
+
+class VerifyResetOTPSerializer(serializers.Serializer):
+    """
+    Validates reset OTP without resetting password.
+    """
+    email = serializers.EmailField()
+    otp = serializers.CharField(max_length=6)
+
+    def validate(self, attrs):
+        try:
+            user = User.objects.get(email__iexact=attrs['email'])
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"otp": "Invalid verification code."})
+
+        from .models import PasswordResetOTP
+        otp_record = PasswordResetOTP.objects.filter(
+            user=user,
+            is_used=False
+        ).order_by('-created_at').first()
+
+        if not otp_record or otp_record.otp != attrs['otp']:
+            raise serializers.ValidationError({"otp": "Invalid verification code."})
+
+        if not otp_record.is_valid():
+            raise serializers.ValidationError({"otp": "Verification code has expired."})
+
+        return attrs
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+
+    """
+    Validates email, OTP, and new password matching during password reset.
+    """
+    email = serializers.EmailField()
+    otp = serializers.CharField(max_length=6)
+    password = serializers.CharField(write_only=True, min_length=8)
+    confirm_password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['confirm_password']:
+            raise serializers.ValidationError({"password": "Password fields didn't match."})
+
+        # Match user
+        try:
+            user = User.objects.get(email__iexact=attrs['email'])
+        except User.DoesNotExist:
+            # Mask user existence during reset submission as well for security consistency
+            raise serializers.ValidationError({"otp": "Invalid verification code."})
+
+        # Check OTP
+        from .models import PasswordResetOTP
+        otp_record = PasswordResetOTP.objects.filter(
+            user=user,
+            is_used=False
+        ).order_by('-created_at').first()
+
+        if not otp_record or otp_record.otp != attrs['otp']:
+            raise serializers.ValidationError({"otp": "Invalid verification code."})
+
+        if not otp_record.is_valid():
+            raise serializers.ValidationError({"otp": "Verification code has expired."})
+
+        # Strength validation
+        from django.contrib.auth.password_validation import validate_password
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        try:
+            validate_password(attrs['password'], user=user)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError({"password": list(e.messages)})
+
+        # Put user inside validation state for views to retrieve
+        self.user_instance = user
+        self.otp_instance = otp_record
+        return attrs
+

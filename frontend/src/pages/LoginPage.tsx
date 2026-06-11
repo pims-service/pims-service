@@ -6,7 +6,7 @@ import { User, Loader2, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-rea
 import PasswordInput from '../components/Auth/PasswordInput';
 
 const LoginPage: React.FC = () => {
-  
+
   const location = useLocation();
   const [formData, setFormData] = useState({
     username: '',
@@ -26,11 +26,11 @@ const LoginPage: React.FC = () => {
     try {
       const response = await api.post('/login/', formData);
       const data = response.data;
-      
+
       // Persist tokens
       localStorage.setItem('access_token', data.access);
       localStorage.setItem('refresh_token', data.refresh);
-      
+
       if (data.user) {
         // Persist user info for UI/Logic
         localStorage.setItem('user_role', data.user.role);
@@ -38,7 +38,7 @@ const LoginPage: React.FC = () => {
         localStorage.setItem('has_completed_sociodemographic', String(data.user.has_completed_sociodemographic));
         localStorage.setItem('due_milestone', data.user.due_milestone || '');
         localStorage.setItem('is_disqualified', String(data.user.is_disqualified || false));
-        
+
         // Redirection based on role and onboarding status
         if (data.user.role === 'Admin') {
           window.location.href = '/admin';
@@ -75,84 +75,83 @@ const LoginPage: React.FC = () => {
             <p className="text-zinc-500">{t('login.subtitle')}</p>
           </div>
 
-        {successMessage && (
-          <div className="p-4 rounded-lg bg-zinc-800 flex items-start gap-3">
-            <CheckCircle2 className="w-5 h-5 text-white shrink-0 mt-0.5" />
-            <p className="text-sm font-medium text-white">{successMessage}</p>
-          </div>
-        )}
+          {successMessage && (
+            <div className="p-4 rounded-lg bg-zinc-800 flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-white shrink-0 mt-0.5" />
+              <p className="text-sm font-medium text-white">{successMessage}</p>
+            </div>
+          )}
 
-        {error && (
-          <div className="p-4 rounded-lg bg-zinc-50 border border-zinc-200 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-zinc-600 shrink-0 mt-0.5" />
-            <p className="text-sm font-medium text-zinc-700">{error}</p>
-          </div>
-        )}
+          {error && (
+            <div className="p-4 rounded-lg bg-zinc-50 border border-zinc-200 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-zinc-600 shrink-0 mt-0.5" />
+              <p className="text-sm font-medium text-zinc-700">{error}</p>
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-zinc-700" htmlFor="username">
-                {t('login.username')}
-              </label>
-              <div className="relative">
-                <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-zinc-700" htmlFor="username">
+                  {t('login.username')}
+                </label>
+                <div className="relative">
+                  <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    required
+                    placeholder={t('login.username_placeholder')}
+                    className="input-minimal !ps-10"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-zinc-700" htmlFor="password">
+                    {t('login.password')}
+                  </label>
+                  <Link to="/forgot-password" className="text-xs text-zinc-500 hover:text-zinc-900 transition-colors">
+                    {t('login.forgot_password')}
+                  </Link>
+                </div>
+                <PasswordInput
+                  id="password"
+                  name="password"
                   required
-                  placeholder={t('login.username_placeholder')}
-                  className="input-minimal !ps-10"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  placeholder={t('login.password_placeholder')}
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 />
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-zinc-700" htmlFor="password">
-                  {t('login.password')}
-                </label>
-                <Link to="/forgot-password" title="Coming Soon" className="text-xs text-zinc-500 hover:text-zinc-900 transition-colors">
-                  {t('login.forgot_password')}
-                </Link>
-              </div>
-              <PasswordInput
-                id="password"
-                name="password"
-                required
-                placeholder={t('login.password_placeholder')}
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              />
-            </div>
-          </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-minimal w-full flex items-center justify-center gap-2 group py-2.5 mt-2"
+            >
+              {loading ? (
+                <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
+              ) : (
+                <>
+                  {t('login.sign_in')}
+                  <ArrowRight className="w-4 h-4 rtl:rotate-180 rtl:group-hover:-translate-x-0.5 group-hover:translate-x-0.5 transition-transform" />
+                </>
+              )}
+            </button>
+          </form>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-minimal w-full flex items-center justify-center gap-2 group py-2.5 mt-2"
-          >
-            {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
-            ) : (
-              <>
-                {t('login.sign_in')}
-                <ArrowRight className="w-4 h-4 rtl:rotate-180 rtl:group-hover:-translate-x-0.5 group-hover:translate-x-0.5 transition-transform" />
-              </>
-            )}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-zinc-500 pt-2 border-t border-zinc-100">
-          {t('login.no_account')}{' '}
-          <Link to="/register" className="text-zinc-900 font-medium hover:underline underline-offset-4">
-            {t('login.create_one')}
-          </Link>
-        </p>
-      </div>
+          <p className="text-center text-sm text-zinc-500 pt-2 border-t border-zinc-100">
+            {t('login.no_account')}{' '}
+            <Link to="/register" className="text-zinc-900 font-medium hover:underline underline-offset-4">
+              {t('login.create_one')}
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
