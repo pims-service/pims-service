@@ -417,6 +417,8 @@ class AdminSuicideRiskFollowUpsView(APIView):
         from .safety_cache import get_suicide_risk_admin_cache
 
         show = request.query_params.get("show", "opt_in")
+        status_filter = request.query_params.get("status", "PENDING").upper()
+
         payload = get_suicide_risk_admin_cache(refresh_if_missing=True)
         if not payload:
             return DRFResponse(
@@ -436,6 +438,9 @@ class AdminSuicideRiskFollowUpsView(APIView):
             cases = payload["cases"]
         else:
             cases = payload["opt_in_cases"]
+
+        # Filter by status
+        cases = [c for c in cases if c.get("suicide_risk_status", "PENDING").upper() == status_filter]
 
         # Manual Pagination
         page_size = 10
@@ -464,6 +469,39 @@ class AdminSuicideRiskFollowUpsView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class AdminSuicideRiskFollowUpDetailView(APIView):
+    """
+    Update endpoint for suicide risk cases.
+    """
+    permission_classes = (permissions.IsAdminUser,)
+
+    def patch(self, request, pk):
+        try:
+            response_set = ResponseSet.objects.get(id=pk, suicide_risk_triggered=True)
+        except ResponseSet.DoesNotExist:
+            return DRFResponse({"detail": "Case not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        new_status = request.data.get("suicide_risk_status")
+        if not new_status:
+            return DRFResponse({"detail": "suicide_risk_status field is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        new_status = new_status.upper()
+        if new_status not in ["PENDING", "RESOLVED"]:
+            return DRFResponse({"detail": "Invalid status value. Choose PENDING or RESOLVED."}, status=status.HTTP_400_BAD_REQUEST)
+
+        response_set.suicide_risk_status = new_status
+        response_set.save(update_fields=["suicide_risk_status"])
+
+        # Force refresh of cache
+        from .safety_cache import refresh_suicide_risk_admin_cache
+        refresh_suicide_risk_admin_cache()
+
+        return DRFResponse({
+            "response_set_id": str(response_set.id),
+            "suicide_risk_status": response_set.suicide_risk_status
+        }, status=status.HTTP_200_OK)
 
 
 class DueMilestoneView(generics.GenericAPIView):

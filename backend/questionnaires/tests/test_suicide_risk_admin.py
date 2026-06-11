@@ -175,3 +175,141 @@ def test_participant_cannot_access_admin_suicide_risk_api(test_user):
     client.force_authenticate(user=test_user)
     res = client.get("/api/questionnaires/admin/suicide-risk-follow-ups/")
     assert res.status_code == 403
+
+
+@pytest.mark.django_db
+def test_admin_api_filters_by_pending_status_by_default(admin_user, test_user):
+    psy_q = Questionnaire.objects.create(
+        title="Battery", assessment_type="PSYCHOMETRIC", is_active=True
+    )
+    # Pending case (default)
+    ResponseSet.objects.create(
+        user=test_user,
+        questionnaire=psy_q,
+        status="COMPLETED",
+        milestone="SIGNUP",
+        completed_at=timezone.now(),
+        suicide_risk_triggered=True,
+        suicide_risk_opt_in=True,
+        suicide_risk_status="PENDING",
+    )
+    # Resolved case
+    other = test_user.__class__.objects.create_user(
+        username="resolved_user", email="res@example.com", password="password"
+    )
+    ResponseSet.objects.create(
+        user=other,
+        questionnaire=psy_q,
+        status="COMPLETED",
+        milestone="7_DAYS",
+        completed_at=timezone.now(),
+        suicide_risk_triggered=True,
+        suicide_risk_opt_in=True,
+        suicide_risk_status="RESOLVED",
+    )
+    refresh_suicide_risk_admin_cache()
+
+    client = APIClient()
+    client.force_authenticate(user=admin_user)
+    res = client.get("/api/questionnaires/admin/suicide-risk-follow-ups/")
+    assert res.status_code == 200
+    assert len(res.data["cases"]) == 1
+    assert res.data["cases"][0]["username"] == test_user.username
+
+
+@pytest.mark.django_db
+def test_admin_api_filters_by_resolved_status(admin_user, test_user):
+    psy_q = Questionnaire.objects.create(
+        title="Battery", assessment_type="PSYCHOMETRIC", is_active=True
+    )
+    # Pending case
+    ResponseSet.objects.create(
+        user=test_user,
+        questionnaire=psy_q,
+        status="COMPLETED",
+        milestone="SIGNUP",
+        completed_at=timezone.now(),
+        suicide_risk_triggered=True,
+        suicide_risk_opt_in=True,
+        suicide_risk_status="PENDING",
+    )
+    # Resolved case
+    other = test_user.__class__.objects.create_user(
+        username="resolved_user", email="res@example.com", password="password"
+    )
+    ResponseSet.objects.create(
+        user=other,
+        questionnaire=psy_q,
+        status="COMPLETED",
+        milestone="7_DAYS",
+        completed_at=timezone.now(),
+        suicide_risk_triggered=True,
+        suicide_risk_opt_in=True,
+        suicide_risk_status="RESOLVED",
+    )
+    refresh_suicide_risk_admin_cache()
+
+    client = APIClient()
+    client.force_authenticate(user=admin_user)
+    res = client.get("/api/questionnaires/admin/suicide-risk-follow-ups/?status=RESOLVED")
+    assert res.status_code == 200
+    assert len(res.data["cases"]) == 1
+    assert res.data["cases"][0]["username"] == "resolved_user"
+
+
+@pytest.mark.django_db
+def test_patch_updates_status_and_invalidates_cache(admin_user, test_user):
+    psy_q = Questionnaire.objects.create(
+        title="Battery", assessment_type="PSYCHOMETRIC", is_active=True
+    )
+    rs = ResponseSet.objects.create(
+        user=test_user,
+        questionnaire=psy_q,
+        status="COMPLETED",
+        milestone="SIGNUP",
+        completed_at=timezone.now(),
+        suicide_risk_triggered=True,
+        suicide_risk_opt_in=True,
+        suicide_risk_status="PENDING",
+    )
+    refresh_suicide_risk_admin_cache()
+
+    client = APIClient()
+    client.force_authenticate(user=admin_user)
+    res = client.patch(
+        f"/api/questionnaires/admin/suicide-risk-follow-ups/{rs.id}/",
+        {"suicide_risk_status": "RESOLVED"},
+    )
+    assert res.status_code == 200
+    assert res.data["suicide_risk_status"] == "RESOLVED"
+
+    # Verify database was updated
+    rs.refresh_from_db()
+    assert rs.suicide_risk_status == "RESOLVED"
+
+    # Verify cache was updated
+    cached = cache.get(CACHE_KEY)
+    assert cached["cases"][0]["suicide_risk_status"] == "RESOLVED"
+
+
+@pytest.mark.django_db
+def test_patch_denies_participants(test_user):
+    psy_q = Questionnaire.objects.create(
+        title="Battery", assessment_type="PSYCHOMETRIC", is_active=True
+    )
+    rs = ResponseSet.objects.create(
+        user=test_user,
+        questionnaire=psy_q,
+        status="COMPLETED",
+        milestone="SIGNUP",
+        completed_at=timezone.now(),
+        suicide_risk_triggered=True,
+        suicide_risk_opt_in=True,
+    )
+    client = APIClient()
+    client.force_authenticate(user=test_user)
+    res = client.patch(
+        f"/api/questionnaires/admin/suicide-risk-follow-ups/{rs.id}/",
+        {"suicide_risk_status": "RESOLVED"},
+    )
+    assert res.status_code == 403

@@ -27,6 +27,7 @@ type SuicideRiskCase = {
   suicide_risk_opt_in: boolean | null;
   phq9_total: number | null;
   sidas_total: number | null;
+  suicide_risk_status: 'PENDING' | 'RESOLVED';
 };
 
 const AdminSuicideRiskPage: React.FC = () => {
@@ -34,6 +35,8 @@ const AdminSuicideRiskPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFilter, setShowFilter] = useState<'opt_in' | 'all'>('opt_in');
+  const [statusFilter, setStatusFilter] = useState<'PENDING' | 'RESOLVED'>('PENDING');
+  const [statusUpdating, setStatusUpdating] = useState<string | null>(null);
   const [meta, setMeta] = useState({
     last_refreshed_at: null as string | null,
     total_flagged: 0,
@@ -46,11 +49,15 @@ const AdminSuicideRiskPage: React.FC = () => {
   const [hasNext, setHasNext] = useState(false);
   const [hasPrev, setHasPrev] = useState(false);
 
-  const fetchCases = useCallback(async (filter: 'opt_in' | 'all' = showFilter, page: number = 1) => {
+  const fetchCases = useCallback(async (
+    filter: 'opt_in' | 'all' = showFilter,
+    statusVal: 'PENDING' | 'RESOLVED' = statusFilter,
+    page: number = 1
+  ) => {
     try {
       setLoading(true);
       const res = await api.get('/questionnaires/admin/suicide-risk-follow-ups/', {
-        params: { show: filter, page },
+        params: { show: filter, status: statusVal, page },
       });
       setCases(res.data.cases || []);
       setMeta({
@@ -68,11 +75,25 @@ const AdminSuicideRiskPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [showFilter]);
+  }, [showFilter, statusFilter]);
 
   useEffect(() => {
-    fetchCases(showFilter, 1);
-  }, [showFilter, fetchCases]);
+    fetchCases(showFilter, statusFilter, 1);
+  }, [showFilter, statusFilter, fetchCases]);
+
+  const handleUpdateStatus = async (caseId: string, newStatus: 'PENDING' | 'RESOLVED') => {
+    setStatusUpdating(caseId);
+    try {
+      await api.patch(`/questionnaires/admin/suicide-risk-follow-ups/${caseId}/`, {
+        suicide_risk_status: newStatus
+      });
+      await fetchCases(showFilter, statusFilter, currentPage);
+    } catch {
+      alert('Failed to update case status.');
+    } finally {
+      setStatusUpdating(null);
+    }
+  };
 
   const optInBadge = (optIn: boolean | null) => {
     if (optIn === true) {
@@ -115,14 +136,24 @@ const AdminSuicideRiskPage: React.FC = () => {
             </p>
           )}
         </div>
-        <select
-          value={showFilter}
-          onChange={(e) => setShowFilter(e.target.value as 'opt_in' | 'all')}
-          className="text-sm border border-zinc-200 rounded-lg px-3 py-2 bg-white text-zinc-700"
-        >
-          <option value="opt_in">Opted in only</option>
-          <option value="all">All flagged cases</option>
-        </select>
+        <div className="flex gap-2">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as 'PENDING' | 'RESOLVED')}
+            className="text-sm border border-zinc-200 rounded-lg px-3 py-2 bg-white text-zinc-700 font-medium shadow-sm"
+          >
+            <option value="PENDING">Pending Outreach</option>
+            <option value="RESOLVED">Resolved / Contacted</option>
+          </select>
+          <select
+            value={showFilter}
+            onChange={(e) => setShowFilter(e.target.value as 'opt_in' | 'all')}
+            className="text-sm border border-zinc-200 rounded-lg px-3 py-2 bg-white text-zinc-700 font-medium shadow-sm"
+          >
+            <option value="opt_in">Opted in only</option>
+            <option value="all">All flagged cases</option>
+          </select>
+        </div>
       </header>
 
       {error && (
@@ -148,15 +179,16 @@ const AdminSuicideRiskPage: React.FC = () => {
                   <th className="px-6 py-4">Assessment</th>
                   <th className="px-6 py-4">Scores</th>
                   <th className="px-6 py-4">Flagged Date</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
                 {cases.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-zinc-400 italic">
-                      {showFilter === 'opt_in'
-                        ? 'No participants have opted in for researcher follow-up.'
-                        : 'No flagged suicide risk cases found.'}
+                    <td colSpan={7} className="px-6 py-12 text-center text-zinc-400 italic">
+                      {statusFilter === 'PENDING'
+                        ? 'No pending flagged cases found.'
+                        : 'No resolved flagged cases found.'}
                     </td>
                   </tr>
                 ) : (
@@ -196,6 +228,25 @@ const AdminSuicideRiskPage: React.FC = () => {
                           ? new Date(item.completed_at).toLocaleDateString()
                           : '—'}
                       </td>
+                      <td className="px-6 py-4 text-right">
+                        {item.suicide_risk_status === 'RESOLVED' ? (
+                          <button
+                            onClick={() => handleUpdateStatus(item.response_set_id, 'PENDING')}
+                            disabled={statusUpdating === item.response_set_id}
+                            className="px-3 py-1.5 border border-zinc-200 text-zinc-600 rounded-lg hover:bg-zinc-50 transition-colors text-xs font-semibold disabled:opacity-50"
+                          >
+                            {statusUpdating === item.response_set_id ? 'Updating...' : 'Reopen'}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleUpdateStatus(item.response_set_id, 'RESOLVED')}
+                            disabled={statusUpdating === item.response_set_id}
+                            className="px-3 py-1.5 bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
+                          >
+                            {statusUpdating === item.response_set_id ? 'Updating...' : 'Mark Resolved'}
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))
                 )}
@@ -211,7 +262,7 @@ const AdminSuicideRiskPage: React.FC = () => {
               </div>
               <div className="flex items-center gap-1.5">
                 <button
-                  onClick={() => fetchCases(showFilter, currentPage - 1)}
+                  onClick={() => fetchCases(showFilter, statusFilter, currentPage - 1)}
                   disabled={!hasPrev || loading}
                   className={`p-1.5 border border-zinc-200 rounded-lg transition-all ${!hasPrev ? 'opacity-30 cursor-not-allowed' : 'hover:bg-zinc-100'}`}
                 >
@@ -221,7 +272,7 @@ const AdminSuicideRiskPage: React.FC = () => {
                   Page {currentPage}
                 </div>
                 <button
-                  onClick={() => fetchCases(showFilter, currentPage + 1)}
+                  onClick={() => fetchCases(showFilter, statusFilter, currentPage + 1)}
                   disabled={!hasNext || loading}
                   className={`p-1.5 border border-zinc-200 rounded-lg transition-all ${!hasNext ? 'opacity-30 cursor-not-allowed' : 'hover:bg-zinc-100'}`}
                 >

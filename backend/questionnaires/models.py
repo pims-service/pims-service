@@ -89,6 +89,17 @@ class ResponseSet(models.Model):
     scores = models.JSONField(default=dict, blank=True, help_text="Calculated subscale and total scores on submission")
     suicide_risk_triggered = models.BooleanField(default=False)
     suicide_risk_opt_in = models.BooleanField(null=True, blank=True)
+    
+    SUICIDE_RISK_STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('RESOLVED', 'Resolved'),
+    )
+    suicide_risk_status = models.CharField(
+        max_length=15,
+        choices=SUICIDE_RISK_STATUS_CHOICES,
+        default='PENDING',
+        db_index=True
+    )
 
     class Meta:
         indexes = [

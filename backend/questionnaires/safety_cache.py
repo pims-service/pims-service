@@ -38,6 +38,7 @@ def _serialize_case(response_set):
         "completed_at": response_set.completed_at.isoformat() if response_set.completed_at else None,
         "suicide_risk_triggered": response_set.suicide_risk_triggered,
         "suicide_risk_opt_in": response_set.suicide_risk_opt_in,
+        "suicide_risk_status": response_set.suicide_risk_status,
         "phq9_total": scores.get("PHQ9_TOTAL"),
         "sidas_total": scores.get("SIDAS_TOTAL"),
     }
@@ -56,6 +57,7 @@ def fetch_flagged_cases_from_db():
             "completed_at",
             "suicide_risk_triggered",
             "suicide_risk_opt_in",
+            "suicide_risk_status",
             "scores",
             "user__user_id",
             "user__username",

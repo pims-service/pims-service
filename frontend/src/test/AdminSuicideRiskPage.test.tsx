@@ -8,6 +8,7 @@ vi.mock('../services/api', () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),
+    patch: vi.fn(),
   },
 }));
 
@@ -36,6 +37,7 @@ describe('AdminSuicideRiskPage', () => {
             suicide_risk_opt_in: true,
             phq9_total: 17,
             sidas_total: 29,
+            suicide_risk_status: 'PENDING',
           },
         ],
       },
@@ -71,7 +73,7 @@ describe('AdminSuicideRiskPage', () => {
     );
 
     expect(
-      await screen.findByText('No participants have opted in for researcher follow-up.')
+      await screen.findByText('No pending flagged cases found.')
     ).toBeInTheDocument();
   });
 });

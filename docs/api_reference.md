@@ -233,3 +233,56 @@ Polls the status of the enqueued CSV generation process.
     "error_message": null
   }
   ```
+
+### 4.3 Query Suicide Risk Follow Ups
+Retrieves flagged clinical suicide risk protocol alerts. Supports filtering by opt-in status (`show=opt_in` or `show=all`), review status (`status=PENDING` or `status=RESOLVED`), and page-based pagination.
+* **URL:** `/api/questionnaires/admin/suicide-risk-follow-ups/?show=<show>&status=<status>&page=<page_number>`
+* **Method:** `GET`
+* **Auth Required:** Yes (Staff Only)
+* **Response (200 OK):**
+  ```json
+  {
+    "last_refreshed_at": "2026-06-06T15:30:00+05:00",
+    "total_flagged": 12,
+    "opt_in_count": 4,
+    "count": 12,
+    "next": true,
+    "previous": false,
+    "cases": [
+      {
+        "user_id": "8f3d61b2-132d-4ef9-813c-83b3337bf87b",
+        "username": "participant123",
+        "full_name": "John Doe",
+        "email": "participant@example.com",
+        "whatsapp_number": "+923001234567",
+        "milestone": "SIGNUP",
+        "milestone_label": "T0 (Signup)",
+        "completed_at": "2026-06-06T15:24:00+05:00",
+        "suicide_risk_opt_in": true,
+        "suicide_risk_status": "PENDING",
+        "phq9_total": 12,
+        "sidas_total": 24
+      }
+    ]
+  }
+  ```
+
+### 4.4 Update Suicide Risk Follow Up Status
+Updates the review and follow-up outreach status of a flagged safety risk case.
+* **URL:** `/api/questionnaires/admin/suicide-risk-follow-ups/<uuid:response_set_id>/`
+* **Method:** `PATCH`
+* **Auth Required:** Yes (Staff Only)
+* **Request Body:**
+  ```json
+  {
+    "suicide_risk_status": "RESOLVED"
+  }
+  ```
+* **Response (200 OK):**
+  ```json
+  {
+    "response_set_id": "c3e1b782-b13c-423c-a99f-eef41b31278c",
+    "suicide_risk_status": "RESOLVED"
+  }
+  ```
+

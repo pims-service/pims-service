@@ -21,6 +21,7 @@ from .views import (
     AdminT4ResponseListView,
     AdminT4ResponseDetailView,
     AdminSuicideRiskFollowUpsView,
+    AdminSuicideRiskFollowUpDetailView,
     DueMilestoneView
 )
 from .analytics_views import (
@@ -44,6 +45,7 @@ urlpatterns = [
     path('t4-results/', AdminT4ResponseListView.as_view(), name='admin_t4_list'),
     path('t4-results/<uuid:pk>/', AdminT4ResponseDetailView.as_view(), name='admin_t4_detail'),
     path('admin/suicide-risk-follow-ups/', AdminSuicideRiskFollowUpsView.as_view(), name='admin_suicide_risk_follow_ups'),
+    path('admin/suicide-risk-follow-ups/<uuid:pk>/', AdminSuicideRiskFollowUpDetailView.as_view(), name='admin_suicide_risk_follow_up_detail'),
 
     path('due/', DueMilestoneView.as_view(), name='due_milestone'),
     path('', QuestionnaireListView.as_view(), name='questionnaire_list'),
