@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import User
 from .serializers import UserSerializer, SignupSerializer, CustomTokenObtainPairSerializer
+from .delete_utils import get_self_delete_confirmation_phrase
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -28,6 +29,51 @@ class AdminUserUpdateView(generics.UpdateAPIView):
     permission_classes = (permissions.IsAdminUser,)
 
 ADMIN_DELETE_CONFIRMATION = "Confirm Delete"
+
+
+class AccountSelfDeleteView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request):
+        user = request.user
+        if user.is_superuser:
+            return Response(
+                {"detail": "Admin accounts cannot be deleted through this action."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        expected = get_self_delete_confirmation_phrase(user.username)
+        confirmation = (request.data.get("confirmation") or "").strip()
+        password = request.data.get("password") or ""
+
+        if not password:
+            return Response(
+                {"detail": "Password is required to delete your account."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not user.check_password(password):
+            return Response(
+                {"detail": "Incorrect password."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if confirmation != expected:
+            return Response(
+                {
+                    "detail": (
+                        f'You must type "{expected}" exactly to permanently delete your account.'
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        username = user.username
+        user.delete()
+        return Response(
+            {"detail": f'Account "{username}" permanently deleted.'},
+            status=status.HTTP_200_OK,
+        )
 
 
 class AdminUserDeleteView(APIView):

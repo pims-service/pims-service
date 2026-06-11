@@ -58,6 +58,19 @@
     "login": "Log in",
     "signup": "Sign up"
   },
+  "profile": {
+    "delete_account_title": "Delete Account",
+    "delete_account_description": "Permanently delete your account and all associated data, including submissions, assessments, and support history. This action cannot be undone.",
+    "delete_account_confirmation_label": "Type {{phrase}} to confirm",
+    "delete_account_password_label": "Enter your password",
+    "delete_account_password_placeholder": "Your account password",
+    "delete_account_cancel": "Cancel",
+    "delete_account_confirm_button": "Delete My Account",
+    "delete_account_section_title": "Danger Zone",
+    "delete_account_section_description": "Once you delete your account, all of your data will be permanently removed.",
+    "delete_account_open_button": "Delete Account",
+    "account_deleted_success": "Account Deleted Successfully"
+  },
   "dashboard": {
     "welcome": "Welcome Back",
     "initialization": "Initialization",

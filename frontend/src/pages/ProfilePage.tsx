@@ -1,12 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import api from '../services/api';
-import { User, Mail, Calendar, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import api, { usersApi } from '../services/api';
+import { User, Mail, Calendar, Clock, Trash2 } from 'lucide-react';
+import DeleteAccountModal from '../components/Auth/DeleteAccountModal';
 
 const ProfilePage: React.FC = () => {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const fetchUser = async () => {
       try {
         const { data } = await api.get('/users/profile/');
@@ -19,6 +27,36 @@ const ProfilePage: React.FC = () => {
     };
     fetchUser();
   }, []);
+
+  const clearSession = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user_role');
+    localStorage.removeItem('user_full_name');
+    localStorage.removeItem('has_completed_sociodemographic');
+    localStorage.removeItem('due_milestone');
+    localStorage.removeItem('is_disqualified');
+  };
+
+  const handleDeleteAccount = async (confirmation: string, password: string) => {
+    if (!user?.username) return;
+    setDeleteLoading(true);
+    setDeleteError(null);
+    try {
+      await usersApi.deleteAccount(confirmation, password);
+      clearSession();
+      navigate('/', {
+        replace: true,
+        state: { accountDeleted: true },
+      });
+    } catch (err: any) {
+      setDeleteError(err.response?.data?.detail || 'Failed to delete account. Please try again.');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const isAdmin = user?.role_name === 'Admin';
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -37,9 +75,8 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-8">
+    <div className="max-w-2xl mx-auto py-8 space-y-6">
       <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-        {/* Header Header */}
         <div className="bg-zinc-800 p-8 text-white">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center">
@@ -52,7 +89,6 @@ const ProfilePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Content */}
         <div className="p-8 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="p-4 bg-zinc-50 rounded-lg border border-zinc-100">
@@ -85,6 +121,42 @@ const ProfilePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {!isAdmin && (
+      <div className="bg-white border border-red-200 rounded-xl shadow-sm p-6 space-y-4">
+        <div>
+          <h2 className="text-lg font-bold text-red-700">{t('profile.delete_account_section_title')}</h2>
+          <p className="text-sm text-zinc-500 mt-1">{t('profile.delete_account_section_description')}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setDeleteError(null);
+            setShowDeleteModal(true);
+          }}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-red-200 text-red-700 text-sm font-semibold hover:bg-red-50 transition-colors"
+        >
+          <Trash2 size={16} />
+          {t('profile.delete_account_open_button')}
+        </button>
+      </div>
+      )}
+
+      {!isAdmin && (
+      <DeleteAccountModal
+        isOpen={showDeleteModal}
+        username={user?.username || ''}
+        deleting={deleteLoading}
+        error={deleteError}
+        onClose={() => {
+          if (!deleteLoading) {
+            setShowDeleteModal(false);
+            setDeleteError(null);
+          }
+        }}
+        onConfirm={handleDeleteAccount}
+      />
+      )}
     </div>
   );
 };

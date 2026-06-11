@@ -58,6 +58,19 @@
     "login": "لاگ ان",
     "signup": "سائن اپ"
   },
+  "profile": {
+    "delete_account_title": "اکاؤنٹ حذف کریں",
+    "delete_account_description": "اپنا اکاؤنٹ اور تمام متعلقہ ڈیٹا مستقل طور پر حذف کریں، بشمول جمع کرائی گئی سرگرمیاں، تشخیصات، اور سپورٹ ہسٹری۔ یہ عمل واپس نہیں لیا جا سکتا۔",
+    "delete_account_confirmation_label": "تصدیق کے لیے {{phrase}} لکھیں",
+    "delete_account_password_label": "اپنا پاس ورڈ درج کریں",
+    "delete_account_password_placeholder": "آپ کا اکاؤنٹ پاس ورڈ",
+    "delete_account_cancel": "منسوخ کریں",
+    "delete_account_confirm_button": "میرا اکاؤنٹ حذف کریں",
+    "delete_account_section_title": "خطرے کا زون",
+    "delete_account_section_description": "اکاؤنٹ حذف کرنے کے بعد آپ کا تمام ڈیٹا مستقل طور پر ہٹا دیا جائے گا۔",
+    "delete_account_open_button": "اکاؤنٹ حذف کریں",
+    "account_deleted_success": "اکاؤنٹ کامیابی سے حذف ہو گیا"
+  },
   "dashboard": {
     "welcome": "خوش آمدید",
     "initialization": "ابتدا",

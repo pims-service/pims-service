@@ -1,10 +1,22 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, Brain, Zap, Shield, Users } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { ArrowRight, Brain, Zap, Shield, Users, CheckCircle2 } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
+  const location = useLocation();
+  const { t } = useTranslation();
+  const accountDeleted = location.state?.accountDeleted;
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-16 sm:py-24 space-y-24">
+      {accountDeleted && (
+        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+          <p className="text-sm font-semibold text-emerald-800">{t('profile.account_deleted_success')}</p>
+        </div>
+      )}
+
       {/* Hero Section */}
       <div className="flex flex-col items-center text-center space-y-8">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200 text-zinc-600 text-sm font-medium animate-in fade-in slide-in-from-bottom-4 duration-1000">
