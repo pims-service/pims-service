@@ -33,11 +33,15 @@ def create_zip_archive(source_dir, output_path):
         'build', 
         'deploy_configs',  # Don't upload deployment credentials folder
         'scratch',
+        'logs',
+        'questions',
     }
     exclude_files = {
         ARCHIVE_NAME,
         '.env',
         'db.sqlite3',
+        'celerybeat-schedule',
+        'celerybeat-schedule.db',
     }
 
     with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
@@ -46,7 +50,7 @@ def create_zip_archive(source_dir, output_path):
             dirs[:] = [d for d in dirs if d not in exclude_dirs]
             
             for file in files:
-                if file in exclude_files:
+                if file in exclude_files or file.startswith('django.log'):
                     continue
                 
                 full_path = os.path.join(root, file)
