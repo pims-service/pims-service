@@ -588,7 +588,7 @@ const QuestionnairePage: React.FC = () => {
                   {/* Bilingual Question Text or Single Language Fallback */}
                   {urdu ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start mb-4">
-                      <div className="text-left">
+                      <div className="text-left font-latin">
                         <span className="text-[10px] font-bold text-zinc-400 uppercase block mb-1">English</span>
                         <p className="text-base md:text-lg font-medium text-zinc-800 leading-relaxed">{english}</p>
                       </div>
@@ -598,7 +598,7 @@ const QuestionnairePage: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="text-left mb-4">
+                    <div className="text-left mb-4 font-latin">
                       <p className="text-base md:text-lg font-medium text-zinc-800 leading-relaxed">{english}</p>
                     </div>
                   )}

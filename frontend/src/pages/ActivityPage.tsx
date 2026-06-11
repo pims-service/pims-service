@@ -309,7 +309,7 @@ const ActivityPage: React.FC = () => {
 
         {categoryDetail && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-zinc-50/50 rounded-xl p-4 border border-zinc-300 text-xs text-zinc-600 mt-1 mb-2">
-            <div className="space-y-1">
+            <div className="space-y-1 font-latin">
               <p className="font-bold text-zinc-800 text-sm">{categoryDetail.label.en}</p>
               <p className="italic">{categoryDetail.definition.en}</p>
               <p className="text-zinc-500 font-medium">{categoryDetail.example.en}</p>
@@ -372,7 +372,7 @@ const ActivityPage: React.FC = () => {
           </div>
           {bilingualDesc.ur && bilingualDesc.ur !== bilingualDesc.en ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-zinc-700 leading-relaxed text-sm font-medium">
-              <div>{bilingualDesc.en}</div>
+              <div className="font-latin">{bilingualDesc.en}</div>
               <div className="text-right font-urdu" dir="rtl">{bilingualDesc.ur}</div>
             </div>
           ) : (

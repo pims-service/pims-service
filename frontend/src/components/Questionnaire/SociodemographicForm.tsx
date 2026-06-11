@@ -135,7 +135,7 @@ const SociodemographicForm: React.FC<SociodemographicFormProps> = ({
             >
               {/* Question Text (Bilingual) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 mb-8">
-                <div className="space-y-2">
+                <div className="space-y-2 font-latin">
                   <span className="text-xs font-black uppercase tracking-wider text-zinc-400">English</span>
                   <p className="text-lg md:text-xl font-medium text-zinc-900 leading-snug">
                     {en}

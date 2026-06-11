@@ -70,7 +70,7 @@ const SafetyPanelModal: React.FC<SafetyPanelModalProps> = ({ isOpen, onConfirm, 
             <ShieldAlert className="w-5 h-5 animate-pulse" />
           </div>
           <div className="flex-1 flex justify-between items-center">
-            <h2 className="text-sm font-bold text-red-900 tracking-wide uppercase">Support Resources Available</h2>
+            <h2 className="text-sm font-bold text-red-900 tracking-wide uppercase font-latin">Support Resources Available</h2>
             <h3 className="text-sm font-bold text-red-900 font-urdu" dir="rtl">امدادی وسائل دستیاب ہیں</h3>
           </div>
         </div>
@@ -79,7 +79,7 @@ const SafetyPanelModal: React.FC<SafetyPanelModalProps> = ({ isOpen, onConfirm, 
         <div className="p-5 md:p-6 space-y-4 flex-1">
           {/* Dual Language Warning Message */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b border-zinc-150 text-xs md:text-sm">
-            <p className="text-zinc-650 font-medium leading-relaxed">
+            <p className="text-zinc-650 font-medium leading-relaxed font-latin">
               Your responses suggest you may be experiencing distress. To protect your well-being, please reach out to one of the support services below. You are not alone.
             </p>
             <p className="text-zinc-650 font-medium leading-relaxed font-urdu text-right" dir="rtl">
@@ -96,16 +96,16 @@ const SafetyPanelModal: React.FC<SafetyPanelModalProps> = ({ isOpen, onConfirm, 
               >
                 <div className="space-y-1 flex-1">
                   <div className="flex flex-wrap items-center gap-x-2">
-                    <span className="font-bold text-zinc-900 text-sm">{res.name}</span>
+                    <span className="font-bold text-zinc-900 text-sm font-latin">{res.name}</span>
                     <span className="text-zinc-400 text-xs">|</span>
                     <span className="font-bold text-zinc-700 text-sm font-urdu" dir="rtl">{res.urduName}</span>
                   </div>
                   
                   <div className="text-[11px] text-zinc-500 leading-normal">
-                    <span>{res.desc}</span> <span className="font-urdu" dir="rtl">{res.descUrdu}</span>
+                    <span className="font-latin">{res.desc}</span> <span className="font-urdu" dir="rtl">{res.descUrdu}</span>
                   </div>
                   
-                  <div className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider">
+                  <div className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider font-latin">
                     Timing: {res.timing}
                   </div>
                 </div>
@@ -142,7 +142,7 @@ const SafetyPanelModal: React.FC<SafetyPanelModalProps> = ({ isOpen, onConfirm, 
             </div>
             
             <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-1.5 flex-1">
-              <div className="text-left">
+              <div className="text-left font-latin">
                 <span className="text-xs font-bold text-zinc-900">Request follow-up from researcher</span>
                 <p className="text-[10px] text-zinc-400">We will check in with you in 48 hours.</p>
               </div>

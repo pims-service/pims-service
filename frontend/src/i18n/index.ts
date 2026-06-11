@@ -14,6 +14,14 @@ const resources = {
   },
 };
 
+const normalizeLanguage = (lng: string) => (lng?.startsWith('ur') ? 'ur' : 'en');
+
+const applyDocumentLanguage = (lng: string) => {
+  const normalized = normalizeLanguage(lng);
+  document.documentElement.lang = normalized;
+  document.documentElement.dir = normalized === 'ur' ? 'rtl' : 'ltr';
+};
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -25,14 +33,7 @@ i18n
     },
   });
 
-// Automatically update dir attribute on language change for RTL support
-i18n.on('languageChanged', (lng) => {
-  document.documentElement.dir = i18n.dir(lng);
-  document.documentElement.lang = lng;
-});
-
-// Set initial direction
-document.documentElement.dir = i18n.dir(i18n.language);
-document.documentElement.lang = i18n.language || 'en';
+i18n.on('languageChanged', applyDocumentLanguage);
+applyDocumentLanguage(i18n.language || 'en');
 
 export default i18n;

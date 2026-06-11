@@ -101,7 +101,7 @@ const DashboardPage: React.FC = () => {
             <div className="border-t border-zinc-100 my-6"></div>
             
             <div className="space-y-6 text-left">
-              <div className="space-y-2">
+              <div className="space-y-2 font-latin">
                 <span className="text-xs font-black uppercase tracking-wider text-zinc-400">English</span>
                 <p className="text-zinc-650 font-medium leading-relaxed">
                   Thank you for your interest in our study. Based on your responses, you do not meet the inclusion criteria for this research experiment. We sincerely appreciate your time and willingness to participate.
@@ -207,22 +207,23 @@ const DashboardPage: React.FC = () => {
             if (!details) return null;
 
             return (
-              <section className={`border-2 rounded-xl p-6 md:p-8 bg-gradient-to-r shadow-sm ${details.colorClass.split(' ').slice(0, 2).join(' ')}`}>
+              <section className={`border-2 rounded-xl p-6 md:p-8 bg-gradient-to-r shadow-sm font-latin ${details.colorClass.split(' ').slice(0, 2).join(' ')}`} dir="ltr">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white shrink-0 ${details.colorClass.split(' ').slice(4, 5).join(' ')}`}>
                       <ClipboardCheck size={24} />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-zinc-900">{details.title}</h3>
-                      <p className="text-sm text-zinc-500 mt-0.5">{details.description}</p>
+                      <h3 className="text-lg font-bold text-zinc-900 leading-snug">{details.title}</h3>
+                      <p className="text-sm text-zinc-500 mt-0.5 leading-normal">{details.description}</p>
                     </div>
                   </div>
                   <Link
                     to={`/questionnaire/${posttestQuestionnaire.id}?milestone=${userProfile.due_milestone}`}
-                    className={`px-6 py-3 text-white rounded-lg font-semibold text-sm transition-colors flex items-center gap-2 shrink-0 ${details.colorClass.split(' ').slice(4, 6).join(' ')}`}
+                    className={`inline-flex items-center justify-center gap-2 px-6 py-3 min-h-11 text-white rounded-lg font-semibold text-sm leading-none transition-colors shrink-0 ${details.colorClass.split(' ').slice(4, 6).join(' ')}`}
                   >
-                    {details.buttonText} <ArrowRight size={16} />
+                    {details.buttonText}
+                    <ArrowRight size={16} className="shrink-0" />
                   </Link>
                 </div>
               </section>
@@ -304,13 +305,13 @@ const DashboardPage: React.FC = () => {
         <div className="space-y-6">
 
 
-          <div className="border border-zinc-200 rounded-xl p-6 text-center bg-white shadow-sm">
-            <div className="inline-block p-5 rounded-xl bg-zinc-800 text-white mb-4">
+          <div className="border border-zinc-200 rounded-xl p-6 bg-white shadow-sm flex flex-col items-center text-center">
+            <div className="flex items-center justify-center p-5 rounded-xl bg-zinc-800 text-white mb-4 leading-none">
               <div className="text-3xl font-bold">{userProfile?.completion_rate || 0}%</div>
             </div>
-            <h4 className="font-semibold text-zinc-800 text-sm">{t('dashboard.completion_rate')}</h4>
-            <p className="text-zinc-400 text-xs mt-1">
-              {t('dashboard.performance')}: {getPerformanceLabel(userProfile?.completion_rate || 0)}
+            <h4 className="font-semibold text-zinc-800 text-sm w-full text-center leading-normal">{t('dashboard.completion_rate')}</h4>
+            <p className="text-zinc-400 text-xs mt-1 w-full text-center leading-normal">
+              {t('dashboard.performance')}: <span dir="ltr" className="inline-block font-latin">{getPerformanceLabel(userProfile?.completion_rate || 0)}</span>
             </p>
           </div>
         </div>
