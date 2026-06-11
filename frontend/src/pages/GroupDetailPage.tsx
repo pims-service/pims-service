@@ -9,9 +9,11 @@ import {
   Edit3, 
   Save, 
   X,
-  ArrowLeft
+  ArrowLeft,
+  Trash2
 } from 'lucide-react';
-import { getGroupDetail, updateGroup } from '../services/api';
+import { getGroupDetail, updateGroup, usersApi } from '../services/api';
+import DeleteUserModal from '../components/Admin/DeleteUserModal';
 
 interface Participant {
   user_id: number;
@@ -42,6 +44,9 @@ const GroupDetailPage: React.FC = () => {
   
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ name: '', description: '' });
+  const [deleteTarget, setDeleteTarget] = useState<Participant | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const fetchDetail = async () => {
     if (!id) return;
@@ -76,6 +81,25 @@ const GroupDetailPage: React.FC = () => {
     } catch (err) {
       console.error('Failed to update group', err);
       setError('Failed to save changes. Please try again.');
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deleteTarget || !group) return;
+    setDeleteLoading(true);
+    setDeleteError(null);
+    try {
+      await usersApi.deleteUser(deleteTarget.user_id, 'Confirm Delete');
+      setGroup({
+        ...group,
+        participants: group.participants.filter((p) => p.user_id !== deleteTarget.user_id),
+        member_count: Math.max(0, group.member_count - 1),
+      });
+      setDeleteTarget(null);
+    } catch (err: any) {
+      setDeleteError(err.response?.data?.detail || 'Failed to delete user. Please try again.');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -190,6 +214,7 @@ const GroupDetailPage: React.FC = () => {
                     <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Day Number</th>
                     <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Daily Submissions</th>
                     <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
@@ -236,11 +261,24 @@ const GroupDetailPage: React.FC = () => {
                            </div>
                         )}
                       </td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDeleteError(null);
+                            setDeleteTarget(p);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-700 text-xs font-semibold hover:bg-red-50 transition-colors"
+                        >
+                          <Trash2 size={14} />
+                          Delete
+                        </button>
+                      </td>
                     </tr>
                   ))}
                   {group.participants.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="px-6 py-16 text-center text-zinc-400 italic text-sm">
+                      <td colSpan={5} className="px-6 py-16 text-center text-zinc-400 italic text-sm">
                          No participants assigned to this experimental segment.
                       </td>
                     </tr>
@@ -250,6 +288,21 @@ const GroupDetailPage: React.FC = () => {
             </div>
           </div>
       </div>
+
+      <DeleteUserModal
+        isOpen={Boolean(deleteTarget)}
+        username={deleteTarget?.username || ''}
+        fullName={deleteTarget?.full_name}
+        deleting={deleteLoading}
+        error={deleteError}
+        onClose={() => {
+          if (!deleteLoading) {
+            setDeleteTarget(null);
+            setDeleteError(null);
+          }
+        }}
+        onConfirm={handleDeleteUser}
+      />
     </div>
   );
 };

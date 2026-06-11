@@ -14,6 +14,10 @@
     "server_error": "Server error (500). Please contact administration.",
     "unexpected_error": "An unexpected error occurred. Please try again."
   },
+  "auth": {
+    "show_password": "Show password",
+    "hide_password": "Hide password"
+  },
   "register": {
     "title": "Create an account",
     "subtitle": "Enter your details to get started",

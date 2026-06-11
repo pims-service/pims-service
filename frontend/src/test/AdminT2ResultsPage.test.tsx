@@ -49,10 +49,10 @@ describe.sequential('AdminT2ResultsPage', () => {
     );
 
     // Verify loading indicator is shown
-    expect(screen.getByText('Loading T2 follow-up data...')).toBeInTheDocument();
+    expect(screen.getByText('Loading 3-month assessment data...')).toBeInTheDocument();
 
     // Wait for the data to load and verify columns and row details
-    expect(await screen.findByText('T2 Post-Test Results')).toBeInTheDocument();
+    expect(await screen.findByText('3-Month Assessment Results')).toBeInTheDocument();
     expect(await screen.findByText('John Doe')).toBeInTheDocument();
     expect(await screen.findByText(/johndoe/i)).toBeInTheDocument();
     expect((await screen.findAllByText('Group A')).length).toBeGreaterThan(0);
@@ -69,7 +69,7 @@ describe.sequential('AdminT2ResultsPage', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('T2 Post-Test Results')).toBeInTheDocument();
+      expect(screen.getByText('3-Month Assessment Results')).toBeInTheDocument();
     });
 
     const exportBtn = screen.getByRole('button', { name: /Export CSV/i });
@@ -129,7 +129,7 @@ describe.sequential('AdminT2ResultsPage', () => {
     expect(questionnairesApi.getAdminT2Detail).toHaveBeenCalledWith('t2-sub-1');
 
     await waitFor(() => {
-      expect(screen.getByText('T2 Response Detail')).toBeInTheDocument();
+      expect(screen.getByText('3-Month Assessment Response Detail')).toBeInTheDocument();
       expect(screen.getByText('How satisfied are you?')).toBeInTheDocument();
       expect(screen.getByText('Very satisfied')).toBeInTheDocument();
     });

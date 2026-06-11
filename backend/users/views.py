@@ -28,6 +28,8 @@ class AdminUserUpdateView(generics.UpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = (permissions.IsAdminUser,)
 
+ADMIN_DELETE_CONFIRMATION = "Confirm Delete"
+
 
 class AccountSelfDeleteView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
@@ -70,6 +72,46 @@ class AccountSelfDeleteView(APIView):
         user.delete()
         return Response(
             {"detail": f'Account "{username}" permanently deleted.'},
+            status=status.HTTP_200_OK,
+        )
+
+
+class AdminUserDeleteView(APIView):
+    permission_classes = (permissions.IsAdminUser,)
+
+    def post(self, request, pk):
+        confirmation = (request.data.get("confirmation") or "").strip()
+        if confirmation != ADMIN_DELETE_CONFIRMATION:
+            return Response(
+                {
+                    "detail": (
+                        f'You must type "{ADMIN_DELETE_CONFIRMATION}" exactly to permanently delete this user.'
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            user = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.pk == request.user.pk:
+            return Response(
+                {"detail": "You cannot delete your own account."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if user.is_superuser:
+            return Response(
+                {"detail": "Admin accounts cannot be deleted through this action."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        username = user.username
+        user.delete()
+        return Response(
+            {"detail": f'User "{username}" permanently deleted.'},
             status=status.HTTP_200_OK,
         )
 

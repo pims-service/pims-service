@@ -165,7 +165,7 @@ const AdminT1ResultsPage: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <RotateCw className="w-8 h-8 text-zinc-400 animate-spin" />
-        <p className="text-zinc-500 font-medium text-sm">Loading T1 follow-up data...</p>
+        <p className="text-zinc-500 font-medium text-sm">Loading 1-week assessment data...</p>
       </div>
     );
   }
@@ -175,10 +175,10 @@ const AdminT1ResultsPage: React.FC = () => {
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-zinc-200 pb-6">
         <div className="space-y-1 flex-1">
           <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium mb-1">
-            <ClipboardCheck size={14} /> T1 Follow-up Data
+            <ClipboardCheck size={14} /> 1-Week Assessment
           </div>
-          <h1 className="text-3xl font-bold text-zinc-900">T1 Post-Test Results</h1>
-          <p className="text-zinc-500 text-sm">T1 post-test psychometric results from completed participants</p>
+          <h1 className="text-3xl font-bold text-zinc-900">1-Week Assessment Results</h1>
+          <p className="text-zinc-500 text-sm">Psychometric results from completed 1-week assessments</p>
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
@@ -311,7 +311,7 @@ const AdminT1ResultsPage: React.FC = () => {
                 {filteredSubmissions.length === 0 && (
                   <tr>
                     <td colSpan={5} className="px-6 py-16 text-center text-zinc-400 italic text-sm">
-                      No T1 post-test submissions yet. Results will appear here when participants complete their Day 7 follow-up questionnaires.
+                      No 1-week assessment submissions yet. Results will appear here when participants complete their Day 7 follow-up questionnaires.
                     </td>
                   </tr>
                 )}
@@ -368,7 +368,7 @@ const AdminT1ResultsPage: React.FC = () => {
             >
               <div className="p-6 border-b border-zinc-200 flex items-center justify-between">
                 <div>
-                  <h3 className="text-xl font-bold text-zinc-900">T1 Response Detail</h3>
+                  <h3 className="text-xl font-bold text-zinc-900">1-Week Assessment Response Detail</h3>
                   <p className="text-sm text-zinc-500 mt-0.5">{selectedSubmission.full_name}</p>
                 </div>
                 <button

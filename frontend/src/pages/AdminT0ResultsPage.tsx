@@ -165,7 +165,7 @@ const AdminT0ResultsPage: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <RotateCw className="w-8 h-8 text-zinc-400 animate-spin" />
-        <p className="text-zinc-500 font-medium text-sm">Loading T0 baseline data...</p>
+        <p className="text-zinc-500 font-medium text-sm">Loading onboarding assessment data...</p>
       </div>
     );
   }
@@ -175,10 +175,10 @@ const AdminT0ResultsPage: React.FC = () => {
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-zinc-200 pb-6">
         <div className="space-y-1 flex-1">
           <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium mb-1">
-            <ClipboardCheck size={14} /> T0 Baseline Data
+            <ClipboardCheck size={14} /> Onboarding Assessment
           </div>
-          <h1 className="text-3xl font-bold text-zinc-900">T0 Baseline Results</h1>
-          <p className="text-zinc-500 text-sm">T0 baseline psychometric quiz results from completed participants</p>
+          <h1 className="text-3xl font-bold text-zinc-900">Onboarding Assessment Results</h1>
+          <p className="text-zinc-500 text-sm">Baseline psychometric results from completed onboarding participants</p>
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">

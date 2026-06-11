@@ -138,6 +138,8 @@ export const updateGroup = groupsApi.update;
 export const usersApi = {
   deleteAccount: (confirmation: string, password: string) =>
     api.post('/users/profile/delete/', { confirmation, password }),
+  deleteUser: (userId: number, confirmation: string) =>
+    api.post(`/users/admin/users/${userId}/delete/`, { confirmation }),
 };
 
 export default api;

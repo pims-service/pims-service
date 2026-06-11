@@ -11,12 +11,14 @@ def participants(db, test_group):
     # User 1: Has completed baseline, hasn't submitted today
     u1 = User.objects.create_user(
         username="p1", email="p1@test.com", password="pwd", 
-        group=test_group, has_completed_sociodemographic=True
+        group=test_group, has_completed_sociodemographic=True,
+        onboarding_completed_at=timezone.now()
     )
     # User 2: Has completed baseline, ALREADY submitted today
     u2 = User.objects.create_user(
         username="p2", email="p2@test.com", password="pwd", 
-        group=test_group, has_completed_sociodemographic=True
+        group=test_group, has_completed_sociodemographic=True,
+        onboarding_completed_at=timezone.now()
     )
     # User 3: Has NOT completed baseline (should not be reminded of daily tasks)
     u3 = User.objects.create_user(

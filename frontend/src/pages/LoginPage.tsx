@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../services/api';
 import { useTranslation } from 'react-i18next';
-import { User, Lock, Loader2, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { User, Loader2, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
+import PasswordInput from '../components/Auth/PasswordInput';
 
 const LoginPage: React.FC = () => {
   
@@ -118,19 +119,14 @@ const LoginPage: React.FC = () => {
                   {t('login.forgot_password')}
                 </Link>
               </div>
-              <div className="relative">
-                <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  placeholder={t('login.password_placeholder')}
-                  className="input-minimal !ps-10"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                />
-              </div>
+              <PasswordInput
+                id="password"
+                name="password"
+                required
+                placeholder={t('login.password_placeholder')}
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              />
             </div>
           </div>
 

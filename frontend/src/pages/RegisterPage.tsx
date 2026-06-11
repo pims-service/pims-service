@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import { useTranslation } from 'react-i18next';
-import { User, Mail, Phone, Lock, Calendar, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Loader2, Key, RefreshCw } from 'lucide-react';
+import { User, Mail, Phone, Calendar, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Loader2, Key, RefreshCw } from 'lucide-react';
+import PasswordInput from '../components/Auth/PasswordInput';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -285,35 +286,27 @@ const RegisterPage: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-zinc-700" htmlFor="password">{t('register.password')}</label>
-                    <div className="relative">
-                      <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                      <input
-                        id="password"
-                        name="password"
-                        type="password"
-                        required
-                        placeholder={t('register.password_placeholder')}
-                        className={`input-minimal !ps-10 ${errors.password ? 'border-black border-2 ring-0' : ''}`}
-                        value={formData.password}
-                        onChange={handleChange}
-                      />
-                    </div>
+                    <PasswordInput
+                      id="password"
+                      name="password"
+                      required
+                      placeholder={t('register.password_placeholder')}
+                      className={errors.password ? 'border-black border-2 ring-0' : ''}
+                      value={formData.password}
+                      onChange={handleChange}
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-zinc-700" htmlFor="confirm_password">{t('register.confirm_password')}</label>
-                    <div className="relative">
-                      <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                      <input
-                        id="confirm_password"
-                        name="confirm_password"
-                        type="password"
-                        required
-                        placeholder={t('register.confirm_password_placeholder')}
-                        className={`input-minimal !ps-10 ${errors.password ? 'border-black border-2 ring-0' : ''}`}
-                        value={formData.confirm_password}
-                        onChange={handleChange}
-                      />
-                    </div>
+                    <PasswordInput
+                      id="confirm_password"
+                      name="confirm_password"
+                      required
+                      placeholder={t('register.confirm_password_placeholder')}
+                      className={errors.confirm_password || errors.password ? 'border-black border-2 ring-0' : ''}
+                      value={formData.confirm_password}
+                      onChange={handleChange}
+                    />
                   </div>
                 </div>
               </div>

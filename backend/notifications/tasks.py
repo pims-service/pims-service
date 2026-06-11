@@ -17,6 +17,41 @@ def send_notification(self, notification_id):
             notification_id,
             notification.user_id,
         )
+        
+        # Send actual email if n_type is 'email' and it contains 'reflection'
+        if notification.n_type == 'email' and 'reflection' in notification.message.lower():
+            from django.core.mail import EmailMultiAlternatives
+            from django.conf import settings
+            
+            user = notification.user
+            name = user.display_name
+            
+            subject = "PIMS Daily Activity Reminder"
+            text_content = f"Hi {name},\n\n{notification.message}\n\nPlease complete your reflection today: https://psycheversity.com/dashboard"
+            
+            html_content = f"""
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e4e4e7; border-radius: 8px;">
+                <h2 style="color: #18181b; margin-top: 0;">Daily Reflection Reminder</h2>
+                <p style="font-size: 16px; color: #18181b;">Hi {name},</p>
+                <p style="color: #3f3f46; font-size: 16px; line-height: 1.5;">{notification.message}</p>
+                <div style="margin: 25px 0;">
+                    <a href="https://psycheversity.com/dashboard" style="background-color: #18181b; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Complete Today's Reflection</a>
+                </div>
+                <hr style="border: 0; border-top: 1px solid #e4e4e7; margin: 20px 0;">
+                <p style="color: #71717a; font-size: 12px; margin-bottom: 0;">This is an automated message from the Psychological Intervention Platform. Please do not reply directly to this email.</p>
+            </div>
+            """
+            
+            msg = EmailMultiAlternatives(
+                subject=subject,
+                body=text_content,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[user.email]
+            )
+            msg.attach_alternative(html_content, "text/html")
+            msg.send(fail_silently=False)
+            logger.info("Successfully sent daily reflection email to %s", user.email)
+            
         notification.status = 'sent'
         notification.save(update_fields=['status'])
         return {'status': 'sent', 'notification_id': notification_id}
@@ -52,6 +87,10 @@ def check_and_send_daily_reminders(reminder_type='morning'):
     
     reminded_count = 0
     for user in participants:
+        # Check if the user has an active daily reflection block today
+        if not user.current_experiment_day:
+            continue
+
         # Check if user submitted today
         has_submitted = Submission.objects.filter(
             user=user,

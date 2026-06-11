@@ -37,12 +37,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate }) => {
 
   const navItems = [
     { label: 'Overview', path: '/admin', icon: <LayoutDashboard size={18} /> },
-    { label: 'T0 Results', path: '/admin/t0-data', icon: <ClipboardCheck size={18} /> },
-    { label: 'T1 Results', path: '/admin/t1-data', icon: <ClipboardCheck size={18} /> },
-    { label: 'T-First-Month Results', path: '/admin/t-first-month-data', icon: <ClipboardCheck size={18} /> },
-    { label: 'T2 Results', path: '/admin/t2-data', icon: <ClipboardCheck size={18} /> },
-    { label: 'T3 Results', path: '/admin/t3-data', icon: <ClipboardCheck size={18} /> },
-    { label: 'T4 Results', path: '/admin/t4-data', icon: <ClipboardCheck size={18} /> },
+    { label: 'Onboarding Assessment', path: '/admin/t0-data', icon: <ClipboardCheck size={18} /> },
+    { label: '1-Week Assessment', path: '/admin/t1-data', icon: <ClipboardCheck size={18} /> },
+    { label: '1-Month Assessment', path: '/admin/t-first-month-data', icon: <ClipboardCheck size={18} /> },
+    { label: '3-Month Assessment', path: '/admin/t2-data', icon: <ClipboardCheck size={18} /> },
+    { label: '6-Month Assessment', path: '/admin/t3-data', icon: <ClipboardCheck size={18} /> },
+    { label: '1-Year Assessment', path: '/admin/t4-data', icon: <ClipboardCheck size={18} /> },
     { label: 'Groups Management', path: '/admin/groups', icon: <Users size={18} /> },
     { label: 'User Queries', path: '/admin/support-queries', icon: <MessageSquare size={18} />, badge: openQueriesCount },
     { label: 'Follow-ups', path: '/admin/follow-ups', icon: <PhoneCall size={18} /> },
