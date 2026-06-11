@@ -112,3 +112,20 @@ During any psychometric milestone completion (T0 SIGNUP, T1, T2, T3, T4), the re
 2. **Immediate UI Action:** The user is immediately shown a **Safety Panel Modal** displaying local Pakistani emergency helpline numbers (Umang, Taskeen, Rescue 1122, Edhi/Chhipa).
 3. **Opt-In Check-In:** The user can opt-in to request a follow-up call from a researcher.
 4. **Administrative Alert:** The backend enqueues a notification to the study administrator and flags the user on the Admin Dashboard within the **Safety Risk Panel** (supported by a cached Redis lookup).
+
+### 3.5 Month-3 Longitudinal Feedback Report (T2 Milestone)
+Upon successful submission of the `3_MONTHS` (T2) psychometric questionnaire wave:
+1. **Asynchronous Trigger**: A Celery task (`send_month_3_report_task`) is queued on transaction commit to compile participant scores.
+2. **Data Aggregation**: The task fetches overall and subscale psychometric scores (`PERMA_OVERALL`, `PERMA_P`, `PERMA_E`, `PERMA_R`, `PERMA_M`, `PERMA_A`, `PERMA_N`, `PERMA_H`, `PERMA_LON`) across all completed milestones: `SIGNUP` (T0), `7_DAYS` (T1), `1_MONTH` (1-Month), and `3_MONTHS` (T2).
+3. **Headless Visualizations**: A 3x3 grid of progression line charts is rendered using Matplotlib in headless mode. Subscales use a strict theme coordinate matching the brand's primary color `#2E4E90` and marker points in gold `#C8A951` to map longitudinal variations.
+4. **Bilingual Formatting & Typography**:
+   * The template uses standard HTML/CSS parsed via WeasyPrint.
+   * Right-to-Left (RTL) styling is applied for Urdu text layouts (`dir="rtl"`, `lang="ur"`).
+   * Visual script typography renders in true Nastaleeq layout using the registered `Jameel Noori Nastaleeq` font.
+5. **Neutral Retention Protocol**:
+   * To prevent skewing the experimental design, the report presents only objective trajectories. It must contain no congratulatory text, clinical interpretations, or peer comparisons.
+   * The template strictly incorporates a neutral call-to-action to encourage continued tracking:
+     * *English*: "Please continue to your next entries."
+     * *Urdu*: "براہ کرم اپنے اگلے اندراجات جاری رکھیں۔"
+6. **Delivery**: The resulting PDF is emailed as a secure attachment (`pims_month3_report.pdf`) to the participant's verified email address.
+

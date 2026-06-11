@@ -195,7 +195,7 @@ Saves responses for a psychometric milestone.
 
 ---
 
-## 4. Admin Tools (Exports)
+## 4. Admin Tools
 
 Admin endpoints require the user to have staff/superuser database privileges.
 
@@ -233,3 +233,184 @@ Polls the status of the enqueued CSV generation process.
     "error_message": null
   }
   ```
+
+### 4.3 Query Suicide Risk Follow Ups
+Retrieves flagged clinical suicide risk protocol alerts. Supports page-based pagination (10 items per page).
+* **URL:** `/api/questionnaires/admin/suicide-risk-follow-ups/?page=<page_number>`
+* **Method:** `GET`
+* **Auth Required:** Yes (Staff Only)
+* **Response (200 OK):**
+  ```json
+  {
+    "last_refreshed_at": "2026-06-06T15:30:00+05:00",
+    "total_flagged": 12,
+    "opt_in_count": 4,
+    "count": 12,
+    "next": true,
+    "previous": false,
+    "cases": [
+      {
+        "user_id": "8f3d61b2-132d-4ef9-813c-83b3337bf87b",
+        "username": "participant123",
+        "full_name": "John Doe",
+        "whatsapp_number": "+923001234567",
+        "milestone": "SIGNUP",
+        "flagged_at": "2026-06-06T15:24:00+05:00",
+        "opt_in_check_in": true,
+        "responses": [
+          {
+            "question_id": 105,
+            "question_text": "[SIDAS] How often did you have thoughts of suicide?",
+            "selected_option": "5 - Very Often"
+          }
+        ]
+      }
+    ]
+  }
+  ```
+
+---
+
+## 5. Group Management
+
+Group management endpoints are used to manage experimental segments. Modification and creation endpoints require staff/superuser permissions, while retrieval endpoints require authentication.
+
+### 5.1 Fetch All Groups
+Retrieves all configured experimental segments with aggregated member counts.
+* **URL:** `/api/groups/`
+* **Method:** `GET`
+* **Auth Required:** Yes
+* **Response (200 OK):**
+  ```json
+  [
+    {
+      "group_id": 1,
+      "name": "Treatment Group A",
+      "description": "Gratitude intervention segment.",
+      "created_at": "2026-06-06T15:20:00+05:00",
+      "member_count": 24
+    }
+  ]
+  ```
+
+### 5.2 Create Group
+Configures a new experimental segment.
+* **URL:** `/api/groups/`
+* **Method:** `POST`
+* **Auth Required:** Yes (Staff Only)
+* **Request Body:**
+  ```json
+  {
+    "name": "Treatment Group C",
+    "description": "Positive reflection segment."
+  }
+  ```
+* **Response (201 Created):**
+  ```json
+  {
+    "group_id": 3,
+    "name": "Treatment Group C",
+    "description": "Positive reflection segment.",
+    "created_at": "2026-06-11T21:40:00+05:00",
+    "member_count": 0
+  }
+  ```
+
+### 5.3 Fetch Group Detail (with Participant Roster)
+Retrieves the properties of a group and lists the participant details currently assigned to it.
+* **URL:** `/api/groups/<id>/`
+* **Method:** `GET`
+* **Auth Required:** Yes
+* **Response (200 OK):**
+  ```json
+  {
+    "group_id": 1,
+    "name": "Treatment Group A",
+    "description": "Gratitude intervention segment.",
+    "created_at": "2026-06-06T15:20:00+05:00",
+    "member_count": 2,
+    "participants": [
+      {
+        "user_id": "8f3d61b2-132d-4ef9-813c-83b3337bf87b",
+        "full_name": "John Doe",
+        "username": "participant123",
+        "email": "participant@example.com",
+        "submission_count": 7,
+        "has_completed_sociodemographic": true,
+        "current_experiment_day": 8,
+        "is_disqualified": false
+      },
+      {
+        "user_id": "7a31b2d1-419b-bf78-ef73-e4b2d18412a1",
+        "full_name": "Jane Smith",
+        "username": "participant456",
+        "email": "jane@example.com",
+        "submission_count": 3,
+        "has_completed_sociodemographic": true,
+        "current_experiment_day": 4,
+        "is_disqualified": false
+      }
+    ]
+  }
+  ```
+
+### 5.4 Update Group
+Modifies group properties.
+* **URL:** `/api/groups/<id>/`
+* **Method:** `PUT` / `PATCH`
+* **Auth Required:** Yes (Staff Only)
+* **Request Body (PATCH example):**
+  ```json
+  {
+    "description": "Updated description for gratitude segment."
+  }
+  ```
+* **Response (200 OK):**
+  ```json
+  {
+    "group_id": 1,
+    "name": "Treatment Group A",
+    "description": "Updated description for gratitude segment.",
+    "created_at": "2026-06-06T15:20:00+05:00",
+    "member_count": 2,
+    "participants": [ ... ]
+  }
+  ```
+
+### 5.5 Delete Group
+Deletes an experimental segment.
+* **URL:** `/api/groups/<id>/`
+* **Method:** `DELETE`
+* **Auth Required:** Yes (Staff Only)
+* **Response (204 No Content):** Empty
+
+---
+
+## 6. Support Ticketing
+
+Provides endpoints for participants to submit support requests and administrators to manage them.
+
+### 6.1 List Support Tickets
+Retrieves a paginated list of support tickets (10 items per page). Staff see all tickets; regular participants see only their own.
+* **URL:** `/api/support/tickets/?page=<page_number>&page_size=<page_size>`
+* **Method:** `GET`
+* **Auth Required:** Yes
+* **Response (200 OK):**
+  ```json
+  {
+    "count": 45,
+    "next": "http://localhost:8000/api/support/tickets/?page=2",
+    "previous": null,
+    "results": [
+      {
+        "id": 12,
+        "user": "8f3d61b2-132d-4ef9-813c-83b3337bf87b",
+        "subject": "App crashes during Reflection submission",
+        "description": "I tried submitting my day 3 reflection and the screen went blank.",
+        "status": "OPEN",
+        "created_at": "2026-06-06T15:10:00+05:00"
+      }
+    ]
+  }
+  ```
+

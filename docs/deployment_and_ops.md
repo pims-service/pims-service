@@ -84,3 +84,22 @@ If a participant complains about stale stats or dashboard lockups:
   ```bash
   docker exec -it psych_celery_worker celery -A core status
   ```
+
+### 4.3 Month-3 PDF Report Generation Dependencies
+The automated Month-3 PERMA trajectory report requires HTML-to-PDF conversion (`weasyprint`) and chart plotting (`matplotlib`).
+* **System Libraries (Cairo & Pango)**: WeasyPrint depends on system packages for font configuration and rendering:
+  * Debian/Ubuntu dependencies (configured in `backend/Dockerfile`): `libpango-1.0-0`, `libpangoft2-1.0-0`, `libharfbuzz0b`, `libpangocairo-1.0-0`, `libffi-dev`, `libcairo2`, `libgdk-pixbuf-2.0-0`, `shared-mime-info`, `fontconfig`.
+* **Urdu RTL Nastaleeq Font Configuration**:
+  * The PDF requires the custom TrueType font `JameelNooriNastaleeq.ttf` for correct Nastaleeq script layout and Urdu characters rendering.
+  * The font file is copied into `/usr/share/fonts/truetype/JameelNooriNastaleeq.ttf` in the backend container, and the font cache is rebuilt using `fc-cache -f -v` during the image build process.
+
+### 4.4 Git-Tracking of Static Assets for CI/CD Builds
+By default, `.gitignore` excludes `/backend/static/` subfolders or files from Git tracking. However, critical runtime assets like fonts (`JameelNooriNastaleeq.ttf`) and brand logos (`pims_logo.png`, `pims_logo-removebg.png`) must be present in the repository so the docker-build context succeeds on GitHub Actions runner.
+* **Workaround**: You must force-stage ignored static files before pushing to remote VM or repository:
+  ```bash
+  git add -f backend/static/fonts/JameelNooriNastaleeq.ttf
+  git add -f backend/static/pims_logo.png
+  git add -f backend/static/pims_logo-removebg.png
+  ```
+* Failures to do this will trigger `COPY failed: no such file or directory` errors during the docker image build phase in the CI pipeline.
+
