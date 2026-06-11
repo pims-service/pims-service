@@ -83,7 +83,7 @@ def generate_posttest_export_csv(task_id):
 
             writer.writerow(row)
 
-        file_name = f"t0_export_{task.id}.csv"
+        file_name = f"onboarding_assessment_export_{task.id}.csv"
         task.file.save(file_name, ContentFile(output.getvalue().encode('utf-8')))
         task.status = 'SUCCESS'
         task.save()
@@ -207,7 +207,12 @@ def generate_longitudinal_export_csv(task_id):
                 for q_id, milestone in psy_columns:
                     ans = resp_map.get((q_id, milestone))
                     if ans:
-                        val = ans.selected_option.label if ans.selected_option else (ans.text_value or '')
+                        if ans.selected_option_value is not None:
+                            val = str(ans.selected_option_value)
+                        elif ans.selected_option:
+                            val = str(ans.selected_option.numeric_value)
+                        else:
+                            val = ans.text_value or ''
                         row.append(val.replace('\n', ' '))
                     else:
                         row.append('')
@@ -227,7 +232,7 @@ def generate_longitudinal_export_csv(task_id):
 
         # 6. Save the temporary file to the Task model
         with open(temp_file_path, 'rb') as f:
-            file_name = f"longitudinal_export_{task.id}.csv"
+            file_name = f"longitudinal_assessment_export_{task.id}.csv"
             task.file.save(file_name, File(f))
 
         task.status = 'SUCCESS'
@@ -322,7 +327,7 @@ def generate_t1_export_csv(task_id):
 
             writer.writerow(row)
 
-        file_name = f"t1_export_{task.id}.csv"
+        file_name = f"1_week_assessment_export_{task.id}.csv"
         task.file.save(file_name, ContentFile(output.getvalue().encode('utf-8')))
         task.status = 'SUCCESS'
         task.save()
@@ -406,7 +411,7 @@ def generate_t_first_month_export_csv(task_id):
             append_battery_score_values(row, rs_1m)
             writer.writerow(row)
 
-        file_name = f"t_first_month_export_{task.id}.csv"
+        file_name = f"1_month_assessment_export_{task.id}.csv"
         task.file.save(file_name, ContentFile(output.getvalue().encode('utf-8')))
         task.status = 'SUCCESS'
         task.save()
@@ -489,7 +494,7 @@ def generate_t2_export_csv(task_id):
             append_battery_score_values(row, rs_t2)
             writer.writerow(row)
 
-        file_name = f"t2_export_{task.id}.csv"
+        file_name = f"3_month_assessment_export_{task.id}.csv"
         task.file.save(file_name, ContentFile(output.getvalue().encode('utf-8')))
         task.status = 'SUCCESS'
         task.save()
@@ -572,7 +577,7 @@ def generate_t3_export_csv(task_id):
             append_battery_score_values(row, rs_t3)
             writer.writerow(row)
 
-        file_name = f"t3_export_{task.id}.csv"
+        file_name = f"6_month_assessment_export_{task.id}.csv"
         task.file.save(file_name, ContentFile(output.getvalue().encode('utf-8')))
         task.status = 'SUCCESS'
         task.save()
@@ -652,7 +657,7 @@ def generate_t4_export_csv(task_id):
             append_battery_score_values(row, rs_t4)
             writer.writerow(row)
 
-        file_name = f"t4_export_{task.id}.csv"
+        file_name = f"1_year_assessment_export_{task.id}.csv"
         task.file.save(file_name, ContentFile(output.getvalue().encode('utf-8')))
         task.status = 'SUCCESS'
         task.save()

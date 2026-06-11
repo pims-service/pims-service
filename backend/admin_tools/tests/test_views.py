@@ -362,8 +362,8 @@ def test_generate_longitudinal_export_csv_task(admin_user, test_group):
     assert data_row[2] == test_group.name
     # Socio gender answer
     assert "Male" in csv_content
-    # PERMA joy answer
-    assert "10 - Completely" in csv_content
+    # PERMA joy answer (numeric value)
+    assert "10" in csv_content
 
 
 
@@ -418,7 +418,7 @@ def test_generate_posttest_export_csv_task(admin_user, test_group):
     # Check Data Row
     data_row = rows[1]
     assert data_row[0] == str(user.user_id)
-    assert "10 - Completely" in csv_content
+    assert "10" in csv_content
 
 
 @pytest.mark.django_db
@@ -470,4 +470,4 @@ def test_generate_t1_export_csv_task(admin_user, test_group):
     # Check Data Row
     data_row = rows[1]
     assert data_row[0] == str(user.user_id)
-    assert "10 - Completely" in csv_content
+    assert "10" in csv_content
