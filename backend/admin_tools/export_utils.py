@@ -39,11 +39,16 @@ def build_psych_item_headers_and_columns(psy_questions, milestone_suffix):
 
 
 def append_psych_item_values(row, resp_map, question_ids):
-    """Append raw item response labels to a CSV row."""
+    """Append raw item response scale values (numeric) to a CSV row."""
     for question_id in question_ids:
         answer = resp_map.get(question_id)
         if answer:
-            value = answer.selected_option.label if answer.selected_option else (answer.text_value or "")
+            if answer.selected_option_value is not None:
+                value = str(answer.selected_option_value)
+            elif answer.selected_option:
+                value = str(answer.selected_option.numeric_value)
+            else:
+                value = answer.text_value or ""
             row.append(value.replace("\n", " "))
         else:
             row.append("")
