@@ -117,9 +117,9 @@ describe('ActivityPage', () => {
 
     await waitFor(() => {
       // Entry labels in Urdu
-      expect(screen.getByText('اندراج 1: مثبت تعلقات')).toBeInTheDocument();
-      expect(screen.getByText('اندراج 2: کامیابی')).toBeInTheDocument();
-      expect(screen.getByText('اندراج 3: لطف')).toBeInTheDocument();
+      expect(screen.getByText('اندراج ۱: مثبت تعلقات')).toBeInTheDocument();
+      expect(screen.getByText('اندراج ۲: کامیابی')).toBeInTheDocument();
+      expect(screen.getByText('اندراج ۳: لطف')).toBeInTheDocument();
 
       // Definitions - Urdu
       expect(screen.getByText('آج کسی دوسرے فرد کے ساتھ کوئی بامقصد ملاقات یا رابطہ۔')).toBeInTheDocument();
@@ -287,4 +287,34 @@ describe('ActivityPage', () => {
       expect(screen.queryByRole('button', { name: /Submit/i })).not.toBeInTheDocument();
     });
   });
+
+  it('renders Group 4 Day 1 schedule, definitions, and examples correctly in English and Urdu', async () => {
+    const mockActivity = {
+      id: 12,
+      title: 'Combined Reflection',
+      description: 'Daily prompt instruction | اردو ہدایات',
+      group_name: 'Group 4',
+      day_number: 1, // Day 1 should show Pleasure with Gratitude, Engagement with Gratitude, Meaning with Gratitude
+      submitted_today: false,
+    };
+
+    (api.get as any).mockResolvedValue({ data: mockActivity });
+
+    renderComponent();
+
+    await waitFor(() => {
+      // Entry labels
+      expect(screen.getByText('Entry 1: Pleasure with Gratitude')).toBeInTheDocument();
+      expect(screen.getByText('Entry 2: Engagement with Gratitude')).toBeInTheDocument();
+      expect(screen.getByText('Entry 3: Meaning with Gratitude')).toBeInTheDocument();
+
+      // Definitions & Examples - English
+      expect(screen.getByText('An enjoyable moment today that you feel grateful for. Describe what happened, why you are grateful for it, and what or who made it possible.')).toBeInTheDocument();
+      expect(screen.getByText(/sister made karak chai/)).toBeInTheDocument();
+
+      // Urdu translation definitions
+      expect(screen.getByText('آج کا کوئی لطف بھرا لمحہ جس کے لیے آپ شکر گزار ہیں۔ بیان کریں کہ کیا ہوا، آپ اس کے لیے کیوں شکر گزار ہیں، اور کس یا کس چیز نے اسے ممکن بنایا۔')).toBeInTheDocument();
+    });
+  });
 });
+

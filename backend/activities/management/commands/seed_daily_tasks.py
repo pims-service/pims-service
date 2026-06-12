@@ -38,13 +38,8 @@ GROUP_PROMPTS = {
         "مختلف واقعہ منتخب کریں۔ صرف آج کے تجربات کا انتخاب کریں۔"
     ),
     'Group 4': (
-        'Before going to sleep, write down the following:\n'
-        '- One thing that gave you pleasure today\n'
-        '- One thing you were deeply absorbed in\n'
-        '- One meaningful interaction with someone\n'
-        '- One thing that felt purposeful\n'
-        '- One thing you accomplished\n'
-        '- One thing you are genuinely grateful for today'
+        "Today's task: Reflect on the past 24 hours. For each of the three categories below, find one experience that meets both conditions: it maps to the category shown; and you feel grateful for it, and you can identify what or who made it possible. For each entry, describe what happened, explain why you are grateful for it, and identify what or who made it possible. Pick experiences from today only. | "
+        "آج کا کام: گزشتہ 24 گھنٹوں پر غور کریں۔ نیچے دی گئی تین اقسام میں سے ہر ایک کے لیے، آج کا ایک ایسا تجربہ منتخب کریں جو دونوں شرائط پوری کرے: یہ دکھائے گئے زمرے سے میل کھاتا ہو؛ اور آپ اس کے لیے شکر گزار ہوں، اور یہ شناخت کر سکیں کہ کس یا کس چیز نے اسے ممکن بنایا۔ ہر اندراج کے لیے، بیان کریں کہ کیا ہوا، وضاحت کریں کہ آپ اس کے لیے کیوں شکر گزار ہیں، اور یہ شناخت کریں کہ کس یا کس چیز نے اسے ممکن بنایا۔ صرف آج کے تجربات کا انتخاب کریں۔"
     ),
 }
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { LogOut, User, LayoutDashboard, Settings, Menu, X, HelpCircle } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import SupportModal from './SupportModal';
@@ -8,6 +8,8 @@ import api from '../services/api';
 import { useNotifications } from '../hooks/useNotifications';
 
 const Navbar: React.FC = () => {
+  const location = useLocation();
+  const isActivityPage = location.pathname.startsWith('/activity');
   
   const { t } = useTranslation();
   const isAuthenticated = !!localStorage.getItem('access_token');
@@ -74,7 +76,7 @@ const Navbar: React.FC = () => {
               </>
             )}
 
-            {!isAdmin && (
+            {!isAdmin && !isActivityPage && (
               <div className="border-r border-zinc-100 pr-4 mr-2">
                 <LanguageSwitcher />
               </div>
@@ -133,7 +135,7 @@ const Navbar: React.FC = () => {
         {/* Mobile Menu Drawer */}
         {isMenuOpen && (
           <div className="md:hidden border-t border-zinc-100 bg-white py-4 px-6 space-y-4 animate-in slide-in-from-top-2 duration-200">
-            {!isAdmin && (
+            {!isAdmin && !isActivityPage && (
               <div className="flex items-center justify-between pb-2 border-b border-zinc-50">
                 <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Language</span>
                 <LanguageSwitcher />
