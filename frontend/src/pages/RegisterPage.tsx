@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import { useTranslation } from 'react-i18next';
-import { User, Mail, Phone, Calendar, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Loader2, Key, RefreshCw } from 'lucide-react';
+import { User, Mail, Phone, Calendar, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Loader2, Key, RefreshCw, X } from 'lucide-react';
 import PasswordInput from '../components/Auth/PasswordInput';
 
 const RegisterPage: React.FC = () => {
@@ -422,47 +422,100 @@ const RegisterPage: React.FC = () => {
 
       {/* Consent Modal */}
       {showConsentModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4 transition-opacity duration-200">
-          <div className="bg-white border-2 border-black max-w-lg w-full p-6 space-y-4 max-h-[85vh] overflow-y-auto rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative flex flex-col">
-            <div className="flex justify-between items-center border-b-2 border-black pb-2">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-black">{t('register.consent_header')}</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/60 backdrop-blur-sm p-4 transition-opacity duration-200 animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl border border-zinc-200 max-w-4xl w-full p-8 shadow-2xl relative flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
+            
+            <div className="flex justify-between items-center border-b border-zinc-100 pb-4 mb-4">
+              <div className="space-y-1">
+                <h2 className="text-xl font-extrabold text-zinc-900 tracking-tight">
+                  {t('register.consent_header')}
+                </h2>
+                <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">
+                  Participant Informed Consent / باضابطہ رضامندی نامہ
+                </p>
+              </div>
               <button 
                 type="button" 
                 onClick={() => setShowConsentModal(false)} 
-                className="text-black font-bold text-xs uppercase tracking-wider border border-black px-2 py-0.5 hover:bg-zinc-100"
+                className="text-zinc-400 hover:text-zinc-600 transition-colors p-2 hover:bg-zinc-100 rounded-full cursor-pointer"
               >
-                Close
+                <X size={20} />
               </button>
             </div>
             
-            <div className="text-xs text-zinc-700 space-y-4 leading-relaxed font-sans overflow-y-auto pr-1">
-              <div>
-                <h4 className="font-bold text-black text-sm mb-1">{t('register.consent_section1_title')}</h4>
-                <p>{t('register.consent_section1_text')}</p>
-              </div>
-              <div>
-                <h4 className="font-bold text-black text-sm mb-1">{t('register.consent_section2_title')}</h4>
-                <p>{t('register.consent_section2_text')}</p>
-              </div>
-              <div>
-                <h4 className="font-bold text-black text-sm mb-1">{t('register.consent_section3_title')}</h4>
-                <p className="text-black font-semibold bg-yellow-50 p-2 border border-dashed border-yellow-300 rounded-none leading-relaxed">
-                  {t('register.consent_section3_text')}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 overflow-y-auto pr-1 flex-1 py-2">
+              {/* English Column */}
+              <div className="space-y-5 text-xs text-zinc-600 leading-relaxed text-left font-latin pr-2 md:border-r md:border-zinc-100">
+                <p className="font-semibold text-zinc-800 text-sm bg-zinc-50 p-3 rounded-xl border border-zinc-100">
+                  {t('register.consent_intro', { lng: 'en' })}
                 </p>
+                
+                <div className="space-y-1">
+                  <h4 className="font-bold text-zinc-900 text-sm">{t('register.consent_section1_title', { lng: 'en' })}</h4>
+                  <p>{t('register.consent_section1_text', { lng: 'en' })}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <h4 className="font-bold text-zinc-900 text-sm">{t('register.consent_section2_title', { lng: 'en' })}</h4>
+                  <p>{t('register.consent_section2_text', { lng: 'en' })}</p>
+                </div>
+
+                <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl space-y-1">
+                  <h4 className="font-bold text-amber-900 text-sm">{t('register.consent_section3_title', { lng: 'en' })}</h4>
+                  <p className="text-amber-800 font-medium leading-relaxed">{t('register.consent_section3_text', { lng: 'en' })}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <h4 className="font-bold text-zinc-900 text-sm">{t('register.consent_section4_title', { lng: 'en' })}</h4>
+                  <p>{t('register.consent_section4_text', { lng: 'en' })}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <h4 className="font-bold text-zinc-900 text-sm">{t('register.consent_section5_title', { lng: 'en' })}</h4>
+                  <p>{t('register.consent_section5_text', { lng: 'en' })}</p>
+                </div>
               </div>
-              <div>
-                <h4 className="font-bold text-black text-sm mb-1">{t('register.consent_section4_title')}</h4>
-                <p>{t('register.consent_section4_text')}</p>
+
+              {/* Urdu Column */}
+              <div className="space-y-5 text-sm text-zinc-600 leading-relaxed text-right font-urdu pl-2" dir="rtl">
+                <p className="font-semibold text-zinc-800 text-base bg-zinc-50 p-3 rounded-xl border border-zinc-100">
+                  {t('register.consent_intro', { lng: 'ur' })}
+                </p>
+
+                <div className="space-y-1">
+                  <h4 className="font-bold text-zinc-900 text-base">{t('register.consent_section1_title', { lng: 'ur' })}</h4>
+                  <p className="text-sm">{t('register.consent_section1_text', { lng: 'ur' })}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <h4 className="font-bold text-zinc-900 text-base">{t('register.consent_section2_title', { lng: 'ur' })}</h4>
+                  <p className="text-sm">{t('register.consent_section2_text', { lng: 'ur' })}</p>
+                </div>
+
+                <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl space-y-1">
+                  <h4 className="font-bold text-amber-900 text-base">{t('register.consent_section3_title', { lng: 'ur' })}</h4>
+                  <p className="text-amber-800 font-medium text-sm leading-relaxed">{t('register.consent_section3_text', { lng: 'ur' })}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <h4 className="font-bold text-zinc-900 text-base">{t('register.consent_section4_title', { lng: 'ur' })}</h4>
+                  <p className="text-sm">{t('register.consent_section4_text', { lng: 'ur' })}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <h4 className="font-bold text-zinc-900 text-base">{t('register.consent_section5_title', { lng: 'ur' })}</h4>
+                  <p className="text-sm">{t('register.consent_section5_text', { lng: 'ur' })}</p>
+                </div>
               </div>
             </div>
             
-            <div className="pt-3 border-t-2 border-black flex justify-end gap-2">
+            <div className="pt-4 border-t border-zinc-100 flex justify-end gap-3 mt-4">
               <button
                 type="button"
                 onClick={() => setShowConsentModal(false)}
-                className="border border-black px-3 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-zinc-100"
+                className="px-5 py-2.5 rounded-xl border border-zinc-300 text-zinc-700 text-xs font-semibold uppercase tracking-wider hover:bg-zinc-50 hover:text-zinc-950 transition-colors cursor-pointer"
               >
-                Read Later
+                Read Later / بعد میں پڑھیں
               </button>
               <button
                 type="button"
@@ -470,9 +523,9 @@ const RegisterPage: React.FC = () => {
                   setFormData(prev => ({ ...prev, consent_agreed: true }));
                   setShowConsentModal(false);
                 }}
-                className="bg-black text-white px-4 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-zinc-800"
+                className="bg-zinc-900 text-white px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider hover:bg-zinc-800 transition-colors shadow-md hover:shadow-lg cursor-pointer"
               >
-                Agree & Close
+                Agree & Close / متفق ہوں اور بند کریں
               </button>
             </div>
           </div>
