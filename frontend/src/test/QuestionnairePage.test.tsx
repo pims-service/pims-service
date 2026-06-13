@@ -320,5 +320,110 @@ describe('QuestionnairePage Scale-Grouped Paging and Autosave', () => {
       expect(screen.getByText('Scale 2 / 2')).toBeInTheDocument();
     });
   });
+
+  it('auto-saves only answered questions (filtered payload, does not send nulls)', async () => {
+    (questionnairesApi.saveDraftResponseSet as any).mockResolvedValue({ data: { success: true } });
+
+    render(
+      <MemoryRouter initialEntries={['/questionnaires/q-1']}>
+        <Routes>
+          <Route path="/questionnaires/:id" element={<QuestionnairePage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Longitudinal Scales')).toBeInTheDocument();
+    });
+
+    // Click '0' response only for question 1 (leaving ques-2 unanswered)
+    const buttons = screen.getAllByRole('button');
+    const zeroButton = buttons.find(b => b.textContent?.includes('0') && !b.textContent.includes('10'));
+    fireEvent.click(zeroButton!);
+
+    // Wait for debounce
+    await delay(600);
+
+    expect(questionnairesApi.saveDraftResponseSet).toHaveBeenCalledTimes(1);
+
+    // The payload must NOT include ques-2 (unanswered) — only ques-1
+    const [, payload] = (questionnairesApi.saveDraftResponseSet as any).mock.calls[0];
+    const questionIds = payload.map((p: any) => p.question_id);
+    expect(questionIds).toContain('ques-1');
+    expect(questionIds).not.toContain('ques-2');
+  });
+
+  it('auto-advances to the last answered scale group when resuming a draft session', async () => {
+    // Simulate a response set that already has PHQ-9 (scale 2) answers saved
+    const draftResponseSet = {
+      id: 'rs-123',
+      responses: [
+        { question: 'ques-1', selected_option: 'opt-0',  text_value: null },
+        { question: 'ques-2', selected_option: 'opt-0',  text_value: null },
+        { question: 'ques-3', selected_option: 'opt-p0', text_value: null },
+      ]
+    };
+    (questionnairesApi.createResponseSet as any).mockResolvedValue({ data: draftResponseSet });
+
+    render(
+      <MemoryRouter initialEntries={['/questionnaires/q-1']}>
+        <Routes>
+          <Route path="/questionnaires/:id" element={<QuestionnairePage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    // Should auto-advance to Scale 2 (PHQ-9), not Scale 1 (PERMA)
+    await waitFor(() => {
+      expect(screen.getByText('Scale 2 / 2')).toBeInTheDocument();
+      // PHQ-9 question should be visible
+      expect(screen.getByText('Feeling down, depressed.')).toBeInTheDocument();
+      // PERMA questions should NOT be visible
+      expect(screen.queryByText('How happy are you?')).not.toBeInTheDocument();
+    });
+  });
+
+  it('correctly maps restored SCALE responses to numeric values so they are not saved as null on next save', async () => {
+    const draftResponseSet = {
+      id: 'rs-123',
+      responses: [
+        { question: 'ques-1', selected_option: 'opt-0',  text_value: null },
+        { question: 'ques-2', selected_option: 'opt-0',  text_value: null },
+      ]
+    };
+    (questionnairesApi.createResponseSet as any).mockResolvedValue({ data: draftResponseSet });
+    (questionnairesApi.saveDraftResponseSet as any).mockResolvedValue({ data: { success: true } });
+
+    render(
+      <MemoryRouter initialEntries={['/questionnaires/q-1']}>
+        <Routes>
+          <Route path="/questionnaires/:id" element={<QuestionnairePage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    // Wait for the questionnaire to load
+    await waitFor(() => {
+      expect(screen.getByText('Longitudinal Scales')).toBeInTheDocument();
+    });
+
+    // Since both ques-1 and ques-2 are restored, the Continue button should be enabled immediately
+    const continueBtn = screen.getByRole('button', { name: /Continue/i });
+    expect(continueBtn).not.toBeDisabled();
+
+    // Click Continue to trigger saveDraftNow
+    fireEvent.click(continueBtn);
+
+    // Verify saveDraftResponseSet is called with the correct option IDs, not nulls!
+    await waitFor(() => {
+      expect(questionnairesApi.saveDraftResponseSet).toHaveBeenCalledWith(
+        'rs-123',
+        expect.arrayContaining([
+          { question_id: 'ques-1', selected_option_id: 'opt-0' },
+          { question_id: 'ques-2', selected_option_id: 'opt-0' },
+        ])
+      );
+    });
+  });
 });
 

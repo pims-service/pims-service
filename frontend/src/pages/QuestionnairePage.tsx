@@ -84,10 +84,43 @@ const QuestionnairePage: React.FC = () => {
         // Restore previous draft responses if they exist
         if (rsRes.data.responses && Array.isArray(rsRes.data.responses)) {
           const restored: Record<string, any> = {};
+          const qs = qRes.data.questions || [];
           rsRes.data.responses.forEach((r: any) => {
-            restored[r.question] = r.selected_option || r.text_value;
+            const questionObj = qs.find((q: any) => q.id === r.question);
+            if (questionObj && questionObj.type === 'SCALE') {
+              const selectedOpt = questionObj.options?.find((o: any) => o.id === r.selected_option);
+              if (selectedOpt) {
+                restored[r.question] = selectedOpt.numeric_value;
+              } else {
+                restored[r.question] = r.selected_option;
+              }
+            } else {
+              restored[r.question] = r.selected_option || r.text_value;
+            }
           });
           setResponses(restored);
+
+          // Auto-advance to the last scale group that has at least one saved answer,
+          // so the user is dropped back at the right place without having to click Next.
+          const groups: { name: string; questions: any[] }[] = [];
+          const groupMap: Record<string, any[]> = {};
+          qs.forEach((q: any) => {
+            const match = q.content.match(/^\[(.*?)\]/);
+            const scale = match ? match[1] : 'General';
+            if (!groupMap[scale]) {
+              groupMap[scale] = [];
+              groups.push({ name: scale, questions: groupMap[scale] });
+            }
+            groupMap[scale].push(q);
+          });
+          let resumeIndex = 0;
+          for (let i = 0; i < groups.length; i++) {
+            const groupHasAnswer = groups[i].questions.some(
+              (q: any) => restored[q.id] !== undefined && restored[q.id] !== null && restored[q.id] !== ''
+            );
+            if (groupHasAnswer) resumeIndex = i;
+          }
+          setCurrentIndex(resumeIndex);
         }
       } catch (err: any) {
         const detail = err.response?.data?.detail;
@@ -156,6 +189,57 @@ const QuestionnairePage: React.FC = () => {
     });
   }, [currentScaleGroup, responses]);
 
+  /**
+   * Build a save payload that only includes questions that have been answered.
+   * This is critical: the backend does delete+bulk_create on every save, so sending
+   * null for unanswered questions would wipe out previously-saved answers.
+   */
+  const buildAnsweredPayload = (currentResponses: Record<string, any>) => {
+    return questions
+      .filter((q: any) => {
+        const val = currentResponses[q.id];
+        return val !== undefined && val !== null && val !== '';
+      })
+      .map((q: any) => {
+        const response = currentResponses[q.id];
+        const base = { question_id: q.id };
+        if (q.type === 'TEXT') {
+          return { ...base, text_value: String(response) };
+        } else if (q.type === 'SCALE') {
+          const selectedOpt = q.options.find((o: any) => o.numeric_value === response);
+          return { ...base, selected_option_id: selectedOpt?.id || null };
+        } else if (q.type === 'CHOICE') {
+          return { ...base, selected_option_id: response || null };
+        }
+        return base;
+      });
+  };
+
+  /**
+   * Immediately flush all answered responses to the server (no debounce).
+   * Called explicitly on Next click to guarantee current-scale answers are
+   * persisted before the user advances, even if no answer was changed.
+   */
+  const saveDraftNow = async (currentResponses: Record<string, any>) => {
+    if (!responseSetId) return;
+    // Cancel any pending debounced save — this one supersedes it.
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+    const payload = buildAnsweredPayload(currentResponses);
+    if (payload.length === 0) return;
+    setIsSaving(true);
+    try {
+      await questionnairesApi.saveDraftResponseSet(responseSetId, payload);
+      setLastSaved(new Date());
+    } catch (err) {
+      console.error('Failed to flush draft:', err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleResponseChange = (questionId: string, value: any) => {
     let newResponses = {
       ...responses,
@@ -181,33 +265,19 @@ const QuestionnairePage: React.FC = () => {
 
     setResponses(newResponses);
 
+    // Debounced autosave — only sends answered questions.
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
-
     setIsSaving(true);
     saveTimeoutRef.current = setTimeout(async () => {
       if (!responseSetId) return;
       try {
-        const payload = questions.map((q: any) => {
-          const response = newResponses[q.id];
-          const base = { question_id: q.id };
-
-          if (q.type === 'TEXT') {
-            return { ...base, text_value: response || "" };
-          } else if (q.type === 'SCALE' || q.type === 'CHOICE') {
-            if (q.type === 'SCALE') {
-              const selectedOpt = q.options.find((o: any) => o.numeric_value === response);
-              return { ...base, selected_option_id: selectedOpt?.id || null };
-            } else {
-              return { ...base, selected_option_id: response || null };
-            }
-          }
-          return base;
-        });
-
-        await questionnairesApi.saveDraftResponseSet(responseSetId, payload);
-        setLastSaved(new Date());
+        const payload = buildAnsweredPayload(newResponses);
+        if (payload.length > 0) {
+          await questionnairesApi.saveDraftResponseSet(responseSetId, payload);
+          setLastSaved(new Date());
+        }
       } catch (err) {
         console.error('Failed to auto-save:', err);
       } finally {
@@ -283,8 +353,12 @@ const QuestionnairePage: React.FC = () => {
     proceedNext();
   };
 
-  const proceedNext = () => {
+  const proceedNext = async () => {
     if (currentIndex < scaleGroups.length - 1) {
+      // Flush all answered responses to the server before advancing.
+      // This guarantees the current scale's answers are persisted even
+      // if no answer was changed (so the debounced autosave didn't fire).
+      await saveDraftNow(responses);
       setCurrentIndex(prev => prev + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
