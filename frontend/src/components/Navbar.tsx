@@ -10,6 +10,8 @@ import { useNotifications } from '../hooks/useNotifications';
 const Navbar: React.FC = () => {
   const location = useLocation();
   const isActivityPage = location.pathname.startsWith('/activity');
+  const isLandingPage = location.pathname === '/';
+  const showLanguageSwitcher = !isActivityPage && !isLandingPage;
   
   const { t } = useTranslation();
   const isAuthenticated = !!localStorage.getItem('access_token');
@@ -54,8 +56,8 @@ const Navbar: React.FC = () => {
           
           {/* Logo & Main Navigation (Left Side) */}
           <div className="flex items-center gap-8">
-            <Link to="/" className="text-xl font-bold text-zinc-900 tracking-tight flex items-center gap-2">
-              PsychPlatform
+            <Link to="/" className="text-xl font-bold text-[#2E4E90] tracking-tight flex items-center gap-2">
+              Psycheversity
             </Link>
           </div>
 
@@ -76,7 +78,7 @@ const Navbar: React.FC = () => {
               </>
             )}
 
-            {!isAdmin && !isActivityPage && (
+            {!isAdmin && showLanguageSwitcher && (
               <div className="border-r border-zinc-100 pr-4 mr-2">
                 <LanguageSwitcher />
               </div>
@@ -111,7 +113,7 @@ const Navbar: React.FC = () => {
 
           {/* Mobile Actions */}
           <div className="md:hidden flex items-center gap-2">
-            {!isAdmin && !isActivityPage && (
+            {!isAdmin && showLanguageSwitcher && (
               <LanguageSwitcher />
             )}
             <button

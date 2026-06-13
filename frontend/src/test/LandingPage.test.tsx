@@ -33,7 +33,11 @@ describe('LandingPage', () => {
 
     expect(screen.getByText('A free, science-based wellbeing program')).toBeDefined();
     expect(screen.getByRole('heading', { name: /Welcome to Psycheversity!/i })).toBeDefined();
-    expect(screen.getByRole('link', { name: /Register Now/i })).toBeDefined();
-    expect(screen.getByRole('link', { name: /Existing Participant/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Home ہوم/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Information معلومات/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /FAQ سوالات/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Crisis Resources ہنگامی مدد/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Contact رابطہ/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Registration رجسٹریشن/i })).toBeDefined();
   });
 });

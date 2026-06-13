@@ -38,6 +38,8 @@ def create_zip_archive(source_dir, output_path):
         ARCHIVE_NAME,
         '.env',
         'db.sqlite3',
+        'celerybeat-schedule',
+        'django.log',
     }
 
     with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
@@ -46,7 +48,7 @@ def create_zip_archive(source_dir, output_path):
             dirs[:] = [d for d in dirs if d not in exclude_dirs]
             
             for file in files:
-                if file in exclude_files:
+                if file in exclude_files or file.endswith('.log'):
                     continue
                 
                 full_path = os.path.join(root, file)
@@ -163,10 +165,10 @@ def main():
         # 10. Seed Core Activities / Questions
         print("\n=== Seeding Core Activities and Scales ===")
         # Seed Scales
-        seed_scales_cmd = f"cd {REMOTE_DIR} && docker compose exec -T backend python manage.py initialize_db"
+        seed_scales_cmd = f"cd {REMOTE_DIR} && docker compose exec -T backend python manage.py seed_longitudinal_scales"
         run_ssh_command(ssh, seed_scales_cmd)
         # Seed Daily Reflection prompts
-        seed_activities_cmd = f"cd {REMOTE_DIR} && docker compose exec -T backend python manage.py shell -c 'from activities.seeds import seed_activities; seed_activities()'"
+        seed_activities_cmd = f"cd {REMOTE_DIR} && docker compose exec -T backend python manage.py seed_daily_tasks"
         run_ssh_command(ssh, seed_activities_cmd)
 
         print("\n=== DEPLOYMENT COMPLETED SUCCESSFULY ===")

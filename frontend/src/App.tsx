@@ -44,7 +44,7 @@ const App: React.FC = () => {
             <Routes>
               <Route
                 path="/"
-                element={<div className="container mx-auto px-4 py-8 flex-grow">{checkAuth() ? (isAdminUser() ? <Navigate to="/admin" replace /> : <Navigate to="/dashboard" replace />) : <LandingPage />}</div>}
+                element={checkAuth() ? (isAdminUser() ? <Navigate to="/admin" replace /> : <Navigate to="/dashboard" replace />) : <LandingPage />}
               />
 
               {/* Guest Only Routes */}
