@@ -87,6 +87,9 @@ const SociodemographicForm: React.FC<SociodemographicFormProps> = ({
 
   const isAllCompleted = questions.every(q => responses[q.id]);
 
+  const answeredCount = questions.filter(q => responses[q.id] !== undefined && responses[q.id] !== null && responses[q.id] !== '').length;
+  const progress = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0;
+
   const handleSubmit = () => {
     if (isAllCompleted) {
       onComplete(responses);
@@ -112,6 +115,22 @@ const SociodemographicForm: React.FC<SociodemographicFormProps> = ({
           ) : (
             <span>Ready</span>
           )}
+        </div>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="mb-16 space-y-6">
+        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.3em]">
+          <span className="text-zinc-400 text-xs font-medium">Progress</span>
+          <span className="text-zinc-700 text-xs font-semibold">{answeredCount} / {questions.length} Questions</span>
+        </div>
+        <div className="h-2 w-full bg-zinc-100 rounded-full overflow-hidden">
+          <motion.div
+            className="h-full bg-zinc-700 rounded-full"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            transition={{ type: 'spring', damping: 20 }}
+          />
         </div>
       </div>
 

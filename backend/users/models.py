@@ -242,40 +242,6 @@ class User(AbstractUser):
         return due
 
     @property
-    def completion_rate(self):
-        """
-        Calculates the percentage of daily activities completed relative to current day.
-        Caches result for 5 minutes to prevent heavy DB hits on every dashboard refresh.
-        """
-        current_day = self.current_experiment_day
-        if not current_day:
-            return 0
-        
-        cache_key = f"user_{self.user_id}_completion_rate"
-        cached_rate = cache.get(cache_key)
-        if cached_rate is not None:
-            return cached_rate
-
-        effective_day = min(current_day, 7)
-        wave = self.current_activity_wave
-        if not wave:
-            return 0
-
-        from activities.models import Submission
-        submissions_count = Submission.objects.filter(
-            user=self, activity_wave=wave
-        ).values('experiment_day').distinct().count()
-        
-        # Avoid division by zero
-        rate = int((submissions_count / effective_day) * 100) if effective_day > 0 else 0
-        final_rate = min(rate, 100)
-        
-        # Cache for 5 minutes
-        cache.set(cache_key, final_rate, timeout=300)
-        
-        return final_rate
-
-    @property
     def has_consecutive_misses(self):
         """
         Returns True if the user has missed submitting daily activities on 2 consecutive days

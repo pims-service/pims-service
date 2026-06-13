@@ -2,21 +2,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Phone, Mail, HelpCircle, FileText, ShieldAlert, Home, Info, ExternalLink } from 'lucide-react';
 import pimsLogo from '../assets/pims_logo.png';
+import ukmLogo from '../assets/ukm_logo.jpeg';
 
-// Inline UKM (Universiti Kebangsaan Malaysia) Logo Component
-const UKMLogo: React.FC = () => (
-  <div className="flex items-center gap-2 border border-zinc-200 px-3 py-1.5 rounded-xl bg-zinc-50 shadow-sm">
-    <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-      <circle cx="50" cy="50" r="45" fill="#C8A951" />
-      <path d="M50 12 L82 68 L18 68 Z" fill="#2E4E90" />
-      <text x="50" y="85" textAnchor="middle" fill="#2E4E90" fontSize="15" fontWeight="bold" fontFamily="sans-serif">UKM</text>
-    </svg>
-    <div className="text-left select-none">
-      <div className="text-[10px] font-bold text-zinc-900 leading-tight">UNIVERSITI KEBANGSAAN MALAYSIA</div>
-      <div className="text-[8px] text-zinc-500 font-semibold leading-tight">The National University of Malaysia</div>
-    </div>
-  </div>
-);
 
 // Timeline Milestone Component for Program Sequence
 const Timeline: React.FC = () => {
@@ -157,7 +144,9 @@ const LandingPage: React.FC = () => {
       {/* Brand Hero Header */}
       <header className="border border-zinc-200 bg-white rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-4 shrink-0">
-          <UKMLogo />
+          <div className="border border-zinc-200 p-1.5 rounded-xl bg-zinc-50 shadow-sm shrink-0">
+            <img src={ukmLogo} alt="UKM Logo" className="h-9 md:h-10 w-auto object-contain select-none" />
+          </div>
           <span className="text-zinc-300 text-2xl hidden md:inline">|</span>
           <div className="border border-zinc-200 p-1.5 rounded-xl bg-zinc-50 shadow-sm shrink-0">
             <img src={pimsLogo} alt="PIMS Logo" className="h-9 md:h-10 w-auto object-contain select-none" />
