@@ -97,7 +97,7 @@ class TestOnboardingAPI:
         response = api_client.post(url, payload, format='json')
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_submission_blocked_on_completed_response_set(self, api_client, fresh_user, socio_questionnaire):
+    def test_submission_idempotent_on_completed_response_set(self, api_client, fresh_user, socio_questionnaire):
         api_client.force_authenticate(user=fresh_user)
         
         rs = ResponseSet.objects.create(
@@ -110,6 +110,6 @@ class TestOnboardingAPI:
         url = f'/api/questionnaires/response-sets/{rs.id}/submit/'
         payload = {"responses_data": []}
         
-        # Submitting should be blocked on completed response sets
+        # Submitting an already completed response set should return 200 OK (idempotent submission)
         response = api_client.post(url, payload, format='json')
-        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.status_code == status.HTTP_200_OK

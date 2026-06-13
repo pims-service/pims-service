@@ -140,7 +140,19 @@ class ResponseSetSubmitView(generics.UpdateAPIView):
 
     def get_queryset(self):
         # Users can only submit their own response sets
-        return super().get_queryset().filter(user=self.request.user, status='DRAFT')
+        return super().get_queryset().filter(user=self.request.user, status__in=['DRAFT', 'COMPLETED'])
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        if instance.status == 'COMPLETED':
+            serializer = self.get_serializer(instance)
+            return DRFResponse(serializer.data, status=status.HTTP_200_OK)
+        
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return DRFResponse(serializer.data)
 
     def post(self, request, *args, **kwargs):
         # Alias POST to perform the update

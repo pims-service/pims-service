@@ -209,21 +209,30 @@ const ForgotPasswordPage: React.FC = () => {
 
           {phase === 'verify' && (
             /* Phase 2: OTP Verification Form */
-            <form onSubmit={handleVerifySubmit} className="space-y-4">
+            <form onSubmit={handleVerifySubmit} className="space-y-6">
+              <div className="p-5 bg-zinc-50/50 border border-zinc-150 rounded-2xl text-center space-y-3">
+                <div className="w-12 h-12 bg-zinc-100/60 rounded-full flex items-center justify-center mx-auto text-zinc-900 shadow-sm border border-zinc-200/40">
+                  <Mail className="w-5 h-5 text-zinc-800" />
+                </div>
+                <p className="text-xs text-zinc-500 leading-relaxed max-w-xs mx-auto">
+                  We've sent a 6-digit verification code to <span className="text-zinc-900 font-semibold">{email}</span>. Please check your inbox.
+                </p>
+              </div>
+
               <div className="space-y-3">
-                <label className="block text-sm font-medium text-zinc-700" htmlFor="reset-otp">
+                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400" htmlFor="reset-otp">
                   {t('forgot_password.otp_label')}
                 </label>
                 <div className="relative">
-                  <Key className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <Key className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                   <input
                     id="reset-otp"
                     name="otp"
                     type="text"
                     required
                     maxLength={6}
-                    placeholder={t('forgot_password.otp_placeholder')}
-                    className="input-minimal !ps-10 font-mono tracking-[0.25em]"
+                    placeholder="000000"
+                    className="w-full h-12 text-center text-xl font-bold tracking-[0.4em] font-mono border border-zinc-200 rounded-xl focus:ring-1 focus:ring-zinc-950 focus:border-zinc-950 outline-none transition-all !ps-8"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
                     disabled={loading}
@@ -237,7 +246,7 @@ const ForgotPasswordPage: React.FC = () => {
                 className="btn-minimal w-full flex items-center justify-center gap-2 py-2.5 mt-2 group"
               >
                 {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
+                  <Loader2 className="w-5 h-5 animate-spin text-zinc-450" />
                 ) : (
                   <>
                     {t('forgot_password.verify_code_btn')}
@@ -254,13 +263,13 @@ const ForgotPasswordPage: React.FC = () => {
                     setError(null);
                     setSuccess(null);
                   }}
-                  className="inline-flex items-center gap-1 text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-900 transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
                   {t('forgot_password.back_to_email')}
                 </button>
                 
-                <Link to="/login" className="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors">
+                <Link to="/login" className="text-xs font-semibold text-zinc-500 hover:text-zinc-900 transition-colors">
                   {t('forgot_password.cancel')}
                 </Link>
               </div>
