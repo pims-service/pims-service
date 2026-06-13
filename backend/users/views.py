@@ -127,13 +127,22 @@ class SendOTPView(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         email = request.data.get('email')
         if not email:
-            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'email': ['Email is required.']}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Check if user already exists
-        from .models import User, EmailVerificationOTP
-        if User.objects.filter(email=email).exists():
-            return Response({'error': 'User with this email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+        username = request.data.get('username')
         
+        # If full registration info is provided, validate using SignupSerializer
+        if username:
+            serializer = SignupSerializer(data=request.data, context={'skip_otp_validation': True})
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # Fallback for resends/email-only checks
+            from .models import User
+            if User.objects.filter(email=email).exists():
+                return Response({'email': ['User with this email already exists.']}, status=status.HTTP_400_BAD_REQUEST)
+        
+        from .models import EmailVerificationOTP
         import random
         # Generate 6 digit OTP
         otp = str(random.randint(100000, 999999))

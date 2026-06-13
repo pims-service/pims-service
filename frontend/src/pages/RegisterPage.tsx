@@ -116,7 +116,7 @@ const RegisterPage: React.FC = () => {
     }
 
     try {
-      const response = await api.post('/auth/send-otp/', { email: formData.email });
+      const response = await api.post('/auth/send-otp/', isResend ? { email: formData.email } : formData);
       if (response.status === 200) {
         setPhase('otp');
         setOtpMessage(isResend ? 'A new verification code has been sent to your email.' : 'Verification code sent to your email.');
