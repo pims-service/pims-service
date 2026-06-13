@@ -18,21 +18,37 @@ const Timeline: React.FC = () => {
 
   return (
     <div className="my-10 w-full bg-zinc-50 border border-zinc-200 rounded-2xl p-6 shadow-sm">
-      <h3 className="text-xs font-bold uppercase text-zinc-400 tracking-wider mb-6 text-center">Program Timeline / پروگرام کا ٹائم لائن</h3>
-      <div className="relative flex items-center justify-between">
-        {/* Progress Line */}
+      <h3 className="text-xs font-bold uppercase text-zinc-400 tracking-wider mb-8 text-center">
+        Program Timeline / پروگرام کا ٹائم لائن
+      </h3>
+      
+      {/* Desktop Horizontal Timeline */}
+      <div className="hidden md:flex relative items-center justify-between">
         <div className="absolute left-4 right-4 top-1/2 h-1 bg-zinc-200 -translate-y-1/2 z-0" />
-        
         {steps.map((step, idx) => (
           <div key={idx} className="relative z-10 flex flex-col items-center">
-            {/* Step circle */}
             <div className="w-8 h-8 rounded-full bg-white border-2 border-[#2E4E90] hover:border-[#C8A951] flex items-center justify-center text-xs font-bold text-[#2E4E90] shadow transition-colors duration-200">
               {idx + 1}
             </div>
-            {/* Bilingual labels */}
             <div className="text-[10px] sm:text-xs font-semibold mt-3 text-center bg-zinc-50 px-1 whitespace-nowrap">
               <div className="text-zinc-800 font-latin">{step.en}</div>
               <div className="font-urdu leading-none text-[#C8A951] mt-1">{step.ur}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Mobile Vertical Timeline */}
+      <div className="md:hidden relative flex flex-col gap-6 pl-4">
+        <div className="absolute left-[29px] top-4 bottom-4 w-0.5 bg-zinc-200 z-0" />
+        {steps.map((step, idx) => (
+          <div key={idx} className="relative z-10 flex items-center gap-4">
+            <div className="w-8 h-8 rounded-full bg-white border-2 border-[#2E4E90] flex items-center justify-center text-xs font-bold text-[#2E4E90] shadow shrink-0">
+              {idx + 1}
+            </div>
+            <div className="flex flex-col text-left">
+              <span className="text-sm font-bold text-zinc-800 font-latin">{step.en}</span>
+              <span className="text-xs font-semibold font-urdu text-[#C8A951]">{step.ur}</span>
             </div>
           </div>
         ))}
@@ -165,8 +181,8 @@ const LandingPage: React.FC = () => {
       {/* Main Microsite Body */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
         {/* Navigation Sidebar */}
-        <aside className="lg:col-span-1 bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm overflow-x-auto lg:overflow-x-visible">
-          <nav className="flex lg:flex-col gap-2 min-w-max lg:min-w-0">
+        <aside className="lg:col-span-1 bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm">
+          <nav className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-col gap-2">
             {[
               { id: 'home', en: 'Home', ur: 'ہوم', icon: <Home size={16} /> },
               { id: 'info', en: 'Information', ur: 'معلومات', icon: <Info size={16} /> },
@@ -178,17 +194,19 @@ const LandingPage: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center justify-between gap-4 w-full px-4 py-3 rounded-xl font-semibold text-xs md:text-sm transition-all text-left outline-none ${
+                className={`flex flex-col lg:flex-row items-center lg:justify-between gap-1 lg:gap-4 w-full px-3 py-3 lg:px-4 rounded-xl font-semibold text-xs md:text-sm transition-all text-center lg:text-left outline-none border-b-2 lg:border-b-0 lg:border-l-4 ${
                   activeTab === tab.id
-                    ? 'bg-[#2E4E90] text-white border-l-4 border-[#C8A951] shadow-md'
-                    : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 border-l-4 border-transparent'
+                    ? 'bg-[#2E4E90] text-white border-[#C8A951] shadow-md'
+                    : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 border-transparent'
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  {tab.icon}
-                  <span className="font-latin">{tab.en}</span>
+                <div className="flex flex-col lg:flex-row items-center gap-1.5">
+                  <span className={activeTab === tab.id ? 'text-white' : 'text-zinc-500'}>
+                    {tab.icon}
+                  </span>
+                  <span className="font-latin text-[11px] sm:text-xs lg:text-sm">{tab.en}</span>
                 </div>
-                <span className="font-urdu leading-none">{tab.ur}</span>
+                <span className="font-urdu text-[10px] sm:text-xs lg:text-sm leading-none lg:mt-0 mt-0.5">{tab.ur}</span>
               </button>
             ))}
           </nav>

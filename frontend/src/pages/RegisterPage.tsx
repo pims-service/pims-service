@@ -212,15 +212,15 @@ const RegisterPage: React.FC = () => {
           </div>
 
         {Object.keys(errors).length > 0 && (
-          <div className="p-4 rounded-none bg-white border-2 border-black space-y-2">
-            <div className="flex items-center gap-2 text-black font-bold uppercase tracking-tight mb-1">
-              <AlertCircle className="w-5 h-5" />
+          <div className="p-4 rounded-2xl bg-red-50/40 border border-red-100 space-y-2 animate-in fade-in duration-350">
+            <div className="flex items-center gap-2 text-red-800 font-bold uppercase tracking-wider text-xs mb-1">
+              <AlertCircle className="w-4 h-4 shrink-0" />
               <span>Registration Failed</span>
             </div>
-            <ul className="list-disc list-inside text-sm text-black space-y-1">
+            <ul className="list-disc list-inside text-xs text-red-750 space-y-1 pl-1">
               {Object.entries(errors).map(([field, messages]) => (
                 <li key={field}>
-                  <span className="capitalize font-bold">{field.replace('_', ' ')}:</span> {messages[0]}
+                  <span className="capitalize font-semibold">{field.replace('_', ' ')}:</span> {messages[0]}
                 </li>
               ))}
             </ul>
@@ -387,29 +387,30 @@ const RegisterPage: React.FC = () => {
             </>
           ) : (
             <div className="space-y-6">
-              <div className="p-4 bg-zinc-50 border-2 border-black space-y-2 text-zinc-800">
-                <div className="flex items-center gap-2 font-bold uppercase tracking-tight text-sm">
-                  <Mail className="w-5 h-5 text-black" />
-                  <span>Verify your email</span>
+              <div className="p-5 bg-zinc-50/50 border border-zinc-150 rounded-2xl text-center space-y-3">
+                <div className="w-12 h-12 bg-zinc-100/60 rounded-full flex items-center justify-center mx-auto text-zinc-900 shadow-sm border border-zinc-200/40">
+                  <Mail className="w-5 h-5 text-zinc-800" />
                 </div>
-                <p className="text-xs leading-relaxed">
-                  We've sent a 6-digit verification code to <strong className="text-black">{formData.email}</strong>. 
-                  Please check your inbox and enter the code below to complete your registration.
-                </p>
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-zinc-900">Verify your email</h3>
+                  <p className="text-xs text-zinc-500 leading-relaxed max-w-xs mx-auto">
+                    We've sent a 6-digit verification code to <span className="text-zinc-900 font-semibold">{formData.email}</span>. Please check your inbox.
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-3">
-                <label className="block text-sm font-medium text-zinc-700" htmlFor="otp">Verification Code</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400" htmlFor="otp">Verification Code</label>
                 <div className="relative">
-                  <Key className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <Key className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                   <input
                     id="otp"
                     name="otp"
                     type="text"
                     required
-                    placeholder="Enter 6-digit code"
-                    className={`input-minimal !ps-10 tracking-[0.25em] text-center font-mono font-bold text-lg ${
-                      errors.otp ? 'border-black border-2 ring-0' : 'border-zinc-300'
+                    placeholder="000000"
+                    className={`w-full h-12 text-center text-xl font-bold tracking-[0.4em] font-mono border border-zinc-200 rounded-xl focus:ring-1 focus:ring-zinc-950 focus:border-zinc-950 outline-none transition-all !ps-8 ${
+                      errors.otp ? 'border-zinc-900 ring-1 ring-zinc-900' : 'border-zinc-200'
                     }`}
                     value={formData.otp}
                     onChange={handleChange}
@@ -418,25 +419,26 @@ const RegisterPage: React.FC = () => {
                 </div>
                 {otpMessage && <p className="text-xs text-emerald-600 font-medium italic mt-1">{otpMessage}</p>}
               </div>
+
               <div className="flex justify-between items-center gap-4 mt-4">
                 <button
                   type="button"
                   onClick={() => setPhase('details')}
-                  className="flex-1 border-2 border-black py-2.5 px-4 uppercase font-bold text-xs flex items-center justify-center gap-2 hover:bg-zinc-50 cursor-pointer"
+                  className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-700 hover:text-zinc-900 font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowLeft className="w-3.5 h-3.5" />
                   Edit Details
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSendOTP(true)}
                   disabled={resending}
-                  className="flex-1 border-2 border-black py-2.5 px-4 uppercase font-bold text-xs flex items-center justify-center gap-2 hover:bg-zinc-50 disabled:opacity-50 cursor-pointer"
+                  className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-700 hover:text-zinc-900 font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer shadow-sm"
                 >
                   {resending ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-zinc-500" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />
                   ) : (
-                    <RefreshCw className="w-4 h-4" />
+                    <RefreshCw className="w-3.5 h-3.5" />
                   )}
                   Resend Code
                 </button>

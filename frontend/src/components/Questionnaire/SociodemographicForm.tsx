@@ -15,6 +15,7 @@ interface SociodemographicFormProps {
   questions: Question[];
   responseSetId: string;
   initialResponses: Record<string, any>;
+  submitting?: boolean;
   onComplete: (responses: Record<string, any>) => void;
 }
 
@@ -22,6 +23,7 @@ const SociodemographicForm: React.FC<SociodemographicFormProps> = ({
   questions,
   responseSetId,
   initialResponses,
+  submitting = false,
   onComplete
 }) => {
   const [responses, setResponses] = useState<Record<string, any>>(initialResponses);
@@ -200,14 +202,25 @@ const SociodemographicForm: React.FC<SociodemographicFormProps> = ({
       <div className="mt-16 pt-8 border-t border-zinc-200 flex justify-end">
         <button
           onClick={handleSubmit}
-          disabled={!isAllCompleted || isSaving}
+          disabled={!isAllCompleted || isSaving || submitting}
           className={`px-8 py-4 rounded-xl font-bold text-sm tracking-wide transition-all duration-300 ${
-            isAllCompleted && !isSaving
+            isAllCompleted && !isSaving && !submitting
               ? 'bg-zinc-900 text-white hover:bg-zinc-800 hover:shadow-lg hover:-translate-y-0.5'
               : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
           }`}
         >
-          {isSaving ? 'Saving...' : isAllCompleted ? 'Submit Sociodemographic Data' : 'Complete all questions to submit'}
+          {submitting ? (
+            <div className="flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Submitting...</span>
+            </div>
+          ) : isSaving ? (
+            'Saving...'
+          ) : isAllCompleted ? (
+            'Submit Sociodemographic Data'
+          ) : (
+            'Complete all questions to submit'
+          )}
         </button>
       </div>
     </div>

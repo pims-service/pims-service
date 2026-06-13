@@ -10,13 +10,13 @@ import { useNotifications } from '../hooks/useNotifications';
 const Navbar: React.FC = () => {
   const location = useLocation();
   const isActivityPage = location.pathname.startsWith('/activity');
-  const isLandingPage = location.pathname === '/';
-  const showLanguageSwitcher = !isActivityPage && !isLandingPage;
   
   const { t } = useTranslation();
   const isAuthenticated = !!localStorage.getItem('access_token');
   const userRole = localStorage.getItem('user_role');
   const isAdmin = userRole === 'Admin';
+  const showLanguageSwitcher = isAuthenticated && !isActivityPage;
+  
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSupportOpen, setIsSupportOpen] = useState(false);
   const [unreadReplies, setUnreadReplies] = useState(0);
