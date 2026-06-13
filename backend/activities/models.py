@@ -69,6 +69,5 @@ from django.core.cache import cache
 @receiver(post_save, sender=Submission)
 def invalidate_user_completion_cache(sender, instance, **kwargs):
     """Clears activity-related caches for a user when they make a submission."""
-    cache.delete(f"user_{instance.user_id}_completion_rate")
     cache.delete(f"user_{instance.user_id}_exp_day")
     cache.delete(f"user_{instance.user_id}_activity_state")

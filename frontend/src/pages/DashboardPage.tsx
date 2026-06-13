@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api, { questionnairesApi } from '../services/api';
 import { useTranslation } from 'react-i18next';
-import { Calendar, CheckCircle2, Clock, ArrowRight, FileText, ClipboardCheck, AlertTriangle } from 'lucide-react';
+import { Calendar, CheckCircle2, Clock, ArrowRight, ClipboardCheck, AlertTriangle } from 'lucide-react';
 
 const DashboardPage: React.FC = () => {
   const [activities, setActivities] = useState<any[]>([]);
-  const [submissions, setSubmissions] = useState<any[]>([]);
   const [phase, setPhase] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [posttestQuestionnaire, setPosttestQuestionnaire] = useState<any>(null);
@@ -18,11 +17,9 @@ const DashboardPage: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [actRes, phaseRes, subRes, activitySubRes, profileRes] = await Promise.all([
+        const [actRes, phaseRes, profileRes] = await Promise.all([
           api.get('/activities/daily/current/').catch(() => ({ data: null })),
           api.get('/phases/current/').catch(() => ({ data: null })),
-          api.get('/questionnaires/response-sets/').catch(() => ({ data: { results: [] } })),
-          api.get('/activities/all-submissions/').catch(() => ({ data: { results: [] } })),
           api.get('/users/profile/').catch(() => ({ data: null }))
         ]);
 
@@ -50,27 +47,6 @@ const DashboardPage: React.FC = () => {
           }
         }
 
-        const questionnaireSubmissions = (Array.isArray(subRes.data) ? subRes.data : subRes.data?.results || [])
-          .filter((s: any) => s.status === 'COMPLETED')
-          .map((s: any) => ({
-            ...s,
-            type: 'questionnaire',
-            display_title: s.questionnaire_title || 'Assessment Result',
-            date: s.completed_at
-          }));
-
-        const dailySubmissions = (Array.isArray(activitySubRes.data) ? activitySubRes.data : activitySubRes.data?.results || []).map((s: any) => ({
-          ...s,
-          type: 'activity',
-          display_title: s.activity_title || 'Daily Activity',
-          date: s.submission_date
-        }));
-
-        const combinedSubmissions = [...questionnaireSubmissions, ...dailySubmissions]
-          .filter(s => s.date)
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-        setSubmissions(combinedSubmissions.slice(0, 5));
       } catch (err) {
         console.error(err);
       } finally {
@@ -80,12 +56,6 @@ const DashboardPage: React.FC = () => {
     fetchData();
   }, []);
 
-  const getPerformanceLabel = (rate: number) => {
-    if (rate >= 90) return t('dashboard.optimal');
-    if (rate >= 70) return 'Good';
-    if (rate >= 40) return 'Average';
-    return 'Action Required';
-  };
 
   if (userProfile?.is_disqualified) {
     return (
@@ -122,7 +92,7 @@ const DashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-4xl mx-auto space-y-8">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-3xl font-bold mb-2 text-zinc-900 leading-tight">{t('dashboard.welcome')}</h1>
@@ -150,8 +120,7 @@ const DashboardPage: React.FC = () => {
         </section>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="space-y-6">
           {/* Milestone Banner */}
           {userProfile?.due_milestone && posttestQuestionnaire && (() => {
             const getMilestoneDetails = (milestone: string) => {
@@ -267,54 +236,6 @@ const DashboardPage: React.FC = () => {
               )}
             </div>
           </section>
-
-          <section className="border border-zinc-200 rounded-xl p-6 md:p-8 bg-white shadow-sm">
-            <h2 className="text-xl font-bold text-zinc-900 mb-6 flex items-center gap-2">
-              <CheckCircle2 className="text-zinc-500" size={20} /> {t('dashboard.recent_submissions')}
-            </h2>
-            <div className="divide-y divide-zinc-100">
-              {(submissions || []).map((sub) => (
-                <div key={`${sub.type}-${sub.id}`} className="py-4 flex items-center justify-between group">
-                  <div className="flex items-center gap-3">
-                    <FileText size={18} className="text-zinc-400" />
-                    <div>
-                      <span className="block font-medium text-zinc-800">{sub.display_title}</span>
-                      <span className="text-zinc-400 text-xs">{new Date(sub.date).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                  {sub.type === 'questionnaire' ? (
-                    <Link to={`/results/${sub.id}`} className="flex items-center gap-1 text-zinc-600 text-sm font-medium hover:text-zinc-900 opacity-0 group-hover:opacity-100 transition-all">
-                      {t('dashboard.view_insights')} <ArrowRight size={14} />
-                    </Link>
-                  ) : (
-                    <Link to={`/activity/${sub.activity}`} className="flex items-center gap-1 text-zinc-600 text-sm font-medium hover:text-zinc-900 opacity-0 group-hover:opacity-100 transition-all">
-                      Edit <ArrowRight size={14} />
-                    </Link>
-                  )}
-                </div>
-              ))}
-              {submissions.length === 0 && (
-                <div className="py-8 text-center text-zinc-400 italic text-sm">
-                  {t('dashboard.no_submissions')}
-                </div>
-              )}
-            </div>
-          </section>
-        </div>
-
-        <div className="space-y-6">
-
-
-          <div className="border border-zinc-200 rounded-xl p-6 bg-white shadow-sm flex flex-col items-center text-center">
-            <div className="flex items-center justify-center p-5 rounded-xl bg-zinc-800 text-white mb-4 leading-none">
-              <div className="text-3xl font-bold">{userProfile?.completion_rate || 0}%</div>
-            </div>
-            <h4 className="font-semibold text-zinc-800 text-sm w-full text-center leading-normal">{t('dashboard.completion_rate')}</h4>
-            <p className="text-zinc-400 text-xs mt-1 w-full text-center leading-normal">
-              {t('dashboard.performance')}: <span dir="ltr" className="inline-block font-latin">{getPerformanceLabel(userProfile?.completion_rate || 0)}</span>
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

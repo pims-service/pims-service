@@ -14,14 +14,6 @@ import {
   Save
 } from 'lucide-react';
 
-const SCALE_NAMES: Record<string, string> = {
-  'PERMA': 'PERMA Profiler',
-  'PHQ-9': 'Depression Severity (PHQ-9)',
-  'GAD-7': 'Anxiety Severity (GAD-7)',
-  'PANAS': 'Positive and Negative Affect (PANAS)',
-  'Gratitude': 'Gratitude Scale',
-  'SIDAS': 'Suicidal Ideation (SIDAS)',
-};
 
 const getNumericValueForResponse = (question: any, responseValue: any): number | undefined => {
   if (responseValue === undefined || responseValue === null) return undefined;
@@ -519,9 +511,6 @@ const QuestionnairePage: React.FC = () => {
     return { english: cleanContent, urdu: '' };
   };
 
-  const currentScaleName = currentScaleGroup.name;
-  const currentScaleTitle = SCALE_NAMES[currentScaleName] || `${currentScaleName} Scale`;
-
   return (
     <div className="max-w-4xl mx-auto py-12 px-4">
       {/* Sticky Header for Save Status */}
@@ -548,7 +537,6 @@ const QuestionnairePage: React.FC = () => {
       <div className="mb-16 space-y-6">
         <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.3em]">
           <span className="text-zinc-400 text-xs font-medium">Scale {currentIndex + 1} / {scaleGroups.length}</span>
-          <span className="text-zinc-700 text-xs font-semibold">{currentScaleTitle}</span>
         </div>
         <div className="h-2 w-full bg-zinc-100 rounded-full overflow-hidden">
           <motion.div

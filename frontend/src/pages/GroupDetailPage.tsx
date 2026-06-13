@@ -22,6 +22,7 @@ interface Participant {
   full_name: string;
   username: string;
   email: string;
+  whatsapp_number: string;
   submission_count: number;
   has_completed_sociodemographic: boolean;
   current_experiment_day: number | null;
@@ -230,7 +231,7 @@ const GroupDetailPage: React.FC = () => {
                 <tr className="bg-zinc-50/30 border-b border-zinc-100">
                   <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Participant</th>
                   <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Day Number</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Daily Submissions</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Contact</th>
                   <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider text-right">Actions</th>
                 </tr>
@@ -246,7 +247,6 @@ const GroupDetailPage: React.FC = () => {
                         <div>
                           <div className="font-semibold text-zinc-900 leading-tight">{p.full_name || 'Anonymous Researcher'}</div>
                           <div className="text-xs text-zinc-400">@{p.username}</div>
-                          <div className="text-[11px] text-zinc-500 font-medium select-all mt-0.5">{p.email}</div>
                         </div>
                       </div>
                     </td>
@@ -262,8 +262,11 @@ const GroupDetailPage: React.FC = () => {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm font-semibold text-zinc-800">
-                      {p.submission_count}
+                    <td className="px-6 py-4">
+                      <div className="text-xs font-semibold text-zinc-800 select-all">{p.email}</div>
+                      <div className="text-xs text-zinc-500 select-all mt-0.5">
+                        {p.whatsapp_number || <span className="text-zinc-300 italic">No number</span>}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       {p.is_disqualified ? (

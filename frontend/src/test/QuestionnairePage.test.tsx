@@ -100,7 +100,7 @@ describe('QuestionnairePage Scale-Grouped Paging and Autosave', () => {
     // Verify first scale group (PERMA) questions are loaded
     await waitFor(() => {
       expect(screen.getByText('Scale 1 / 2')).toBeInTheDocument();
-      expect(screen.getByText('PERMA Profiler')).toBeInTheDocument();
+      expect(screen.getByText('Longitudinal Scales')).toBeInTheDocument();
       // First question (bilingual)
       expect(screen.getByText('How happy are you?')).toBeInTheDocument();
       expect(screen.getByText('آپ کتنے خوش ہیں؟')).toBeInTheDocument();
@@ -128,7 +128,7 @@ describe('QuestionnairePage Scale-Grouped Paging and Autosave', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('PERMA Profiler')).toBeInTheDocument();
+      expect(screen.getByText('Longitudinal Scales')).toBeInTheDocument();
     });
 
     // We have options 0 and 10 for ques-1
@@ -177,7 +177,7 @@ describe('QuestionnairePage Scale-Grouped Paging and Autosave', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('PERMA Profiler')).toBeInTheDocument();
+      expect(screen.getByText('Longitudinal Scales')).toBeInTheDocument();
     });
 
     // Answer the required questions for scale 1

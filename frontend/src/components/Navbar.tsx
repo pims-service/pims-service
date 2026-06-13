@@ -88,19 +88,7 @@ const Navbar: React.FC = () => {
                   <User size={18} /> {t('navbar.profile')}
                 </Link>
                 
-                {!isAdmin && (
-                  <button
-                    onClick={() => setIsSupportOpen(true)}
-                    className="relative text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors flex items-center gap-2"
-                  >
-                    <HelpCircle size={18} /> Support
-                    {unreadReplies > 0 && (
-                      <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                        {unreadReplies}
-                      </span>
-                    )}
-                  </button>
-                )}
+
                 
                 <button
                   onClick={handleLogout}
@@ -121,11 +109,14 @@ const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile Hamburger Toggle */}
-          <div className="md:hidden flex items-center">
+          {/* Mobile Actions */}
+          <div className="md:hidden flex items-center gap-2">
+            {!isAdmin && !isActivityPage && (
+              <LanguageSwitcher />
+            )}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-zinc-600 hover:text-zinc-900 focus:outline-none"
+              className="text-zinc-600 hover:text-zinc-900 focus:outline-none p-1"
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -135,12 +126,6 @@ const Navbar: React.FC = () => {
         {/* Mobile Menu Drawer */}
         {isMenuOpen && (
           <div className="md:hidden border-t border-zinc-100 bg-white py-4 px-6 space-y-4 animate-in slide-in-from-top-2 duration-200">
-            {!isAdmin && !isActivityPage && (
-              <div className="flex items-center justify-between pb-2 border-b border-zinc-50">
-                <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Language</span>
-                <LanguageSwitcher />
-              </div>
-            )}
             {isAuthenticated ? (
               <>
                 {!isAdmin && (
@@ -169,23 +154,7 @@ const Navbar: React.FC = () => {
                   <User size={20} /> {t('navbar.profile')}
                 </Link>
                 
-                {!isAdmin && (
-                  <button
-                    onClick={() => {
-                      setIsSupportOpen(true);
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 text-sm font-medium text-zinc-600 py-2 w-full text-left"
-                  >
-                    <div className="relative">
-                      <HelpCircle size={20} />
-                      {unreadReplies > 0 && (
-                        <span className="absolute -top-1 -right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border border-white"></span>
-                      )}
-                    </div>
-                    Support
-                  </button>
-                )}
+
                 
                 <button
                   onClick={handleLogout}
@@ -215,6 +184,21 @@ const Navbar: React.FC = () => {
           </div>
         )}
       </nav>
+      {isAuthenticated && !isAdmin && (
+        <button
+          onClick={() => setIsSupportOpen(true)}
+          className="fixed bottom-6 right-6 z-50 px-5 py-3 bg-zinc-900 text-white hover:bg-zinc-800 rounded-full shadow-2xl hover:shadow-zinc-900/30 transition-all duration-300 hover:scale-105 flex items-center gap-2 border border-zinc-700/50 animate-in fade-in zoom-in-95 duration-300 font-semibold text-sm"
+          title="Support / رابطہ"
+        >
+          <HelpCircle size={18} />
+          <span>Support / مدد</span>
+          {unreadReplies > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center border border-white">
+              {unreadReplies}
+            </span>
+          )}
+        </button>
+      )}
     </>
   );
 };

@@ -328,7 +328,6 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
             cache.delete(f"user_{user.id}_due_milestone")
             cache.delete(f"user_{user.id}_activity_state")
             cache.delete(f"user_{user.id}_exp_day")
-            cache.delete(f"user_{user.id}_completion_rate")
 
             # Calculate and save scores
             calculate_and_save_scores(instance)
