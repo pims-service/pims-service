@@ -109,7 +109,7 @@ def test_send_welcome_email_task_skips_disqualified_user(test_user):
 
 
 @pytest.mark.django_db
-def test_send_welcome_email_task_skips_screen_out_risk(test_user):
+def test_send_welcome_email_task_sends_even_with_risk(test_user):
     from questionnaires.models import Questionnaire, ResponseSet
 
     test_user.onboarding_completed_at = test_user.created_at
@@ -130,6 +130,5 @@ def test_send_welcome_email_task_skips_screen_out_risk(test_user):
 
     result = send_welcome_email_task(test_user.user_id)
 
-    assert result['status'] == 'skipped'
-    assert result['reason'] == 'screen_out_risk'
-    assert len(mail.outbox) == 0
+    assert result['status'] == 'sent'
+    assert len(mail.outbox) == 1

@@ -79,14 +79,13 @@ def check_and_trigger_risk_protocol(response_set, *, notify_participant=True):
             from notifications.tasks import send_notification
             from django.db import transaction
 
-            is_signup_psychometric = (
-                response_set.milestone == 'SIGNUP'
-                and response_set.questionnaire.assessment_type == 'PSYCHOMETRIC'
-            )
+            # Participant email: bilingual support resources at every stage (including SIGNUP).
+            if notify_participant:
+                from emails.tasks import send_support_email_task
+                transaction.on_commit(
+                    lambda user_id=user.user_id: send_support_email_task.delay(user_id)
+                )
 
-            # Participant email: generic distress alert for in-study triggers only.
-            # SIGNUP screen-out sends E0 from the submit serializer instead.
-            if notify_participant and not is_signup_psychometric:
                 participant_message = (
                     "Your responses suggest you may be experiencing distress. To protect your well-being, "
                     "please reach out to one of the support services below. You are not alone.\n\n"
@@ -95,15 +94,6 @@ def check_and_trigger_risk_protocol(response_set, *, notify_participant=True):
                     "Rozan 0304-1118666 / 0800-22444 (Mon–Sat)\n"
                     "Emergency Rescue 1122, Edhi 115, Chhipa 1020"
                 )
-
-                p_email = Notification.objects.create(
-                    user=user,
-                    n_type='email',
-                    message=participant_message,
-                    scheduled_time=timezone.now(),
-                    status='pending'
-                )
-                transaction.on_commit(lambda: send_notification.delay(p_email.id))
 
                 p_whatsapp = Notification.objects.create(
                     user=user,
@@ -317,6 +307,7 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
             instance.save()
 
             user = instance.user
+            socio_disqualified = False
             if instance.questionnaire.assessment_type == 'SOCIODEMOGRAPHIC':
                 is_disqualified = False
                 for item in responses_data:
@@ -334,6 +325,7 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
                     user.is_disqualified = True
                     user.disqualification_reason = "Answered YES to eligibility screener."
                     user.save(update_fields=['is_disqualified', 'disqualification_reason'])
+                    socio_disqualified = True
                 else:
                     assign_user_to_group(user)
                     user.has_completed_sociodemographic = True
@@ -365,23 +357,12 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
             # Check and trigger risk-protocol alert
             check_and_trigger_risk_protocol(instance)
 
-            if (
-                is_new_onboarding
-                and not user.is_disqualified
-                and instance.suicide_risk_triggered
-            ):
-                user.is_disqualified = True
-                user.disqualification_reason = 'Safety screener exclusion at sign-up.'
-                user.save(update_fields=['is_disqualified', 'disqualification_reason'])
-                from emails.tasks import send_screen_out_email_task
+            if socio_disqualified:
+                from emails.tasks import send_socio_disqualification_email_task
                 transaction.on_commit(
-                    lambda user_id=user.user_id: send_screen_out_email_task.delay(user_id)
+                    lambda user_id=user.user_id: send_socio_disqualification_email_task.delay(user_id)
                 )
-            elif (
-                is_new_onboarding
-                and not user.is_disqualified
-                and not instance.suicide_risk_triggered
-            ):
+            elif is_new_onboarding and not user.is_disqualified:
                 from emails.tasks import send_welcome_email_task
                 transaction.on_commit(
                     lambda user_id=user.user_id: send_welcome_email_task.delay(user_id)

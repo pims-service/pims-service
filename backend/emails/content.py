@@ -43,6 +43,66 @@ WELCOME_EMAIL = {
     'closing_team_ur': 'سائیکیورسٹی ریسرچ ٹیم',
 }
 
+SUPPORT_EMAIL = {
+    'subject_en': 'Support resources are available',
+    'subject_ur': 'معاونت کے وسائل دستیاب ہیں',
+    'title_en': 'Support Resources Available',
+    'title_ur': 'امدادی وسائل دستیاب ہیں',
+    'paragraphs_en': [
+        (
+            'Your responses suggest you may be experiencing distress. To protect your well-being, '
+            'please reach out to one of the support services below. You are not alone.'
+        ),
+        (
+            'Support is available, and asking for help is a sign of strength, not weakness. '
+            'If you are ever in immediate danger, please contact your local emergency services right away.'
+        ),
+    ],
+    'paragraphs_ur': [
+        (
+            'آپ کے جوابات سے لگتا ہے کہ آپ پریشانی محسوس کر رہے ہیں۔ اپنی بہبود کے لیے '
+            'براہِ کرم نیچے دیے گئے اداروں میں سے کسی ایک سے رابطہ کریں۔ آپ اکیلے نہیں ہیں۔'
+        ),
+        (
+            'مدد دستیاب ہے، اور مدد مانگنا کمزوری نہیں بلکہ ہمت کی علامت ہے۔ '
+            'اگر آپ کبھی فوری خطرے میں ہوں تو فوراً اپنی قریبی ہنگامی خدمات سے رابطہ کریں۔'
+        ),
+    ],
+    'closing_en': 'With care,',
+    'closing_team_en': 'Psycheversity Research Team',
+    'closing_ur': 'خلوص اور ہمدردی کے ساتھ،',
+    'closing_team_ur': 'سائیکیورسٹی ریسرچ ٹیم',
+}
+
+SOCIO_DISQUALIFICATION_EMAIL = {
+    'subject_en': 'Thank you for your interest : eligibility update',
+    'subject_ur': 'آپ کی دلچسپی کا شکریہ : اہلیت کے بارے میں ایک گزارش',
+    'title_en': 'Eligibility update',
+    'title_ur': 'اہلیت کے بارے میں گزارش',
+    'paragraphs_en': [
+        'Thank you for your interest in the Psycheversity wellbeing study.',
+        (
+            'Based on your responses to our eligibility questions, this study is not the right fit '
+            'for you at this time. This is not a reflection on you in any way.'
+        ),
+        (
+            'If you have questions, you are welcome to contact us at support@psycheversity.com.'
+        ),
+    ],
+    'paragraphs_ur': [
+        'سائیکیورسٹی کی بہبود تحقیق میں دلچسپی کا شکریہ۔',
+        (
+            'ہمارے اہلیت کے سوالنامے میں آپ کے جوابات کی بنیاد پر، یہ تحقیق اِس وقت '
+            'آپ کے لیے موزوں نہیں۔ اِس میں آپ کی کوئی کمی نہیں۔'
+        ),
+        'اگر آپ کے کوئی سوالات ہوں تو آپ support@psycheversity.com پر ہم سے رابطہ کر سکتے ہیں۔',
+    ],
+    'closing_en': 'Warm regards,',
+    'closing_team_en': 'Psycheversity Research Team',
+    'closing_ur': 'نیک تمناؤں کے ساتھ،',
+    'closing_team_ur': 'سائیکیورسٹی ریسرچ ٹیم',
+}
+
 SCREEN_OUT_EMAIL = {
     'subject_en': 'Thank you for your interest : a note about next steps',
     'subject_ur': 'آپ کی دلچسپی کا شکریہ : اگلے مرحلے کے بارے میں ایک گزارش',

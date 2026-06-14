@@ -216,6 +216,121 @@ def build_welcome_email(first_name: str, links: dict[str, str] | None = None) ->
     }
 
 
+def _build_simple_bilingual_email(
+    first_name: str,
+    email_content: dict,
+    *,
+    links: dict[str, str] | None = None,
+    extra_english_html: str = '',
+    extra_urdu_html: str = '',
+    extra_english_text: str = '',
+    extra_urdu_text: str = '',
+) -> dict[str, str]:
+    links = links or get_email_links()
+    subject = build_bilingual_subject(email_content['subject_en'], email_content['subject_ur'])
+
+    english_body = _render_paragraphs(email_content['paragraphs_en'], greeting=first_name)
+    english_body += extra_english_html
+    english_body += (
+        f'<p style="margin: 18px 0 4px; font-size: 15px; line-height: 1.6;">{email_content["closing_en"]}</p>'
+        f'<p style="margin: 0; font-size: 15px; line-height: 1.6; font-weight: 600;">'
+        f'{email_content["closing_team_en"]}</p>'
+    )
+
+    urdu_body = _render_urdu_paragraphs(email_content['paragraphs_ur'], greeting=first_name)
+    urdu_body += extra_urdu_html
+    urdu_body += (
+        f'<p style="margin: 18px 0 4px; font-size: 16px; line-height: 1.9;">{email_content["closing_ur"]}</p>'
+        f'<p style="margin: 0; font-size: 16px; line-height: 1.9; font-weight: 600;">'
+        f'{email_content["closing_team_ur"]}</p>'
+    )
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu&display=swap" rel="stylesheet">
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #f4f4f5;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+            <div style="background-color: #ffffff; border: 1px solid #e4e4e7; border-radius: 8px; padding: 24px;">
+                <h1 style="margin: 0 0 18px; font-family: {LATIN_FONT_STACK}; font-size: 22px; color: {NAVY}; border-bottom: 2px solid {GOLD}; padding-bottom: 10px;">
+                    {email_content['title_en']}
+                </h1>
+                <div style="font-family: {LATIN_FONT_STACK}; color: #18181b;">
+                    {english_body}
+                </div>
+                <hr style="border: 0; border-top: 1px solid #e4e4e7; margin: 24px 0;">
+                <div dir="rtl" style="font-family: {URDU_FONT_STACK}; text-align: right; color: #18181b;">
+                    <h2 style="margin: 0 0 18px; font-size: 22px; color: {NAVY}; border-bottom: 2px solid {GOLD}; padding-bottom: 10px;">
+                        {email_content['title_ur']}
+                    </h2>
+                    {urdu_body}
+                </div>
+                {build_standard_footer_html(links)}
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+    text_content = '\n\n'.join([
+        email_content['subject_en'],
+        '',
+        f'Dear {first_name},',
+        *email_content['paragraphs_en'],
+        extra_english_text,
+        email_content['closing_en'],
+        email_content['closing_team_en'],
+        '',
+        email_content['subject_ur'],
+        '',
+        f'محترم {first_name}،',
+        *email_content['paragraphs_ur'],
+        extra_urdu_text,
+        email_content['closing_ur'],
+        email_content['closing_team_ur'],
+        '',
+        STANDARD_FOOTER['paragraphs_en'][0].format(**links),
+        STANDARD_FOOTER['paragraphs_en'][1].format(**links),
+        STANDARD_FOOTER['paragraphs_en'][2],
+        '',
+        STANDARD_FOOTER['paragraphs_ur'][0].format(**links),
+        STANDARD_FOOTER['paragraphs_ur'][1].format(**links),
+        STANDARD_FOOTER['paragraphs_ur'][2],
+    ])
+
+    return {
+        'subject': subject,
+        'text_content': text_content,
+        'html_content': html_content,
+    }
+
+
+def build_support_email(first_name: str, links: dict[str, str] | None = None) -> dict[str, str]:
+    from .content import SUPPORT_EMAIL
+
+    crisis_en_html, crisis_ur_html = _build_crisis_resources_html()
+    crisis_en_text, crisis_ur_text = _build_crisis_resources_text()
+    return _build_simple_bilingual_email(
+        first_name,
+        SUPPORT_EMAIL,
+        links=links,
+        extra_english_html=crisis_en_html,
+        extra_urdu_html=crisis_ur_html,
+        extra_english_text=crisis_en_text,
+        extra_urdu_text=crisis_ur_text,
+    )
+
+
+def build_socio_disqualification_email(first_name: str, links: dict[str, str] | None = None) -> dict[str, str]:
+    from .content import SOCIO_DISQUALIFICATION_EMAIL
+
+    return _build_simple_bilingual_email(first_name, SOCIO_DISQUALIFICATION_EMAIL, links=links)
+
+
 def build_screen_out_email(first_name: str, links: dict[str, str] | None = None) -> dict[str, str]:
     from .content import SCREEN_OUT_EMAIL
 

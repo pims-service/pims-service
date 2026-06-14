@@ -112,7 +112,7 @@ def test_sociodemographic_submission_completes_onboarding(fresh_client, fresh_us
     assert 'سائیکیورسٹی میں خوش آمدید' in welcome.subject
     assert welcome.to == [fresh_user.email]
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_sociodemographic_disqualification(fresh_client, fresh_user, test_group):
     """
     Submitting a sociodemographic response set with a disqualifying answer
@@ -153,9 +153,12 @@ def test_sociodemographic_disqualification(fresh_client, fresh_user, test_group)
     assert fresh_user.disqualification_reason != ""
     assert fresh_user.has_completed_sociodemographic is False
     assert fresh_user.group is None
-    assert len(mail.outbox) == 0
+    assert len(mail.outbox) == 1
+    disqualification = mail.outbox[0]
+    assert 'Thank you for your interest' in disqualification.subject
+    assert 'not the right fit for you at this time' in disqualification.alternatives[0][0]
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_sociodemographic_disqualification_by_order(fresh_client, fresh_user, test_group):
     """
     Submitting a sociodemographic response set with a question of order 11/12
@@ -196,6 +199,7 @@ def test_sociodemographic_disqualification_by_order(fresh_client, fresh_user, te
     assert fresh_user.disqualification_reason != ""
     assert fresh_user.has_completed_sociodemographic is False
     assert fresh_user.group is None
+    assert len(mail.outbox) == 1
 
 @pytest.mark.django_db
 def test_7_days_milestone_completion_marks_posttest(fresh_client, fresh_user):

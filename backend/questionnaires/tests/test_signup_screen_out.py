@@ -44,7 +44,7 @@ def _create_signup_battery_with_risk_trigger():
 
 
 @pytest.mark.django_db(transaction=True)
-def test_signup_risk_sends_screen_out_email_not_welcome(fresh_client, fresh_user, test_group):
+def test_signup_risk_sends_support_and_welcome_not_disqualified(fresh_client, fresh_user, test_group):
     test_group.is_active = True
     test_group.save()
 
@@ -70,14 +70,13 @@ def test_signup_risk_sends_screen_out_email_not_welcome(fresh_client, fresh_user
     assert response.status_code == status.HTTP_200_OK
 
     fresh_user.refresh_from_db()
-    assert fresh_user.is_disqualified is True
-    assert 'Safety screener exclusion' in fresh_user.disqualification_reason
+    assert fresh_user.is_disqualified is False
     assert fresh_user.onboarding_completed_at is not None
 
-    assert len(mail.outbox) == 1
-    screen_out = mail.outbox[0]
-    assert 'Thank you for your interest' in screen_out.subject
-    assert 'not the right fit for you at this time' in screen_out.alternatives[0][0]
+    assert len(mail.outbox) == 2
+    subjects = [message.subject for message in mail.outbox]
+    assert any('Support resources are available' in subject for subject in subjects)
+    assert any('Welcome to Psycheversity' in subject for subject in subjects)
     assert Notification.objects.filter(user=fresh_user, n_type='email').count() == 0
 
 
