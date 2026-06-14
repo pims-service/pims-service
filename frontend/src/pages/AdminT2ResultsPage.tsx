@@ -173,54 +173,68 @@ const AdminT2ResultsPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-700 pt-0">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-zinc-200 pb-6">
-        <div className="space-y-1 flex-1">
-          <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium mb-1">
-            <ClipboardCheck size={14} /> 3-Month Assessment
+      <header className="border-b border-zinc-200 pb-5 space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium">
+              <ClipboardCheck size={14} /> 3-Month Assessment
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 tracking-tight">
+              3-Month Assessment Results
+            </h1>
+            <p className="text-zinc-500 text-sm">
+              Psychometric results from completed 3-month assessments
+            </p>
           </div>
-          <h1 className="text-3xl font-bold text-zinc-900">3-Month Assessment Results</h1>
-          <p className="text-zinc-500 text-sm">Psychometric results from completed 3-month assessments</p>
+          <div className="flex items-center md:self-end">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-50 border border-zinc-205 rounded-lg text-sm">
+              <span className="text-zinc-500 text-xs uppercase tracking-wider font-semibold">Total Participants:</span>
+              <span className="font-bold text-zinc-800 text-sm font-mono">{totalCount}</span>
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+            <div className="relative group sm:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
+              <input
+                type="text"
+                placeholder="Search participants..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-200 transition-all text-sm"
+              />
+            </div>
+
+            <select
+              value={selectedGroup}
+              onChange={(e) => setSelectedGroup(e.target.value)}
+              className="px-3 py-2 bg-white border border-zinc-200 rounded-lg focus:outline-none text-sm text-zinc-700 cursor-pointer"
+            >
+              <option value="All">All Groups</option>
+              {uniqueGroups.sort().map(grp => (
+                <option key={grp} value={grp}>{grp}</option>
+              ))}
+            </select>
+          </div>
+
           <button
             onClick={handleExport}
             disabled={!!exportingId}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-zinc-800 text-white rounded-lg font-medium text-sm hover:bg-zinc-700 transition-colors disabled:opacity-40 whitespace-nowrap mr-2"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-zinc-800 text-white rounded-lg font-medium text-sm hover:bg-zinc-700 transition-colors disabled:opacity-40 whitespace-nowrap"
           >
             {exportingId ? (
               <>
-                <RotateCw size={16} className="animate-spin" />
+                <RotateCw size={14} className="animate-spin" />
                 Preparing...
               </>
             ) : (
               <>
-                <Download size={16} /> Export CSV
+                <Download size={14} /> Export CSV
               </>
             )}
           </button>
-          
-          <div className="relative group flex-grow sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
-            <input
-              type="text"
-              placeholder="Search participants..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-200 transition-all text-sm"
-            />
-          </div>
-
-          <select
-            value={selectedGroup}
-            onChange={(e) => setSelectedGroup(e.target.value)}
-            className="px-3 py-2.5 bg-white border border-zinc-200 rounded-lg focus:outline-none text-sm text-zinc-700 cursor-pointer"
-          >
-            <option value="All">All Groups</option>
-            {uniqueGroups.sort().map(grp => (
-              <option key={grp} value={grp}>{grp}</option>
-            ))}
-          </select>
         </div>
       </header>
 

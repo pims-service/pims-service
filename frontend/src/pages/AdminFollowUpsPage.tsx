@@ -16,12 +16,17 @@ const AdminFollowUpsPage: React.FC = () => {
   const [hasNext, setHasNext] = useState(false);
   const [hasPrev, setHasPrev] = useState(false);
 
-  const fetchTickets = async (page: number = 1) => {
+  // Status Filter State
+  const [selectedStatus, setSelectedStatus] = useState<string>('');
+
+  const fetchTickets = async (page: number = 1, status: string = selectedStatus) => {
     try {
       setLoading(true);
-      const res = await api.get('/support/tickets/follow_ups/', {
-        params: { page }
-      });
+      const params: any = { page };
+      if (status) {
+        params.status = status;
+      }
+      const res = await api.get('/support/tickets/follow_ups/', { params });
       const data = res.data;
       if (data && typeof data === 'object' && 'results' in data && Array.isArray(data.results)) {
         setTickets(data.results);
@@ -45,8 +50,13 @@ const AdminFollowUpsPage: React.FC = () => {
     }
   };
 
+  const handleStatusChange = (status: string) => {
+    setSelectedStatus(status);
+    fetchTickets(1, status);
+  };
+
   useEffect(() => {
-    fetchTickets(1);
+    fetchTickets(1, '');
   }, []);
 
   const handleUpdateTicket = async (id: number, status: string, notes: string) => {
@@ -87,7 +97,7 @@ const AdminFollowUpsPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pt-0">
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-zinc-200 pb-6 mb-6">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-200 pb-6 mb-6">
         <div>
           <h1 className="text-3xl font-bold text-zinc-900 flex items-center gap-3">
             <PhoneCall size={28} className="text-zinc-800" />
@@ -96,6 +106,20 @@ const AdminFollowUpsPage: React.FC = () => {
           <p className="text-zinc-500 text-sm mt-1">
             Clinical outreach tasks for participants flagged under Tier 3 (high activity miss rate) and Tier 4 (overdue assessments).
           </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <label htmlFor="status-filter" className="text-sm font-semibold text-zinc-700">Status:</label>
+          <select
+            id="status-filter"
+            value={selectedStatus}
+            onChange={(e) => handleStatusChange(e.target.value)}
+            className="px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 text-sm bg-white text-zinc-800 font-medium shadow-sm cursor-pointer"
+          >
+            <option value="">All Statuses</option>
+            <option value="Open">Open</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Resolved">Resolved</option>
+          </select>
         </div>
       </header>
 
@@ -251,8 +275,9 @@ const AdminFollowUpsPage: React.FC = () => {
                 <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Outreach Actions & Clinical Notes</div>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">Call Task Status</label>
+                    <label htmlFor="status-update" className="block text-xs font-bold text-zinc-500 uppercase mb-1">Call Task Status</label>
                     <select
+                      id="status-update"
                       value={selectedTicket.status}
                       onChange={(e) => setSelectedTicket({ ...selectedTicket, status: e.target.value })}
                       className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 text-sm bg-white"

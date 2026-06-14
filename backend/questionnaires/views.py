@@ -20,6 +20,7 @@ from .serializers import (
     QuestionnaireSerializer, 
     ResponseSetSerializer, 
     AdminResponseSetSerializer,
+    AdminResponseSetListSerializer,
     ResponseSetSubmitSerializer
 )
 
@@ -204,7 +205,7 @@ class AdminT0ResponseListView(generics.ListAPIView):
     """
     Researcher-only view to list all completed T0 baseline psychometric assessments.
     """
-    serializer_class = AdminResponseSetSerializer
+    serializer_class = AdminResponseSetListSerializer
     permission_classes = (permissions.IsAdminUser,)
     pagination_class = StandardResultsSetPagination
 
@@ -213,10 +214,7 @@ class AdminT0ResponseListView(generics.ListAPIView):
             milestone='SIGNUP',
             questionnaire__assessment_type='PSYCHOMETRIC',
             status='COMPLETED'
-        ).select_related('user__group', 'questionnaire').prefetch_related(
-            'responses__question',
-            'responses__selected_option'
-        ).order_by('-completed_at')
+        ).select_related('user__group', 'questionnaire').order_by('-completed_at')
 
 class AdminT0ResponseDetailView(generics.RetrieveAPIView):
     """
@@ -240,7 +238,7 @@ class AdminT1ResponseListView(generics.ListAPIView):
     """
     Researcher-only view to list all completed T1 follow-up (Day 7) psychometric assessments.
     """
-    serializer_class = AdminResponseSetSerializer
+    serializer_class = AdminResponseSetListSerializer
     permission_classes = (permissions.IsAdminUser,)
     pagination_class = StandardResultsSetPagination
 
@@ -249,10 +247,7 @@ class AdminT1ResponseListView(generics.ListAPIView):
             milestone='7_DAYS',
             questionnaire__assessment_type='PSYCHOMETRIC',
             status='COMPLETED'
-        ).select_related('user__group', 'questionnaire').prefetch_related(
-            'responses__question',
-            'responses__selected_option'
-        ).order_by('-completed_at')
+        ).select_related('user__group', 'questionnaire').order_by('-completed_at')
 
 
 class AdminT1ResponseDetailView(generics.RetrieveAPIView):
@@ -277,7 +272,7 @@ class AdminTFirstMonthResponseListView(generics.ListAPIView):
     """
     Researcher-only view to list all completed T-First-Month follow-up (Day 30) psychometric assessments.
     """
-    serializer_class = AdminResponseSetSerializer
+    serializer_class = AdminResponseSetListSerializer
     permission_classes = (permissions.IsAdminUser,)
     pagination_class = StandardResultsSetPagination
 
@@ -286,7 +281,7 @@ class AdminTFirstMonthResponseListView(generics.ListAPIView):
             milestone='1_MONTH',
             questionnaire__assessment_type='PSYCHOMETRIC',
             status='COMPLETED'
-        ).select_related('user', 'questionnaire').order_by('-completed_at')
+        ).select_related('user__group', 'questionnaire').order_by('-completed_at')
 
 
 class AdminTFirstMonthResponseDetailView(generics.RetrieveAPIView):
@@ -311,7 +306,7 @@ class AdminT2ResponseListView(generics.ListAPIView):
     """
     Researcher-only view to list all completed T2 follow-up (Day 90) psychometric assessments.
     """
-    serializer_class = AdminResponseSetSerializer
+    serializer_class = AdminResponseSetListSerializer
     permission_classes = (permissions.IsAdminUser,)
     pagination_class = StandardResultsSetPagination
 
@@ -320,10 +315,7 @@ class AdminT2ResponseListView(generics.ListAPIView):
             milestone='3_MONTHS',
             questionnaire__assessment_type='PSYCHOMETRIC',
             status='COMPLETED'
-        ).select_related('user__group', 'questionnaire').prefetch_related(
-            'responses__question',
-            'responses__selected_option'
-        ).order_by('-completed_at')
+        ).select_related('user__group', 'questionnaire').order_by('-completed_at')
 
 
 class AdminT2ResponseDetailView(generics.RetrieveAPIView):
@@ -348,7 +340,7 @@ class AdminT3ResponseListView(generics.ListAPIView):
     """
     Researcher-only view to list all completed T3 follow-up (Month 6) psychometric assessments.
     """
-    serializer_class = AdminResponseSetSerializer
+    serializer_class = AdminResponseSetListSerializer
     permission_classes = (permissions.IsAdminUser,)
     pagination_class = StandardResultsSetPagination
 
@@ -357,10 +349,7 @@ class AdminT3ResponseListView(generics.ListAPIView):
             milestone='6_MONTHS',
             questionnaire__assessment_type='PSYCHOMETRIC',
             status='COMPLETED'
-        ).select_related('user__group', 'questionnaire').prefetch_related(
-            'responses__question',
-            'responses__selected_option'
-        ).order_by('-completed_at')
+        ).select_related('user__group', 'questionnaire').order_by('-completed_at')
 
 
 class AdminT3ResponseDetailView(generics.RetrieveAPIView):
@@ -385,7 +374,7 @@ class AdminT4ResponseListView(generics.ListAPIView):
     """
     Researcher-only view to list all completed T4 follow-up (Month 12) psychometric assessments.
     """
-    serializer_class = AdminResponseSetSerializer
+    serializer_class = AdminResponseSetListSerializer
     permission_classes = (permissions.IsAdminUser,)
     pagination_class = StandardResultsSetPagination
 
@@ -394,10 +383,7 @@ class AdminT4ResponseListView(generics.ListAPIView):
             milestone='1_YEAR',
             questionnaire__assessment_type='PSYCHOMETRIC',
             status='COMPLETED'
-        ).select_related('user__group', 'questionnaire').prefetch_related(
-            'responses__question',
-            'responses__selected_option'
-        ).order_by('-completed_at')
+        ).select_related('user__group', 'questionnaire').order_by('-completed_at')
 
 
 class AdminT4ResponseDetailView(generics.RetrieveAPIView):

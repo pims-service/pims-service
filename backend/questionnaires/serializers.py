@@ -203,6 +203,27 @@ class AdminResponseSetSerializer(serializers.ModelSerializer):
             return obj.user.group.name
         return None
 
+class AdminResponseSetListSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source='user.display_name', read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
+    whatsapp_number = serializers.CharField(source='user.whatsapp_number', read_only=True)
+    questionnaire_title = serializers.CharField(source='questionnaire.title', read_only=True)
+    group_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ResponseSet
+        fields = [
+            'id', 'user', 'full_name', 'username', 'whatsapp_number',
+            'questionnaire', 'questionnaire_title', 
+            'group_name',
+            'status', 'started_at', 'completed_at'
+        ]
+
+    def get_group_name(self, obj):
+        if hasattr(obj.user, 'group') and obj.user.group:
+            return obj.user.group.name
+        return None
+
 class ResponseBulkSerializer(serializers.Serializer):
     """
     Serializer for individual responses within a bulk submission.

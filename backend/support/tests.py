@@ -184,3 +184,50 @@ def test_participant_cannot_access_follow_ups(auth_client):
     response = auth_client.get('/api/support/tickets/follow_ups/')
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
+
+@pytest.mark.django_db
+def test_admin_can_filter_follow_ups(admin_client, participant_user):
+    # Create tickets with different statuses
+    SupportTicket.objects.create(
+        user=participant_user,
+        subject='Call Protocol: Task 1',
+        message='Msg1',
+        status='Open'
+    )
+    SupportTicket.objects.create(
+        user=participant_user,
+        subject='Call Protocol: Task 2',
+        message='Msg2',
+        status='In Progress'
+    )
+    SupportTicket.objects.create(
+        user=participant_user,
+        subject='Call Protocol: Task 3',
+        message='Msg3',
+        status='Resolved'
+    )
+
+    # Filter: Open
+    res_open = admin_client.get('/api/support/tickets/follow_ups/?status=Open')
+    assert res_open.status_code == status.HTTP_200_OK
+    data = res_open.json()
+    results = data.get('results', data) if isinstance(data, dict) else data
+    assert len(results) == 1
+    assert results[0]['subject'] == 'Call Protocol: Task 1'
+
+    # Filter: In Progress
+    res_ip = admin_client.get('/api/support/tickets/follow_ups/?status=in_progress')
+    assert res_ip.status_code == status.HTTP_200_OK
+    data = res_ip.json()
+    results = data.get('results', data) if isinstance(data, dict) else data
+    assert len(results) == 1
+    assert results[0]['subject'] == 'Call Protocol: Task 2'
+
+    # Filter: Resolved
+    res_res = admin_client.get('/api/support/tickets/follow_ups/?status=resolved')
+    assert res_res.status_code == status.HTTP_200_OK
+    data = res_res.json()
+    results = data.get('results', data) if isinstance(data, dict) else data
+    assert len(results) == 1
+    assert results[0]['subject'] == 'Call Protocol: Task 3'
+

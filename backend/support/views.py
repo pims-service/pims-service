@@ -22,9 +22,10 @@ class SupportTicketViewSet(viewsets.ModelViewSet):
     pagination_class = SupportTicketPagination
     
     def get_queryset(self):
+        queryset = SupportTicket.objects.select_related('user')
         if self.request.user.is_staff or (self.request.user.role and self.request.user.role.name == 'Admin'):
-            return SupportTicket.objects.all()
-        return SupportTicket.objects.filter(user=self.request.user)
+            return queryset
+        return queryset.filter(user=self.request.user)
     
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -71,7 +72,16 @@ class SupportTicketViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAdminUser])
     def follow_ups(self, request):
-        tickets = SupportTicket.objects.filter(subject__icontains="Call Protocol")
+        status_filter = request.query_params.get('status')
+        tickets = SupportTicket.objects.filter(subject__icontains="Call Protocol").select_related('user')
+        if status_filter:
+            norm = status_filter.strip().lower().replace('_', ' ')
+            if norm == 'open':
+                tickets = tickets.filter(status='Open')
+            elif norm == 'in progress':
+                tickets = tickets.filter(status='In Progress')
+            elif norm == 'resolved':
+                tickets = tickets.filter(status='Resolved')
         page = self.paginate_queryset(tickets)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

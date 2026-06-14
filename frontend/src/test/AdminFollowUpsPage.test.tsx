@@ -90,7 +90,7 @@ describe('AdminFollowUpsPage', () => {
     expect(screen.getByText('Initial clinical notes')).toBeInTheDocument();
 
     // Change status in select dropdown
-    const select = screen.getByRole('combobox');
+    const select = screen.getByLabelText('Call Task Status');
     fireEvent.change(select, { target: { value: 'Resolved' } });
 
     // Click save changes button
@@ -100,6 +100,27 @@ describe('AdminFollowUpsPage', () => {
     expect(api.patch).toHaveBeenCalledWith('/support/tickets/1/', {
       status: 'Resolved',
       admin_notes: 'Initial clinical notes',
+    });
+  });
+
+  it('sends status query parameter when filtering by status', async () => {
+    (api.get as any).mockResolvedValueOnce({ data: [] });
+
+    render(
+      <MemoryRouter>
+        <AdminFollowUpsPage />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Call Protocol Follow-Ups')).toBeInTheDocument();
+    });
+
+    const statusFilter = screen.getByLabelText('Status:');
+    fireEvent.change(statusFilter, { target: { value: 'In Progress' } });
+
+    expect(api.get).toHaveBeenLastCalledWith('/support/tickets/follow_ups/', {
+      params: { page: 1, status: 'In Progress' }
     });
   });
 });
