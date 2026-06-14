@@ -118,6 +118,12 @@ class User(AbstractUser):
             return False
         if not self.onboarding_completed_at:
             return False
+        
+        # Check if they have submitted Day 7 of PRE_T1
+        from activities.models import Submission
+        if Submission.objects.filter(user=self, activity_wave='PRE_T1', experiment_day=7).exists():
+            return True
+
         due_date = self.onboarding_completed_at + timezone.timedelta(days=7)
         return timezone.now() >= due_date
 
@@ -172,8 +178,10 @@ class User(AbstractUser):
         # 1. 7_DAYS (T1 post-test)
         if '7_DAYS' not in completed_milestones:
             due_date = self.onboarding_completed_at + timezone.timedelta(days=7)
-            if now >= due_date:
-                if now - due_date >= timezone.timedelta(days=14):
+            from activities.models import Submission
+            day7_submitted = Submission.objects.filter(user=self, activity_wave='PRE_T1', experiment_day=7).exists()
+            if now >= due_date or day7_submitted:
+                if now - due_date >= timezone.timedelta(days=14) and not day7_submitted:
                     # 7_DAYS has expired. Move on.
                     pass
                 else:
@@ -196,8 +204,10 @@ class User(AbstractUser):
             # 1.5. 1_MONTH (T-First-Month follow-up)
             if '1_MONTH' not in completed_milestones:
                 due_date = ref_date + timezone.timedelta(days=23)  # 30 days total since onboarding
-                if now >= due_date:
-                    if now - due_date >= timezone.timedelta(days=14):
+                from activities.models import Submission
+                day7_submitted = Submission.objects.filter(user=self, activity_wave='PRE_T_1M', experiment_day=7).exists()
+                if now >= due_date or day7_submitted:
+                    if now - due_date >= timezone.timedelta(days=14) and not day7_submitted:
                         # 1_MONTH has expired.
                         pass
                     else:
@@ -206,8 +216,10 @@ class User(AbstractUser):
             # 2. 3_MONTHS (T2 follow-up)
             if due is None and '3_MONTHS' not in completed_milestones:
                 due_date = ref_date + timezone.timedelta(days=90)
-                if now >= due_date:
-                    if now - due_date >= timezone.timedelta(days=14):
+                from activities.models import Submission
+                day7_submitted = Submission.objects.filter(user=self, activity_wave='PRE_T2', experiment_day=7).exists()
+                if now >= due_date or day7_submitted:
+                    if now - due_date >= timezone.timedelta(days=14) and not day7_submitted:
                         # 3_MONTHS has expired.
                         pass
                     else:
@@ -216,8 +228,10 @@ class User(AbstractUser):
             # 3. 6_MONTHS (T3 follow-up)
             if due is None and '6_MONTHS' not in completed_milestones:
                 due_date = ref_date + timezone.timedelta(days=180)
-                if now >= due_date:
-                    if now - due_date >= timezone.timedelta(days=14):
+                from activities.models import Submission
+                day7_submitted = Submission.objects.filter(user=self, activity_wave='PRE_T3', experiment_day=7).exists()
+                if now >= due_date or day7_submitted:
+                    if now - due_date >= timezone.timedelta(days=14) and not day7_submitted:
                         # 6_MONTHS has expired.
                         pass
                     else:
@@ -226,8 +240,10 @@ class User(AbstractUser):
             # 4. 1_YEAR (T4 follow-up)
             if due is None and '1_YEAR' not in completed_milestones:
                 due_date = ref_date + timezone.timedelta(days=365)
-                if now >= due_date:
-                    if now - due_date >= timezone.timedelta(days=14):
+                from activities.models import Submission
+                day7_submitted = Submission.objects.filter(user=self, activity_wave='PRE_T4', experiment_day=7).exists()
+                if now >= due_date or day7_submitted:
+                    if now - due_date >= timezone.timedelta(days=14) and not day7_submitted:
                         # 1_YEAR has expired.
                         pass
                     else:

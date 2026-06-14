@@ -4,12 +4,27 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import ActivityPage from '../pages/ActivityPage';
 import api from '../services/api';
 
-// Mock the API service
+const { mockNavigate, mockQuestionnairesApi } = vi.hoisted(() => ({
+  mockNavigate: vi.fn(),
+  mockQuestionnairesApi: {
+    list: vi.fn(),
+  },
+}));
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual as any,
+    useNavigate: () => mockNavigate,
+  };
+});
+
 vi.mock('../services/api', () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),
-  }
+  },
+  questionnairesApi: mockQuestionnairesApi,
 }));
 
 // Mock react-i18next with dynamic language capability
@@ -220,7 +235,8 @@ describe('ActivityPage', () => {
         entry_2: validText,
         entry_3: validText,
       });
-    });
+      expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+    }, { timeout: 2500 });
   });
 
   it('saves draft to local storage on change and restores it on reload', async () => {
@@ -315,6 +331,68 @@ describe('ActivityPage', () => {
       // Urdu translation definitions
       expect(screen.getByText('آج کا کوئی لطف بھرا لمحہ جس کے لیے آپ شکر گزار ہیں۔ بیان کریں کہ کیا ہوا، آپ اس کے لیے کیوں شکر گزار ہیں، اور کس یا کس چیز نے اسے ممکن بنایا۔')).toBeInTheDocument();
     });
+  });
+
+  it('auto-forwards user to active psychometric questionnaire when Day 7 activity is submitted', async () => {
+    const mockActivity = {
+      id: 12,
+      title: 'Structured Reflection',
+      description: 'Daily prompt instruction',
+      group_name: 'Group 3',
+      day_number: 7, // Day 7 submission should trigger auto-forward
+      submitted_today: false,
+    };
+
+    (api.get as any).mockImplementation((url: string) => {
+      if (url === '/activities/daily/current/') {
+        return Promise.resolve({ data: mockActivity });
+      }
+      if (url === '/users/profile/') {
+        return Promise.resolve({ data: { due_milestone: '7_DAYS' } });
+      }
+      return Promise.reject(new Error(`Unhandled GET: ${url}`));
+    });
+
+    (api.post as any).mockResolvedValue({ data: { success: true } });
+
+    // Mock active questionnaires
+    mockQuestionnairesApi.list.mockResolvedValue({
+      data: [
+        {
+          id: 'q-psych-id',
+          is_active: true,
+          assessment_type: 'PSYCHOMETRIC',
+        }
+      ]
+    });
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('Entry 1: Positive Relationships')).toBeInTheDocument();
+    });
+
+    const textareas = screen.getAllByRole('textbox');
+    const validText = Array(25).fill('word').join(' ');
+
+    fireEvent.change(textareas[0], { target: { value: validText } });
+    fireEvent.change(textareas[1], { target: { value: validText } });
+    fireEvent.change(textareas[2], { target: { value: validText } });
+
+    const submitBtn = screen.getByRole('button', { name: /Submit/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith('/activities/daily/submit/', {
+        activity: 12,
+        entry_1: validText,
+        entry_2: validText,
+        entry_3: validText,
+      });
+      expect(api.get).toHaveBeenCalledWith('/users/profile/');
+      expect(mockQuestionnairesApi.list).toHaveBeenCalled();
+      expect(mockNavigate).toHaveBeenCalledWith('/questionnaire/q-psych-id?milestone=7_DAYS', { replace: true });
+    }, { timeout: 2500 });
   });
 });
 

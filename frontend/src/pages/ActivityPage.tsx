@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import { Save, CheckCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import { Save, CheckCircle, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
 
 const GROUP_3_SCHEDULE: Record<number, string[]> = {
   1: ['Pleasure', 'Engagement', 'Meaning'],
@@ -160,6 +161,7 @@ const ActivityPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [completed, setCompleted] = useState(false);
 
   const getBilingualText = (content: string) => {
     if (!content) return { en: '', ur: '' };
@@ -361,7 +363,59 @@ const ActivityPage: React.FC = () => {
       
       // Clear draft on successful submission
       localStorage.removeItem(`activity_draft_${id}`);
-      navigate('/dashboard');
+      setCompleted(true);
+
+      const isDay7 = activity?.day_number === 7 || activity?.current_day === 7;
+
+      if (isDay7) {
+        const fetchProfileAndRedirect = async (retries = 3, delay = 500) => {
+          try {
+            const profileRes = await api.get('/users/profile/');
+            const dueMilestone = profileRes.data?.due_milestone;
+            if (dueMilestone && dueMilestone !== 'SIGNUP') {
+              localStorage.setItem('due_milestone', dueMilestone);
+              const { questionnairesApi } = await import('../services/api');
+              const questionnaires = await questionnairesApi.list();
+              const qList = Array.isArray(questionnaires.data) ? questionnaires.data : questionnaires.data?.results || [];
+              const battery = qList.find((q: any) => q.is_active && q.assessment_type === 'PSYCHOMETRIC');
+              if (battery) {
+                setTimeout(() => {
+                  setCompleted(false);
+                  navigate(`/questionnaire/${battery.id}?milestone=${dueMilestone}`, { replace: true });
+                }, 1000);
+                return;
+              }
+            }
+            if (retries > 0) {
+              setTimeout(() => {
+                fetchProfileAndRedirect(retries - 1, delay * 2);
+              }, delay);
+            } else {
+              setTimeout(() => {
+                setCompleted(false);
+                navigate('/dashboard', { replace: true });
+              }, 1000);
+            }
+          } catch (err) {
+            if (retries > 0) {
+              setTimeout(() => {
+                fetchProfileAndRedirect(retries - 1, delay * 2);
+              }, delay);
+            } else {
+              setTimeout(() => {
+                setCompleted(false);
+                navigate('/dashboard', { replace: true });
+              }, 1000);
+            }
+          }
+        };
+        fetchProfileAndRedirect();
+      } else {
+        setTimeout(() => {
+          setCompleted(false);
+          navigate('/dashboard');
+        }, 1000);
+      }
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Error submitting activity. Please try again.');
     } finally {
@@ -463,6 +517,43 @@ const ActivityPage: React.FC = () => {
       </div>
     );
   };
+
+  if (completed) {
+    return (
+      <div className="max-w-md mx-auto py-24 px-4 text-center space-y-8">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', damping: 12 }}
+          className="w-20 h-20 bg-zinc-800 rounded-xl flex items-center justify-center mx-auto shadow-lg"
+        >
+          <CheckCircle2 className="w-12 h-12 text-white" />
+        </motion.div>
+
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="space-y-4"
+        >
+          <h2 className="text-3xl font-bold text-zinc-900">Activity Finalized</h2>
+          <p className="text-zinc-500 text-sm max-w-xs mx-auto">
+            Reflection submission complete. Synchronizing results with research matrix.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="flex items-center justify-center gap-2 text-zinc-500 text-xs font-medium"
+        >
+          <Loader2 className="w-4 h-4 animate-spin" />
+          Synchronizing Environment
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto py-6">
