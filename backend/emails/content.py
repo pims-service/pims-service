@@ -43,6 +43,99 @@ WELCOME_EMAIL = {
     'closing_team_ur': 'سائیکیورسٹی ریسرچ ٹیم',
 }
 
+SCREEN_OUT_EMAIL = {
+    'subject_en': 'Thank you for your interest : a note about next steps',
+    'subject_ur': 'آپ کی دلچسپی کا شکریہ : اگلے مرحلے کے بارے میں ایک گزارش',
+    'title_en': 'A note about next steps',
+    'title_ur': 'اگلے مرحلے کے بارے میں ایک گزارش',
+    'paragraphs_en': [
+        'Thank you for taking the time to complete the questionnaires, and for your honesty in answering them.',
+        (
+            'Based on your responses, this self-guided writing program is not the right fit for you at this time. '
+            'This is not a reflection on you in any way, and it is fairly common.'
+        ),
+        (
+            'What matters most to us is your wellbeing. Some of your answers suggest you may be going through '
+            'a difficult period, and you deserve real support from someone who can give you proper attention and care.'
+        ),
+        (
+            'Please consider reaching out to one of the services below. Support is available, and asking for help '
+            'is a sign of strength, not weakness. If you are ever in immediate danger, please contact your local '
+            'emergency services right away.'
+        ),
+        'You are welcome to contact us as well. Please take care of yourself.',
+    ],
+    'paragraphs_ur': [
+        'سوالنامے مکمل کرنے کے لیے وقت نکالنے اور اپنے جوابات میں دیانت داری کا شکریہ۔',
+        (
+            'آپ کے جوابات کی بنیاد پر، یہ خود رہنمائی پر مبنی تحریری پروگرام اِس وقت آپ کے لیے موزوں نہیں۔ '
+            'اِس میں آپ کی کوئی کمی نہیں، اور ایسا ہونا عام بات ہے۔'
+        ),
+        (
+            'ہمارے لیے سب سے اہم آپ کی بہبود ہے۔ آپ کے کچھ جوابات سے لگتا ہے کہ آپ شاید ایک مشکل دور سے گزر رہے ہیں، '
+            'اور آپ ایسے فرد سے حقیقی مدد کے مستحق ہیں جو آپ کو مناسب توجہ اور خیال دے سکے۔'
+        ),
+        (
+            'براہِ کرم نیچے دیے گئے اداروں میں سے کسی ایک سے رابطہ کرنے پر غور کیجیے۔ مدد دستیاب ہے، '
+            'اور مدد مانگنا کمزوری نہیں بلکہ ہمت کی علامت ہے۔ اگر آپ کبھی فوری خطرے میں ہوں تو فوراً '
+            'اپنی قریبی ہنگامی خدمات سے رابطہ کریں۔'
+        ),
+        'آپ ہم سے بھی رابطہ کر سکتے ہیں۔ براہِ کرم اپنا خیال رکھیے۔',
+    ],
+    'closing_en': 'With warm regards and care,',
+    'closing_team_en': 'Psycheversity Research Team',
+    'closing_ur': 'خلوص اور ہمدردی کے ساتھ،',
+    'closing_team_ur': 'سائیکیورسٹی ریسرچ ٹیم',
+}
+
+CRISIS_RESOURCES = [
+    {
+        'name_en': 'Umang',
+        'name_ur': 'امنگ',
+        'phone': '0311-7786264',
+        'timing_en': '24/7, free, multilingual',
+        'timing_ur': '24/7، مفت، کثیر لسانی',
+        'desc_en': 'Suicide prevention and mental health support helpline.',
+        'desc_ur': 'خودکشی کی روک تھام اور ذہنی صحت کی معاونت کے لیے ہیلپ لائن۔',
+    },
+    {
+        'name_en': 'Taskeen',
+        'name_ur': 'تسکین',
+        'phone': '0316-8275336',
+        'timing_en': 'Mon–Sat 11 am–11 pm, 24/7 chatbot at taskeen.org',
+        'timing_ur': 'پیر–ہفتہ 11 صبح–11 رات، taskeen.org پر 24/7 چیٹ بوٹ',
+        'desc_en': 'Emotional well-being support and guidance.',
+        'desc_ur': 'جذباتی فلاح و بہبود کے لیے مدد اور رہنمائی۔',
+    },
+    {
+        'name_en': 'Rozan Counselling Helpline',
+        'name_ur': 'روزن ہیلپ لائن',
+        'phone': '0304-1118666 / 0800-22444',
+        'timing_en': 'Mon–Sat 10 am–6 pm',
+        'timing_ur': 'پیر–ہفتہ 10 صبح–6 شام',
+        'desc_en': 'Professional counseling and psychological support.',
+        'desc_ur': 'پیشہ ورانہ مشاورت اور نفسیاتی مدد۔',
+    },
+    {
+        'name_en': 'Emergency Rescue 1122',
+        'name_ur': 'ریسکیو 1122',
+        'phone': '1122',
+        'timing_en': '24/7, emergency medical response',
+        'timing_ur': '24/7، ہنگامی طبی امداد',
+        'desc_en': 'Immediate medical and rescue services.',
+        'desc_ur': 'فوری طبی اور بچاؤ کی خدمات۔',
+    },
+    {
+        'name_en': 'Ambulance: Edhi 115 / Chhipa 1020',
+        'name_ur': 'ایدھی 115 / چھیپا 1020',
+        'phone': '115 / 1020',
+        'timing_en': '24/7, urgent ambulance transfer',
+        'timing_ur': '24/7، ہنگامی ایمبولینس',
+        'desc_en': 'Emergency transport services to nearest hospital.',
+        'desc_ur': 'قریبی ہسپتال میں ہنگامی منتقلی کی خدمات۔',
+    },
+]
+
 STANDARD_FOOTER = {
     'paragraphs_en': [
         (
