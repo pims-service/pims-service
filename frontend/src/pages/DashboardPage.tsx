@@ -1,31 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api, { questionnairesApi } from '../services/api';
-import { useTranslation } from 'react-i18next';
 import { Calendar, CheckCircle2, Clock, ArrowRight, ClipboardCheck, AlertTriangle } from 'lucide-react';
 
 const DashboardPage: React.FC = () => {
   const [activities, setActivities] = useState<any[]>([]);
-  const [phase, setPhase] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [posttestQuestionnaire, setPosttestQuestionnaire] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const { t } = useTranslation();
 
 
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [actRes, phaseRes, profileRes] = await Promise.all([
+        const [actRes, profileRes] = await Promise.all([
           api.get('/activities/daily/current/').catch(() => ({ data: null })),
-          api.get('/phases/current/').catch(() => ({ data: null })),
           api.get('/users/profile/').catch(() => ({ data: null }))
         ]);
 
         const actData = actRes.data;
         setActivities(actData && !actData.detail ? [actData] : []);
-        setPhase(phaseRes.data);
         setUserProfile(profileRes.data);
 
         // Keep localStorage in sync with the server-side due_milestone
@@ -56,6 +51,12 @@ const DashboardPage: React.FC = () => {
     fetchData();
   }, []);
 
+  const getFirstName = () => {
+    const rawName = userProfile?.full_name || userProfile?.username || '';
+    const firstWord = rawName.replace(/[._]/g, ' ').trim().split(/\s+/)[0];
+    if (!firstWord) return '';
+    return firstWord.charAt(0).toUpperCase() + firstWord.slice(1);
+  };
 
   if (userProfile?.is_disqualified) {
     return (
@@ -95,18 +96,46 @@ const DashboardPage: React.FC = () => {
     <div className="max-w-4xl mx-auto space-y-8">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-2 text-zinc-900 leading-tight">{t('dashboard.welcome')}</h1>
-          <p className="text-zinc-500 font-medium text-sm">{t('dashboard.welcome_new')} <span className="text-zinc-800 font-semibold">{phase?.name || t('dashboard.initialization')}</span></p>
+          <h1 className="text-3xl font-bold mb-2 text-zinc-900 leading-tight">
+            Welcome Back, {getFirstName()}
+          </h1>
         </div>
         <div className="bg-white border border-zinc-200 rounded-lg px-4 py-2 flex items-center gap-3 shadow-sm">
           <Calendar className="text-zinc-500" size={18} />
-          <span className="text-sm font-semibold text-zinc-700">
-            {activities.length > 0 && activities[0].current_day
-              ? t('dashboard.day_of', { current: activities[0].current_day, total: 7 })
-              : t('dashboard.welcome_new')}
-          </span>
+          {activities.length > 0 && activities[0].current_day ? (
+            <span className="text-sm font-semibold text-zinc-700 flex items-center gap-1.5">
+              <span>Day {activities[0].current_day} of 7</span>
+              <span className="text-zinc-300">|</span>
+              <span dir="rtl" className="font-urdu text-sm">7 میں سے {activities[0].current_day} دن</span>
+            </span>
+          ) : (
+            <span className="text-sm font-semibold text-zinc-700">
+              Main Intervention Phase / مرکزی مرحلہ
+            </span>
+          )}
         </div>
       </header>
+
+      {/* Bilingual Instruction Note */}
+      <section className="bg-zinc-50 border border-zinc-200 rounded-xl p-6 shadow-sm">
+        <h3 className="text-base font-bold text-zinc-900 mb-4 flex items-center gap-2 border-b border-zinc-200 pb-2">
+          <span>How to Participate / حصہ لینے کا طریقہ</span>
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-zinc-650">
+          <div className="space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#2E4E90]">Instructions (English)</span>
+            <p className="text-sm font-medium leading-relaxed">
+              Click the active link under <strong>Today's Focus</strong>, write your reflection, and submit. You will then be redirected to any due questionnaires.
+            </p>
+          </div>
+          <div className="space-y-2 text-right border-t md:border-t-0 md:border-l border-zinc-200 pt-4 md:pt-0 md:pl-6" dir="rtl">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#2E4E90] block text-left md:text-right" dir="ltr">ہدایات (اردو)</span>
+            <p className="text-base font-medium leading-relaxed font-urdu">
+              آج کی توجہ (Today's Focus) کے تحت دیے گئے عنوان پر کلک کریں، اپنے خیالات لکھیں اور جمع کرائیں۔ اس کے بعد آپ کو مطلوبہ سوالناموں پر خودکار طور پر بھیج دیا جائے گا۔
+            </p>
+          </div>
+        </div>
+      </section>
 
       {userProfile?.has_consecutive_misses && (
         <section className="border-2 border-amber-200 rounded-xl p-5 bg-amber-50 text-amber-900 shadow-sm flex items-start gap-4 animate-in slide-in-from-top duration-300">
@@ -201,7 +230,7 @@ const DashboardPage: React.FC = () => {
 
           <section className="border border-zinc-200 rounded-xl p-6 md:p-8 bg-white shadow-sm">
             <h2 className="text-xl font-bold text-zinc-900 mb-6 flex items-center gap-2">
-              <Clock className="text-zinc-500" size={20} /> {t('dashboard.todays_focus')}
+              <Clock className="text-zinc-500" size={20} /> Today's Focus / آج کی توجہ
             </h2>
 
             <div className="space-y-3">
@@ -222,17 +251,17 @@ const DashboardPage: React.FC = () => {
                   </div>
                   {activity.submitted_today ? (
                     <div className="px-5 py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 text-xs font-semibold rounded-lg flex items-center gap-2 shrink-0">
-                      <CheckCircle2 size={16} /> Completed
+                      <CheckCircle2 size={16} /> Completed / مکمل
                     </div>
                   ) : (
                     <div className="px-5 py-2 bg-zinc-800 text-white text-xs font-semibold rounded-lg group-hover:bg-zinc-700 transition-colors flex items-center gap-1 shrink-0">
-                      Open <ArrowRight size={14} />
+                      Open / کھولیں <ArrowRight size={14} />
                     </div>
                   )}
                 </Link>
               ))}
               {activities.length === 0 && !loading && (
-                <div className="text-center py-10 text-zinc-400 italic">{t('dashboard.no_activities')}</div>
+                <div className="text-center py-10 text-zinc-400 italic">No activities scheduled for today. / آج کے لیے کوئی مشقیں نہیں ہیں۔</div>
               )}
             </div>
           </section>

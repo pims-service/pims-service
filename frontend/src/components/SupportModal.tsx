@@ -101,7 +101,7 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) => {
         <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between shrink-0">
           <h2 className="text-xl font-bold text-zinc-900 flex items-center gap-2">
             <MessageSquare size={20} className="text-zinc-500" />
-            Support Center
+            Support Center / سپورٹ سینٹر
           </h2>
           <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600 transition-colors">
             <X size={20} />
@@ -111,19 +111,17 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) => {
         <div className="flex border-b border-zinc-100 px-6 shrink-0 bg-zinc-50/50">
           <button
             onClick={() => setActiveTab('history')}
-            className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'history' ? 'border-zinc-900 text-zinc-900' : 'border-transparent text-zinc-500 hover:text-zinc-700'
-            }`}
+            className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'history' ? 'border-zinc-900 text-zinc-900' : 'border-transparent text-zinc-500 hover:text-zinc-700'
+              }`}
           >
-            My Tickets
+            My Tickets / میری درخواستیں
           </button>
           <button
             onClick={() => setActiveTab('new')}
-            className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'new' ? 'border-zinc-900 text-zinc-900' : 'border-transparent text-zinc-500 hover:text-zinc-700'
-            }`}
+            className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'new' ? 'border-zinc-900 text-zinc-900' : 'border-transparent text-zinc-500 hover:text-zinc-700'
+              }`}
           >
-            New Ticket
+            New Ticket / نئی درخواست
           </button>
         </div>
 
@@ -131,14 +129,15 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) => {
           {activeTab === 'new' && (
             <div>
               {success ? (
-                <div className="flex flex-col items-center justify-center py-8 space-y-4 animate-in zoom-in-95 duration-300">
-                  <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
+                <div className="flex flex-col items-center justify-center py-8 space-y-4 animate-in zoom-in-95 duration-300 text-center">
+                  <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
                     <CheckCircle2 size={32} />
                   </div>
-                  <h3 className="text-xl font-bold text-zinc-900">Ticket Submitted</h3>
-                  <p className="text-zinc-500 text-center max-w-xs text-sm">
-                    We've received your message and our team will reply shortly. Check back in the 'My Tickets' tab.
-                  </p>
+                  <h3 className="text-xl font-bold text-zinc-900">Ticket Submitted / درخواست جمع ہو گئی</h3>
+                  <div className="text-zinc-500 text-sm space-y-2">
+                    <p className="font-latin">We've received your message and our team will reply shortly. Check back in the 'My Tickets' tab.</p>
+                    <p className="font-urdu text-base text-zinc-600" dir="rtl">ہمیں آپ کا پیغام موصول ہو گیا ہے اور ہماری ٹیم جلد ہی جواب دے گی۔ 'میری درخواستیں' والے حصے میں چیک کریں۔</p>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -148,24 +147,30 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) => {
                     </div>
                   )}
                   <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-zinc-700">Subject</label>
+                    <label className="text-sm font-medium text-zinc-700 flex justify-between">
+                      <span>Subject (English)</span>
+                      <span className="font-urdu text-zinc-500" dir="rtl">موضوع (اردو)</span>
+                    </label>
                     <input
                       type="text"
                       required
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
-                      placeholder="What do you need help with?"
+                      placeholder="What do you need help with? / آپ کو کس بارے میں مدد چاہیے؟"
                       className="input-minimal"
                       maxLength={200}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-zinc-700">Message</label>
+                    <label className="text-sm font-medium text-zinc-700 flex justify-between">
+                      <span>Message (English)</span>
+                      <span className="font-urdu text-zinc-500" dir="rtl">پیغام (اردو)</span>
+                    </label>
                     <textarea
                       required
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Describe your issue or question in detail..."
+                      placeholder="Describe your issue or question in detail... / اپنا مسئلہ یا سوال تفصیل سے لکھیں..."
                       className="input-minimal min-h-[120px] resize-y"
                       maxLength={2000}
                     />
@@ -177,7 +182,7 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) => {
                       className="btn-minimal flex items-center gap-2"
                     >
                       {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                      Submit Ticket
+                      Submit Ticket / جمع کرائیں
                     </button>
                   </div>
                 </form>
@@ -192,14 +197,15 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) => {
                   <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
                 </div>
               ) : tickets.length === 0 ? (
-                <div className="text-center py-8 text-zinc-500 text-sm">
-                  You haven't submitted any support tickets yet.
+                <div className="text-center py-8 text-zinc-500 text-sm space-y-1">
+                  <p className="font-latin">You haven't submitted any support tickets yet.</p>
+                  <p className="font-urdu text-base text-zinc-650" dir="rtl">آپ نے ابھی تک کوئی سپورٹ ٹکٹ جمع نہیں کروایا ہے۔</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {tickets.map(ticket => (
                     <div key={ticket.id} className="border border-zinc-200 rounded-xl overflow-hidden bg-white">
-                      <button 
+                      <button
                         onClick={() => toggleTicket(ticket)}
                         className="w-full text-left px-5 py-4 flex items-center justify-between hover:bg-zinc-50 transition-colors"
                       >
@@ -208,7 +214,7 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) => {
                             <div className="flex items-center gap-2">
                               <span className="font-semibold text-zinc-900">{ticket.subject}</span>
                               {ticket.admin_reply && !ticket.is_read_by_user && (
-                                <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">New Reply</span>
+                                <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">New Reply / نیا جواب</span>
                               )}
                             </div>
                             <span className="text-xs text-zinc-500 font-mono mt-0.5">{ticket.ticket_number} • {new Date(ticket.created_at).toLocaleDateString()}</span>
@@ -216,20 +222,24 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) => {
                         </div>
                         {getStatusBadge(ticket.status)}
                       </button>
-                      
+
                       {expandedTicketId === ticket.id && (
                         <div className="px-5 py-4 border-t border-zinc-100 bg-zinc-50/50 space-y-4">
                           <div>
-                            <div className="text-xs font-semibold text-zinc-500 uppercase mb-1">Your Message</div>
+                            <div className="text-xs font-semibold text-zinc-500 uppercase mb-1 flex justify-between">
+                              <span>Your Message</span>
+                              <span className="font-urdu text-zinc-400 normal-case" dir="rtl">آپ کا پیغام</span>
+                            </div>
                             <div className="text-sm text-zinc-800 whitespace-pre-wrap bg-white p-3 rounded-lg border border-zinc-200">
                               {ticket.message}
                             </div>
                           </div>
-                          
+
                           {ticket.admin_reply && (
                             <div>
-                              <div className="text-xs font-semibold text-emerald-600 uppercase mb-1 flex items-center gap-1">
-                                <MessageSquare size={12} /> Admin Reply
+                              <div className="text-xs font-semibold text-emerald-600 uppercase mb-1 flex items-center justify-between">
+                                <span className="flex items-center gap-1"><MessageSquare size={12} /> Admin Reply</span>
+                                <span className="font-urdu text-emerald-500 normal-case" dir="rtl">ایڈمن کا جواب</span>
                               </div>
                               <div className="text-sm text-emerald-900 whitespace-pre-wrap bg-emerald-50 p-3 rounded-lg border border-emerald-100">
                                 {ticket.admin_reply}
@@ -237,8 +247,9 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) => {
                             </div>
                           )}
                           {!ticket.admin_reply && ticket.status !== 'Resolved' && (
-                            <div className="text-xs text-zinc-400 flex items-center gap-1 italic">
-                              <Clock size={12} /> Awaiting response from support team...
+                            <div className="text-xs text-zinc-400 flex items-center justify-between italic">
+                              <span className="flex items-center gap-1"><Clock size={12} /> Awaiting response from support team...</span>
+                              <span className="font-urdu text-zinc-450 normal-case" dir="rtl">سپورٹ ٹیم کے جواب کا انتظار ہے...</span>
                             </div>
                           )}
                         </div>

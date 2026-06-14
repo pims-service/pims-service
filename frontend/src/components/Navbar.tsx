@@ -10,13 +10,14 @@ import { useNotifications } from '../hooks/useNotifications';
 const Navbar: React.FC = () => {
   const location = useLocation();
   const isActivityPage = location.pathname.startsWith('/activity');
-  
+  const isDashboardPage = location.pathname === '/dashboard';
+
   const { t } = useTranslation();
   const isAuthenticated = !!localStorage.getItem('access_token');
   const userRole = localStorage.getItem('user_role');
   const isAdmin = userRole === 'Admin';
-  const showLanguageSwitcher = isAuthenticated && !isActivityPage;
-  
+  const showLanguageSwitcher = isAuthenticated && !isActivityPage && !isDashboardPage;
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSupportOpen, setIsSupportOpen] = useState(false);
   const [unreadReplies, setUnreadReplies] = useState(0);
@@ -53,7 +54,7 @@ const Navbar: React.FC = () => {
       <SupportModal isOpen={isSupportOpen} onClose={() => setIsSupportOpen(false)} />
       <nav className="border-b border-zinc-200 bg-white relative z-50">
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-          
+
           {/* Logo & Main Navigation (Left Side) */}
           <div className="flex items-center gap-8">
             <Link to="/" className="text-xl font-bold text-[#2E4E90] tracking-tight flex items-center gap-2">
@@ -89,9 +90,9 @@ const Navbar: React.FC = () => {
                 <Link to="/profile" className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors flex items-center gap-2">
                   <User size={18} /> {t('navbar.profile')}
                 </Link>
-                
 
-                
+
+
                 <button
                   onClick={handleLogout}
                   className="text-sm font-medium text-zinc-900 border border-zinc-200 px-3 py-1 rounded hover:bg-zinc-900 hover:text-white transition-all flex items-center gap-2"
@@ -155,9 +156,9 @@ const Navbar: React.FC = () => {
                 >
                   <User size={20} /> {t('navbar.profile')}
                 </Link>
-                
 
-                
+
+
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-3 text-sm font-medium text-red-600 py-2 w-full text-left"

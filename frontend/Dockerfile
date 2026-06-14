@@ -3,9 +3,12 @@ FROM public.ecr.aws/docker/library/node:20-alpine AS builder
 
 WORKDIR /app
 
+# Install pnpm
+RUN npm install -g pnpm
+
 # Install dependencies
-COPY package*.json ./
-RUN npm install
+COPY package*.json pnpm-lock.yaml* ./
+RUN pnpm install
 
 # Copy source files
 COPY . .
@@ -15,7 +18,7 @@ ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
 # Build the application
-RUN npm run build
+RUN pnpm run build
 
 # Stage 2: Serve the compiled static files using Nginx
 FROM public.ecr.aws/docker/library/nginx:1.25-alpine
