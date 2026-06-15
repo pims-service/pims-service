@@ -34,7 +34,12 @@ class DailySubmissionSerializer(serializers.ModelSerializer):
     content = serializers.CharField(required=False, allow_blank=True)
     class Meta:
         model = Submission
-        fields = ['id', 'activity', 'entry_1', 'entry_2', 'entry_3', 'content', 'submission_date']
+        fields = [
+            'id', 'activity', 'entry_1', 'entry_2', 'entry_3', 'content', 'submission_date',
+            'entry_1_focus_ts', 'entry_2_focus_ts', 'entry_3_focus_ts',
+            'entry_1_submit_ts', 'entry_2_submit_ts', 'entry_3_submit_ts',
+            'entry_1_duration_sec', 'entry_2_duration_sec', 'entry_3_duration_sec'
+        ]
         read_only_fields = ['submission_date']
 
     def validate(self, data):
@@ -62,6 +67,23 @@ class DailySubmissionSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError({field_name: "Minimum word count per entry is 20 words."})
                 if words > 200:
                     raise serializers.ValidationError({field_name: "Maximum word count per entry is 200 words."})
+
+        # Set default/fallback values for new focus/submit/duration fields
+        now = timezone.now()
+        for i in (1, 2, 3):
+            entry_field = f'entry_{i}'
+            focus_field = f'entry_{i}_focus_ts'
+            submit_field = f'entry_{i}_submit_ts'
+            duration_field = f'entry_{i}_duration_sec'
+            
+            # If the entry text is provided, make sure we have focus_ts, submit_ts, duration_sec
+            if data.get(entry_field):
+                if not data.get(focus_field):
+                    data[focus_field] = now
+                if not data.get(submit_field):
+                    data[submit_field] = now
+                if data.get(duration_field) is None:
+                    data[duration_field] = 0
 
         return data
 

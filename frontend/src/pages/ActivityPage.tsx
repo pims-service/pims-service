@@ -158,8 +158,33 @@ const ActivityPage: React.FC = () => {
   const [entry2, setEntry2] = useState('');
   const [entry3, setEntry3] = useState('');
 
+  const focusTimestampsRef = useRef<Record<number, string | null>>({ 1: null, 2: null, 3: null });
+  const durationsRef = useRef<Record<number, number>>({ 1: 0, 2: 0, 3: 0 });
+  const activeFocusRef = useRef<number | null>(null);
+  const focusStartRef = useRef<number | null>(null);
+
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const handleFocus = (index: number) => {
+    if (activity?.submitted_today) return;
+    if (!focusTimestampsRef.current[index]) {
+      focusTimestampsRef.current[index] = new Date().toISOString();
+    }
+    activeFocusRef.current = index;
+    focusStartRef.current = Date.now();
+  };
+
+  const handleBlur = (index: number) => {
+    if (activity?.submitted_today) return;
+    if (activeFocusRef.current === index && focusStartRef.current !== null) {
+      const elapsedMs = Date.now() - focusStartRef.current;
+      const elapsedSec = elapsedMs / 1000;
+      durationsRef.current[index] += elapsedSec;
+      activeFocusRef.current = null;
+      focusStartRef.current = null;
+    }
+  };
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
 
@@ -352,13 +377,40 @@ const ActivityPage: React.FC = () => {
     e.preventDefault();
     if (!canSubmit) return;
 
+    if (activeFocusRef.current !== null) {
+      handleBlur(activeFocusRef.current);
+    }
+
     setSubmitting(true);
+    
+    const nowIso = new Date().toISOString();
+    const entry1SubmitTs = entry1 ? nowIso : null;
+    const entry2SubmitTs = entry2 ? nowIso : null;
+    const entry3SubmitTs = entry3 ? nowIso : null;
+
+    const entry1FocusTs = entry1 ? (focusTimestampsRef.current[1] || nowIso) : null;
+    const entry2FocusTs = entry2 ? (focusTimestampsRef.current[2] || nowIso) : null;
+    const entry3FocusTs = entry3 ? (focusTimestampsRef.current[3] || nowIso) : null;
+
+    const entry1Duration = entry1 ? Math.round(durationsRef.current[1]) : 0;
+    const entry2Duration = entry2 ? Math.round(durationsRef.current[2]) : 0;
+    const entry3Duration = entry3 ? Math.round(durationsRef.current[3]) : 0;
+
     try {
       await api.post('/activities/daily/submit/', {
         activity: activity?.id,
         entry_1: entry1,
         entry_2: entry2,
-        entry_3: entry3
+        entry_3: entry3,
+        entry_1_focus_ts: entry1FocusTs,
+        entry_2_focus_ts: entry2FocusTs,
+        entry_3_focus_ts: entry3FocusTs,
+        entry_1_submit_ts: entry1SubmitTs,
+        entry_2_submit_ts: entry2SubmitTs,
+        entry_3_submit_ts: entry3SubmitTs,
+        entry_1_duration_sec: entry1Duration,
+        entry_2_duration_sec: entry2Duration,
+        entry_3_duration_sec: entry3Duration,
       });
       
       // Clear draft on successful submission
@@ -490,6 +542,8 @@ const ActivityPage: React.FC = () => {
             placeholder="Reflect and write here... / یہاں لکھنا شروع کریں..."
             value={value}
             onChange={(e) => handleEntryChange(index, e.target.value)}
+            onFocus={() => handleFocus(index)}
+            onBlur={() => handleBlur(index)}
             required
             readOnly={isLocked}
           />

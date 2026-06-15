@@ -35,6 +35,19 @@ class Submission(models.Model):
     entry_1 = models.TextField(blank=True, default='')
     entry_2 = models.TextField(blank=True, default='')
     entry_3 = models.TextField(blank=True, default='')
+    
+    entry_1_focus_ts = models.DateTimeField(null=True, blank=True)
+    entry_2_focus_ts = models.DateTimeField(null=True, blank=True)
+    entry_3_focus_ts = models.DateTimeField(null=True, blank=True)
+    
+    entry_1_submit_ts = models.DateTimeField(null=True, blank=True)
+    entry_2_submit_ts = models.DateTimeField(null=True, blank=True)
+    entry_3_submit_ts = models.DateTimeField(null=True, blank=True)
+    
+    entry_1_duration_sec = models.PositiveIntegerField(default=0)
+    entry_2_duration_sec = models.PositiveIntegerField(default=0)
+    entry_3_duration_sec = models.PositiveIntegerField(default=0)
+
     activity_wave = models.CharField(max_length=10, choices=ACTIVITY_WAVE_CHOICES, default='PRE_T1', db_index=True)
     experiment_day = models.PositiveIntegerField(null=True, blank=True, db_index=True)
     submission_date = models.DateTimeField(auto_now_add=True, db_index=True)
