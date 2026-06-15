@@ -40,10 +40,22 @@ def send_notification(self, notification_id):
             
             msg_lower = notification.message.lower()
             if 'reflection' in msg_lower:
-                subject = "PIMS Daily Activity Reminder"
-                button_text = "Complete Today's Reflection"
-                title = "Daily Reflection Reminder"
-                dashboard_url = "https://psycheversity.com/dashboard"
+                from emails.builder import build_daily_nudge_email, get_first_name
+                from emails.booster_schedule import get_active_writing_day
+                from emails.tasks import _send_participant_email
+
+                first_name = get_first_name(user)
+                writing_day = get_active_writing_day(user)
+                if writing_day:
+                    phase = writing_day.phase_number
+                    day = writing_day.day_in_phase
+                else:
+                    phase = 1
+                    day = 1
+
+                email_content = build_daily_nudge_email(first_name, phase=phase, day_in_phase=day)
+                _send_participant_email(email_content, user.email)
+                logger.info("Successfully sent daily activity nudge email to %s", user.email)
             else:
                 if 'overdue' in msg_lower:
                     subject = "PIMS Assessment Overdue Reminder"
@@ -53,31 +65,31 @@ def send_notification(self, notification_id):
                     title = "Assessment Due Reminder"
                 button_text = "Go to Dashboard"
                 dashboard_url = "https://psycheversity.com/dashboard"
-                
-            text_content = f"Hi {name},\n\n{notification.message}\n\nPlease visit your dashboard: {dashboard_url}"
-            
-            html_content = f"""
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e4e4e7; border-radius: 8px;">
-                <h2 style="color: #18181b; margin-top: 0;">{title}</h2>
-                <p style="font-size: 16px; color: #18181b;">Hi {name},</p>
-                <p style="color: #3f3f46; font-size: 16px; line-height: 1.5;">{notification.message}</p>
-                <div style="margin: 25px 0;">
-                    <a href="{dashboard_url}" style="background-color: #18181b; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">{button_text}</a>
+
+                text_content = f"Hi {name},\n\n{notification.message}\n\nPlease visit your dashboard: {dashboard_url}"
+
+                html_content = f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e4e4e7; border-radius: 8px;">
+                    <h2 style="color: #18181b; margin-top: 0;">{title}</h2>
+                    <p style="font-size: 16px; color: #18181b;">Hi {name},</p>
+                    <p style="color: #3f3f46; font-size: 16px; line-height: 1.5;">{notification.message}</p>
+                    <div style="margin: 25px 0;">
+                        <a href="{dashboard_url}" style="background-color: #18181b; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">{button_text}</a>
+                    </div>
+                    <hr style="border: 0; border-top: 1px solid #e4e4e7; margin: 20px 0;">
+                    <p style="color: #71717a; font-size: 12px; margin-bottom: 0;">This is an automated message from the Psychological Intervention Platform. Please do not reply directly to this email.</p>
                 </div>
-                <hr style="border: 0; border-top: 1px solid #e4e4e7; margin: 20px 0;">
-                <p style="color: #71717a; font-size: 12px; margin-bottom: 0;">This is an automated message from the Psychological Intervention Platform. Please do not reply directly to this email.</p>
-            </div>
-            """
-            
-            msg = EmailMultiAlternatives(
-                subject=subject,
-                body=text_content,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[user.email]
-            )
-            msg.attach_alternative(html_content, "text/html")
-            msg.send(fail_silently=False)
-            logger.info("Successfully sent email notification to %s", user.email)
+                """
+
+                msg = EmailMultiAlternatives(
+                    subject=subject,
+                    body=text_content,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[user.email]
+                )
+                msg.attach_alternative(html_content, "text/html")
+                msg.send(fail_silently=False)
+                logger.info("Successfully sent email notification to %s", user.email)
             
         notification.status = 'sent'
         notification.save(update_fields=['status'])
