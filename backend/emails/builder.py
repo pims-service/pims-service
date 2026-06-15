@@ -536,3 +536,52 @@ def build_phase_complete_email(
         **PHASE_REPORT_COMPLETE_EMAIL,
     }
     return _build_simple_bilingual_email(first_name, templates[template_key], links=links)
+
+
+def build_otp_email(otp: str, links: dict[str, str] | None = None) -> dict[str, str]:
+    from .content import OTP_EMAIL
+
+    otp_html = (
+        f'<div style="margin: 24px 0; text-align: center;">'
+        f'<span style="background-color: #f8fafc; color: {NAVY}; font-size: 32px; '
+        f'font-weight: bold; letter-spacing: 4px; padding: 12px 30px; '
+        f'border: 2px solid #e2e8f0; border-radius: 8px; display: inline-block;'
+        f'font-family: Arial, sans-serif;">{otp}</span>'
+        f'</div>'
+    )
+    otp_text = f'\nVerification Code: {otp}\n'
+
+    return _build_simple_bilingual_email(
+        first_name="",
+        email_content=OTP_EMAIL,
+        links=links,
+        extra_english_html=otp_html,
+        extra_urdu_html=otp_html,
+        extra_english_text=otp_text,
+        extra_urdu_text=otp_text,
+    )
+
+
+def build_password_reset_email(first_name: str, otp: str, links: dict[str, str] | None = None) -> dict[str, str]:
+    from .content import PASSWORD_RESET_EMAIL
+
+    otp_html = (
+        f'<div style="margin: 24px 0; text-align: center;">'
+        f'<span style="background-color: #f8fafc; color: {NAVY}; font-size: 32px; '
+        f'font-weight: bold; letter-spacing: 4px; padding: 12px 30px; '
+        f'border: 2px solid #e2e8f0; border-radius: 8px; display: inline-block;'
+        f'font-family: Arial, sans-serif;">{otp}</span>'
+        f'</div>'
+    )
+    otp_text = f'\nVerification Code: {otp}\n'
+
+    return _build_simple_bilingual_email(
+        first_name=first_name,
+        email_content=PASSWORD_RESET_EMAIL,
+        links=links,
+        extra_english_html=otp_html,
+        extra_urdu_html=otp_html,
+        extra_english_text=otp_text,
+        extra_urdu_text=otp_text,
+    )
+

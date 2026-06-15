@@ -70,12 +70,12 @@ def test_send_daily_reflection_email_personalization(test_user):
     # Assert email was sent
     assert len(mail.outbox) == 1
     sent_email = mail.outbox[0]
-    assert sent_email.subject == "PIMS Daily Activity Reminder"
+    assert "Day 1 of Phase 1" in sent_email.subject
     assert sent_email.to == [test_user.email]
-    assert "Sarah Kim" in sent_email.body
-    assert "Sarah Kim" in sent_email.alternatives[0][0]
-    assert "complete your daily reflection today." in sent_email.body
-    assert "Complete Today's Reflection" in sent_email.alternatives[0][0]
+    assert "Sarah" in sent_email.body
+    assert "Sarah" in sent_email.alternatives[0][0]
+    assert "Start today's exercise" in sent_email.alternatives[0][0]
+    assert "آج کی مشق شروع کریں" in sent_email.alternatives[0][0]
 
     # 2. Notification without "reflection" in message (milestone/assessment due, should send due email)
     mail.outbox = []

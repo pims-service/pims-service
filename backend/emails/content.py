@@ -220,3 +220,44 @@ STANDARD_FOOTER = {
         ),
     ],
 }
+
+
+OTP_EMAIL = {
+    'subject_en': 'Your Email Verification Code',
+    'subject_ur': 'آپ کا ای میل تصدیقی کوڈ',
+    'title_en': 'Email Verification',
+    'title_ur': 'ای میل کی تصدیق',
+    'paragraphs_en': [
+        'Welcome to Psycheversity! Your email verification code is below.',
+        'This code will expire in 10 minutes. Please enter this code on the registration page to complete your email verification.'
+    ],
+    'paragraphs_ur': [
+        'سائیکیورسٹی میں خوش آمدید! آپ کا ای میل تصدیقی کوڈ نیچے دیا گیا ہے۔',
+        'یہ کوڈ 10 منٹ میں ختم ہو جائے گا۔ ای میل کی تصدیق مکمل کرنے کے لیے براہِ کرم یہ کوڈ رجسٹریشن پیج پر درج کریں۔'
+    ],
+    'closing_en': 'Warm regards,',
+    'closing_team_en': 'Psycheversity Research Team',
+    'closing_ur': 'نیک تمناؤں کے ساتھ،',
+    'closing_team_ur': 'سائیکیورسٹی ریسرچ ٹیم',
+}
+
+
+PASSWORD_RESET_EMAIL = {
+    'subject_en': 'PIMS Password Reset Request',
+    'subject_ur': 'پاس ورڈ دوبارہ ترتیب دینے کی درخواست',
+    'title_en': 'Password Reset Verification',
+    'title_ur': 'پاس ورڈ دوبارہ ترتیب دینے کی تصدیق',
+    'paragraphs_en': [
+        'We received a request to reset your password. Use the verification code below to proceed.',
+        'This code will expire in 10 minutes. For security, please do not share this code with anyone. If you did not request this, you can safely ignore this email.'
+    ],
+    'paragraphs_ur': [
+        'ہمیں آپ کا پاس ورڈ دوبارہ ترتیب دینے کی درخواست موصول ہوئی ہے۔ آگے بڑھنے کے لیے نیچے دیا گیا تصدیقی کوڈ استعمال کریں۔',
+        'یہ کوڈ 10 منٹ میں ختم ہو جائے گا۔ سیکیورٹی وجوہات کی بناء پر، براہِ کرم یہ کوڈ کسی کے ساتھ شیئر نہ کریں۔ اگر آپ نے اس کی درخواست نہیں کی تھی، تو آپ اس ای میل کو نظر انداز کر سکتے ہیں۔'
+    ],
+    'closing_en': 'Warm regards,',
+    'closing_team_en': 'Psycheversity Research Team',
+    'closing_ur': 'نیک تمناؤں کے ساتھ،',
+    'closing_team_ur': 'سائیکیورسٹی ریسرچ ٹیم',
+}
+
