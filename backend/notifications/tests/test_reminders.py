@@ -48,14 +48,14 @@ class TestDailyReminders:
         # Mark User 2 as having submitted today
         Submission.objects.create(user=u2, activity=today_activity, content="Done")
         
-        # Run morning reminder (whatsapp only — E3 email handled by emails.booster_tasks)
+        # Run morning reminder (triggers E3 daily nudge email via send_notification)
         result = check_and_send_daily_reminders(reminder_type='morning')
         
         # Assertions
         assert "Sent 1 morning reminders" in result
         
-        # Verify User 1 got a whatsapp notification, but User 2 and 3 did not
-        assert Notification.objects.filter(user=u1, n_type='whatsapp', message__icontains="morning").exists()
+        # Verify User 1 got an email notification, but User 2 and 3 did not
+        assert Notification.objects.filter(user=u1, n_type='email', message__icontains="morning").exists()
         assert not Notification.objects.filter(user=u2).exists()
         assert not Notification.objects.filter(user=u3).exists()
         
@@ -71,9 +71,9 @@ class TestDailyReminders:
         
         assert "Sent 2 evening reminders" in result # User 1 and User 2 both haven't submitted
         
-        # Verify evening specific message (whatsapp)
+        # Verify evening specific message (email)
         notification = Notification.objects.filter(user=u1).first()
-        assert notification.n_type == 'whatsapp'
+        assert notification.n_type == 'email'
         assert "Good evening" in notification.message
         assert "still time" in notification.message
 

@@ -40,6 +40,10 @@ const QuestionnairePage: React.FC = () => {
   const [completed, setCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [transitioning, setTransitioning] = useState(false);
+  const submittingRef = useRef(false);
+  const transitioningRef = useRef(false);
+
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -344,6 +348,7 @@ const QuestionnairePage: React.FC = () => {
   };
 
   const handleNext = () => {
+    if (transitioningRef.current || submittingRef.current) return;
     if (checkSuicideRiskLocal() && !hasShownSafetyPanel) {
       setHasShownSafetyPanel(true);
       setSafetyPanelPendingAction('next');
@@ -354,19 +359,30 @@ const QuestionnairePage: React.FC = () => {
   };
 
   const proceedNext = async () => {
+    if (transitioningRef.current || submittingRef.current) return;
     if (currentIndex < scaleGroups.length - 1) {
-      // Flush all answered responses to the server before advancing.
-      // This guarantees the current scale's answers are persisted even
-      // if no answer was changed (so the debounced autosave didn't fire).
-      await saveDraftNow(responses);
-      setCurrentIndex(prev => prev + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      transitioningRef.current = true;
+      setTransitioning(true);
+      try {
+        // Flush all answered responses to the server before advancing.
+        // This guarantees the current scale's answers are persisted even
+        // if no answer was changed (so the debounced autosave didn't fire).
+        await saveDraftNow(responses);
+        setCurrentIndex(prev => prev + 1);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        console.error('Failed to save draft and transition:', err);
+      } finally {
+        transitioningRef.current = false;
+        setTransitioning(false);
+      }
     } else {
       submitAll();
     }
   };
 
   const handleBack = () => {
+    if (transitioningRef.current || submittingRef.current) return;
     if (currentIndex > 0) {
       setCurrentIndex(prev => prev - 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -470,7 +486,8 @@ const QuestionnairePage: React.FC = () => {
   };
 
   const submitAll = async (overrideResponses?: Record<string, any>) => {
-    if (!responseSetId || submitting) return;
+    if (!responseSetId || submittingRef.current || transitioningRef.current) return;
+    submittingRef.current = true;
     setSubmitting(true);
     const finalState = overrideResponses || responses;
     
@@ -511,6 +528,7 @@ const QuestionnairePage: React.FC = () => {
     } catch (err: any) {
       setError('Failed to submit questionnaire. Please try again.');
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };
@@ -580,7 +598,7 @@ const QuestionnairePage: React.FC = () => {
           questions={questions}
           responseSetId={responseSetId!}
           initialResponses={responses}
-          submitting={submitting}
+          submitting={submitting || transitioning}
           onComplete={(finalResponses) => {
             setResponses(finalResponses);
             submitAll(finalResponses);
@@ -728,7 +746,7 @@ const QuestionnairePage: React.FC = () => {
           <div className="pt-8 border-t border-zinc-200 flex justify-between items-center">
             <button
               onClick={handleBack}
-              disabled={currentIndex === 0}
+              disabled={currentIndex === 0 || transitioning || submitting}
               className="flex items-center gap-2 text-zinc-400 hover:text-zinc-700 disabled:opacity-0 transition-all font-medium text-sm"
             >
               <ArrowLeft className="w-4 h-4" /> Previous
@@ -736,10 +754,10 @@ const QuestionnairePage: React.FC = () => {
 
             <button
               onClick={handleNext}
-              disabled={submitting || !isScaleGroupCompleted}
+              disabled={submitting || transitioning || !isScaleGroupCompleted}
               className="px-8 py-3 bg-zinc-800 text-white font-medium rounded-lg text-sm hover:bg-zinc-700 transition-colors min-w-[140px] flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              {submitting ? (
+              {submitting || transitioning ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>

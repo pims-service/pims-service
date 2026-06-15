@@ -229,3 +229,37 @@ PHASE_REPORT_COMPLETE_EMAIL = {
         'closing_team_ur': 'سائیکیورسٹی ریسرچ ٹیم',
     },
 }
+
+EVENING_REMINDER_EMAIL = {
+    'subject_en': "Evening Reminder: Day {day_in_phase} of Phase {phase} writing exercise",
+    'subject_ur': 'شام کی یاد دہانی: مرحلہ {phase} کے دن {day_in_phase} کی تحریری مشق',
+    'title_en': "Evening Reminder",
+    'title_ur': 'شام کی یاد دہانی',
+    'lead_en': (
+        "Dear {first_name}, you haven't completed today's writing exercise (Day {day_in_phase} of Phase {phase}) yet. "
+        "There is still time to write before the day ends!"
+    ),
+    'lead_ur': (
+        "محترم {first_name}، آپ نے ابھی تک آج کی تحریری مشق (مرحلہ {phase} کا دن {day_in_phase}) مکمل نہیں کی۔ "
+        "دن ختم ہونے سے پہلے ابھی وقت باقی ہے!"
+    ),
+    'button_en': "Complete today's exercise",
+    'button_ur': 'آج کی مشق مکمل کریں',
+}
+
+CONSECUTIVE_MISSES_EMAIL = {
+    'subject_en': "Let's get back on track with Phase {phase} writing exercises",
+    'subject_ur': 'آئیے مرحلہ {phase} کی تحریری مشقیں دوبارہ شروع کریں',
+    'title_en': "Let's Get Back on Track",
+    'title_ur': 'آئیے دوبارہ شروعات کریں',
+    'lead_en': (
+        "Dear {first_name}, we noticed you missed your daily reflections for a couple of days. "
+        "Research shows consistency is key to benefit from the intervention. Let's get back on track today with Day {day_in_phase} of Phase {phase}!"
+    ),
+    'lead_ur': (
+        "محترم {first_name}، ہم نے محسوس کیا کہ آپ گزشتہ چند دنوں سے اپنی تحریری مشق نہیں کر سکے۔ "
+        "تحقیق سے معلوم ہوا ہے کہ اس پروگرام سے پورا فائدہ اٹھانے کے لیے باقاعدگی ضروری ہے۔ آئیے آج سے مرحلہ {phase} کے دن {day_in_phase} کی مشق کے ساتھ دوبارہ شروعات کریں!"
+    ),
+    'button_en': "Resume your writing",
+    'button_ur': 'اپنی تحریر دوبارہ شروع کریں',
+}

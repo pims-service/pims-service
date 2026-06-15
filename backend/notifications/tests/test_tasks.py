@@ -77,6 +77,44 @@ def test_send_daily_reflection_email_personalization(test_user):
     assert "Start today's exercise" in sent_email.alternatives[0][0]
     assert "آج کی مشق شروع کریں" in sent_email.alternatives[0][0]
 
+    # 1b. Notification with "reflection" and "evening" in message (should send evening reminder email)
+    mail.outbox = []
+    notif_evening = Notification.objects.create(
+        user=test_user,
+        n_type='email',
+        message='Good evening! You haven\'t completed your daily reflection yet. There\'s still time!',
+        scheduled_time=timezone.now(),
+        status='pending'
+    )
+    res_ev = send_notification(notif_evening.pk)
+    notif_evening.refresh_from_db()
+    assert notif_evening.status == 'sent'
+    assert len(mail.outbox) == 1
+    sent_ev_email = mail.outbox[0]
+    assert "Evening Reminder" in sent_ev_email.subject
+    assert "Evening Reminder" in sent_ev_email.alternatives[0][0]
+    assert "Complete today's exercise" in sent_ev_email.alternatives[0][0]
+    assert "آج کی مشق مکمل کریں" in sent_ev_email.alternatives[0][0]
+
+    # 1c. Notification with "reflection" and "missed" in message (should send consecutive misses email)
+    mail.outbox = []
+    notif_missed = Notification.objects.create(
+        user=test_user,
+        n_type='email',
+        message='We noticed you missed your reflection for a couple of days. Research shows consistency is key. Let\'s get back on track today!',
+        scheduled_time=timezone.now(),
+        status='pending'
+    )
+    res_ms = send_notification(notif_missed.pk)
+    notif_missed.refresh_from_db()
+    assert notif_missed.status == 'sent'
+    assert len(mail.outbox) == 1
+    sent_ms_email = mail.outbox[0]
+    assert "get back on track" in sent_ms_email.subject.lower()
+    assert "Back on Track" in sent_ms_email.alternatives[0][0]
+    assert "Resume your writing" in sent_ms_email.alternatives[0][0]
+    assert "اپنی تحریر دوبارہ شروع کریں" in sent_ms_email.alternatives[0][0]
+
     # 2. Notification without "reflection" in message (milestone/assessment due, should send due email)
     mail.outbox = []
     notif_due = Notification.objects.create(

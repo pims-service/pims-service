@@ -110,3 +110,46 @@ def test_signup_draft_risk_does_not_send_participant_email(fresh_client, fresh_u
 
     rs.refresh_from_db()
     assert rs.suicide_risk_triggered is True
+
+@pytest.mark.django_db(transaction=True)
+def test_signup_draft_to_submit_sends_participant_email(fresh_client, fresh_user, test_group):
+    test_group.is_active = True
+    test_group.save()
+
+    battery, q_phq9, _, opt_risk = _create_signup_battery_with_risk_trigger()
+
+    fresh_user.has_completed_sociodemographic = True
+    fresh_user.group = test_group
+    fresh_user.save()
+
+    rs = ResponseSet.objects.create(
+        user=fresh_user,
+        questionnaire=battery,
+        milestone='SIGNUP',
+        status='DRAFT',
+    )
+
+    # 1. Save draft which triggers protocol but suppresses notifications to participant
+    draft_url = reverse('response_set_save_draft', kwargs={'pk': rs.pk})
+    response = fresh_client.post(
+        draft_url,
+        {'responses_data': [{'question_id': q_phq9.id, 'selected_option_id': opt_risk.id}]},
+        format='json',
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert len(mail.outbox) == 0
+
+    # 2. Submit the response set, which should now send the support email to the participant
+    submit_url = reverse('response_set_submit', kwargs={'pk': rs.pk})
+    response = fresh_client.post(
+        submit_url,
+        {'responses_data': [{'question_id': q_phq9.id, 'selected_option_id': opt_risk.id}]},
+        format='json',
+    )
+    assert response.status_code == status.HTTP_200_OK
+    
+    # Verify both the support and welcome email are sent
+    assert len(mail.outbox) == 2
+    subjects = [message.subject for message in mail.outbox]
+    assert any('Support resources are available' in subject for subject in subjects)
+    assert any('Welcome to Psycheversity' in subject for subject in subjects)

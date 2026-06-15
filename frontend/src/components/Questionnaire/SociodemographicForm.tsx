@@ -30,6 +30,13 @@ const SociodemographicForm: React.FC<SociodemographicFormProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const submittingFormRef = useRef(false);
+
+  useEffect(() => {
+    if (!submitting) {
+      submittingFormRef.current = false;
+    }
+  }, [submitting]);
 
   useEffect(() => {
     return () => {
@@ -93,7 +100,8 @@ const SociodemographicForm: React.FC<SociodemographicFormProps> = ({
   const progress = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0;
 
   const handleSubmit = () => {
-    if (isAllCompleted) {
+    if (isAllCompleted && !submittingFormRef.current && !submitting && !isSaving) {
+      submittingFormRef.current = true;
       onComplete(responses);
     }
   };

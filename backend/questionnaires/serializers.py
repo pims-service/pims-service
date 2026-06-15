@@ -63,24 +63,49 @@ def check_and_trigger_risk_protocol(response_set, *, notify_participant=True):
             response_set.suicide_risk_triggered = True
             response_set.save(update_fields=['suicide_risk_triggered'])
 
-        cache_key = f"risk_alert_triggered_{response_set.id}"
-        
-        if not cache.get(cache_key):
-            cache.set(cache_key, True, timeout=86400)
-            
-            user = response_set.user
-            reasons_str = ", ".join(reasons)
+        user = response_set.user
+        reasons_str = ", ".join(reasons)
+        from django.db import transaction
+        from notifications.tasks import send_notification
+
+        # 1. Notify admins (only once per response set)
+        admin_cache_key = f"risk_admin_alerted_{response_set.id}"
+        if not cache.get(admin_cache_key):
+            cache.set(admin_cache_key, True, timeout=86400)
             
             logger.critical(
                 "RISK PROTOCOL ALERT: User %s (ID: %s, Email: %s) flagged for suicidal risk: %s.",
                 user.username, user.id, user.email, reasons_str
             )
             
-            from notifications.tasks import send_notification
-            from django.db import transaction
+            # Notify admins
+            User = get_user_model()
+            admins = User.objects.filter(is_staff=True)
+            for admin in admins:
+                admin_notif = Notification.objects.create(
+                    user=admin,
+                    n_type='email',
+                    message=(
+                        f"CRITICAL SAFETY ALERT: Participant '{user.username}' (ID: {user.id}) "
+                        f"has triggered suicidal risk protocols. Reasons: {reasons_str}. "
+                        f"Immediate clinical follow-up required."
+                    ),
+                    scheduled_time=timezone.now(),
+                    status='pending'
+                )
+                transaction.on_commit(
+                    lambda admin_notif_id=admin_notif.id: send_notification.delay(admin_notif_id)
+                )
 
-            # Participant email: bilingual support resources at every stage (including SIGNUP).
-            if notify_participant:
+            from .tasks import refresh_suicide_risk_admin_cache_task
+            transaction.on_commit(lambda: refresh_suicide_risk_admin_cache_task.delay())
+
+        # 2. Notify participant (only if notify_participant=True and not already notified)
+        if notify_participant:
+            part_cache_key = f"risk_participant_alerted_{response_set.id}"
+            if not cache.get(part_cache_key):
+                cache.set(part_cache_key, True, timeout=86400)
+                
                 from emails.tasks import send_support_email_task
                 transaction.on_commit(
                     lambda user_id=user.user_id: send_support_email_task.delay(user_id)
@@ -102,27 +127,7 @@ def check_and_trigger_risk_protocol(response_set, *, notify_participant=True):
                     scheduled_time=timezone.now(),
                     status='pending'
                 )
-                transaction.on_commit(lambda: send_notification.delay(p_whatsapp.id))
-
-            # Notify admins
-            User = get_user_model()
-            admins = User.objects.filter(is_staff=True)
-            for admin in admins:
-                admin_notif = Notification.objects.create(
-                    user=admin,
-                    n_type='email',
-                    message=(
-                        f"CRITICAL SAFETY ALERT: Participant '{user.username}' (ID: {user.id}) "
-                        f"has triggered suicidal risk protocols. Reasons: {reasons_str}. "
-                        f"Immediate clinical follow-up required."
-                    ),
-                    scheduled_time=timezone.now(),
-                    status='pending'
-                )
-                transaction.on_commit(lambda admin_notif_id=admin_notif.id: send_notification.delay(admin_notif_id))
-
-            from .tasks import refresh_suicide_risk_admin_cache_task
-            transaction.on_commit(lambda: refresh_suicide_risk_admin_cache_task.delay())
+                transaction.on_commit(lambda notif_id=p_whatsapp.id: send_notification.delay(notif_id))
 
 
 class OptionSerializer(serializers.ModelSerializer):

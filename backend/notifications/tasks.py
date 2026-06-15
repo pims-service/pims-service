@@ -40,7 +40,12 @@ def send_notification(self, notification_id):
             
             msg_lower = notification.message.lower()
             if 'reflection' in msg_lower:
-                from emails.builder import build_daily_nudge_email, get_first_name
+                from emails.builder import (
+                    build_daily_nudge_email,
+                    build_evening_reminder_email,
+                    build_consecutive_misses_email,
+                    get_first_name,
+                )
                 from emails.booster_schedule import get_active_writing_day
                 from emails.tasks import _send_participant_email
 
@@ -53,7 +58,13 @@ def send_notification(self, notification_id):
                     phase = 1
                     day = 1
 
-                email_content = build_daily_nudge_email(first_name, phase=phase, day_in_phase=day)
+                if 'missed' in msg_lower:
+                    email_content = build_consecutive_misses_email(first_name, phase=phase, day_in_phase=day)
+                elif 'evening' in msg_lower:
+                    email_content = build_evening_reminder_email(first_name, phase=phase, day_in_phase=day)
+                else:
+                    email_content = build_daily_nudge_email(first_name, phase=phase, day_in_phase=day)
+
                 _send_participant_email(email_content, user.email)
                 logger.info("Successfully sent daily activity nudge email to %s", user.email)
             else:
@@ -144,10 +155,11 @@ def check_and_send_daily_reminders(reminder_type='morning'):
                 if reminder_type == 'evening':
                     msg = "Good evening! You haven't completed your daily reflection yet. There's still time!"
             
-            # Create a whatsapp notification only — bilingual E3 email is sent by emails.booster_tasks.
+            # Create email notification for daily reflection reminder
+            n_type = 'email'
             n = Notification.objects.create(
                 user=user,
-                n_type='whatsapp',
+                n_type=n_type,
                 message=msg,
                 scheduled_time=timezone.now(),
                 status='pending'
