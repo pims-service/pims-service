@@ -120,6 +120,10 @@ export const questionnairesApi = {
   triggerAdminLongitudinalExport: (groupName?: string) => api.post('/admin/tools/export/longitudinal/csv/', {
     group: groupName || 'All'
   }),
+  triggerAdminDailyEntriesExport: (groupName?: string, waveName?: string) => api.post('/admin/tools/export/daily-entries/csv/', {
+    group: groupName || 'All',
+    wave: waveName || 'All'
+  }),
   getAdminExportStatus: (taskId: string) => api.get(`/admin/tools/export/status/${taskId}/`),
 
   exportQuestionnaireData: (id: string) => api.get(`/questionnaires/${id}/export/`, { responseType: 'blob' }),

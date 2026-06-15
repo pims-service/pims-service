@@ -68,7 +68,7 @@ describe.sequential('AdminT4ResultsPage', () => {
       expect(screen.getByText('1-Year Assessment Results')).toBeInTheDocument();
     });
 
-    const exportBtn = screen.getByRole('button', { name: /Export CSV/i });
+    const exportBtn = screen.getByRole('button', { name: /Export Assessments CSV/i });
     fireEvent.click(exportBtn);
 
     expect(questionnairesApi.triggerAdminT4Export).toHaveBeenCalledWith('All');

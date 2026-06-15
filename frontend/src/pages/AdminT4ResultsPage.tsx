@@ -55,6 +55,7 @@ const AdminT4ResultsPage: React.FC = () => {
   const [selectedSubmission, setSelectedSubmission] = useState<PosttestSet | null>(null);
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [exportStatus, setExportStatus] = useState<'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED' | null>(null);
+  const [exportType, setExportType] = useState<'psychometric' | 'daily_entries' | null>(null);
 
   const fetchSubmissions = async (page: number = 1) => {
     setLoading(true);
@@ -91,6 +92,7 @@ const AdminT4ResultsPage: React.FC = () => {
     fetchSubmissions();
   }, []);
 
+  // Polling logic for Export Task
   useEffect(() => {
     let pollInterval: NodeJS.Timeout;
 
@@ -107,18 +109,25 @@ const AdminT4ResultsPage: React.FC = () => {
             setExportStatus(null);
             const link = document.createElement('a');
             link.href = file_url;
-            const dateStr = new Date().toISOString().split('T')[0];
-            link.setAttribute('download', `t4_results_${dateStr}.csv`);
+            
+            const filename = exportType === 'daily_entries'
+              ? 't4_daily_entries_export.csv'
+              : `t4_results_${new Date().toISOString().split('T')[0]}.csv`;
+              
+            link.setAttribute('download', filename);
             document.body.appendChild(link);
             link.click();
             link.remove();
+            setExportType(null);
           } else if (status === 'FAILED') {
             setExportingId(null);
+            setExportType(null);
           }
         } catch (err) {
           console.error('Polling failed', err);
           setExportingId(null);
           setExportStatus('FAILED');
+          setExportType(null);
         }
       }, 2000);
     }
@@ -126,7 +135,7 @@ const AdminT4ResultsPage: React.FC = () => {
     return () => {
       if (pollInterval) clearInterval(pollInterval);
     };
-  }, [exportingId, exportStatus]);
+  }, [exportingId, exportStatus, exportType]);
 
   const handleViewDetail = async (id: string) => {
     try {
@@ -140,6 +149,7 @@ const AdminT4ResultsPage: React.FC = () => {
   const handleExport = async () => {
     try {
       setExportStatus('PENDING');
+      setExportType('psychometric');
       const response = await questionnairesApi.triggerAdminT4Export(selectedGroup);
       setExportingId(response.data.task_id);
       setError(null);
@@ -147,6 +157,22 @@ const AdminT4ResultsPage: React.FC = () => {
       console.error('Failed to export T4 follow-up data', err);
       setError('Failed to initiate CSV export. Please check server logs.');
       setExportStatus(null);
+      setExportType(null);
+    }
+  };
+
+  const handleExportDailyEntries = async () => {
+    try {
+      setExportStatus('PENDING');
+      setExportType('daily_entries');
+      const response = await questionnairesApi.triggerAdminDailyEntriesExport(selectedGroup, 'PRE_T4');
+      setExportingId(response.data.task_id);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to export T4 daily entries data', err);
+      setError('Failed to initiate CSV export. Please check server logs.');
+      setExportStatus(null);
+      setExportType(null);
     }
   };
 
@@ -217,22 +243,41 @@ const AdminT4ResultsPage: React.FC = () => {
             </select>
           </div>
 
-          <button
-            onClick={handleExport}
-            disabled={!!exportingId}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-zinc-800 text-white rounded-lg font-medium text-sm hover:bg-zinc-705 transition-colors disabled:opacity-40 whitespace-nowrap"
-          >
-            {exportingId ? (
-              <>
-                <RotateCw size={14} className="animate-spin" />
-                Preparing...
-              </>
-            ) : (
-              <>
-                <Download size={14} /> Export CSV
-              </>
-            )}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleExport}
+              disabled={!!exportingId}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-zinc-800 text-white rounded-lg font-medium text-sm hover:bg-zinc-700 transition-colors disabled:opacity-40 whitespace-nowrap"
+            >
+              {exportingId && exportType === 'psychometric' ? (
+                <>
+                  <RotateCw size={14} className="animate-spin" />
+                  Preparing...
+                </>
+              ) : (
+                <>
+                  <Download size={14} /> Export Assessments CSV
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={handleExportDailyEntries}
+              disabled={!!exportingId}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-zinc-800 text-white rounded-lg font-medium text-sm hover:bg-zinc-700 transition-colors disabled:opacity-40 whitespace-nowrap"
+            >
+              {exportingId && exportType === 'daily_entries' ? (
+                <>
+                  <RotateCw size={14} className="animate-spin" />
+                  Preparing...
+                </>
+              ) : (
+                <>
+                  <Download size={14} /> Export Daily Entries
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </header>
 

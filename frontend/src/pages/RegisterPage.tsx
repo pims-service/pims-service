@@ -4,6 +4,7 @@ import api from '../services/api';
 import { useTranslation } from 'react-i18next';
 import { User, Mail, Phone, Calendar, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Loader2, Key, RefreshCw, X } from 'lucide-react';
 import PasswordInput from '../components/Auth/PasswordInput';
+import OtpInput from '../components/Auth/OtpInput';
 
 const COUNTRY_CODES = [
   { code: '+92', name: 'PK', label: 'Pakistan (+92)' },
@@ -400,23 +401,24 @@ const RegisterPage: React.FC = () => {
               </div>
 
               <div className="space-y-3">
-                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400" htmlFor="otp">Verification Code</label>
-                <div className="relative">
-                  <Key className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                  <input
-                    id="otp"
-                    name="otp"
-                    type="text"
-                    required
-                    placeholder="000000"
-                    className={`w-full h-12 text-center text-xl font-bold tracking-[0.4em] font-mono border border-zinc-200 rounded-xl focus:ring-1 focus:ring-zinc-950 focus:border-zinc-950 outline-none transition-all !ps-8 ${
-                      errors.otp ? 'border-zinc-900 ring-1 ring-zinc-900' : 'border-zinc-200'
-                    }`}
-                    value={formData.otp}
-                    onChange={handleChange}
-                    maxLength={6}
-                  />
+                <div className="flex items-center gap-1.5 text-zinc-400">
+                  <Key className="w-3.5 h-3.5" />
+                  <label className="block text-xs font-bold uppercase tracking-wider" htmlFor="otp">Verification Code</label>
                 </div>
+                <OtpInput
+                  id="otp"
+                  value={formData.otp}
+                  onChange={(val) => {
+                    setFormData(prev => ({ ...prev, otp: val }));
+                    if (errors.otp) {
+                      const newErrors = { ...errors };
+                      delete newErrors.otp;
+                      setErrors(newErrors);
+                    }
+                  }}
+                  disabled={loading}
+                  error={!!errors.otp}
+                />
                 {otpMessage && <p className="text-xs text-emerald-600 font-medium italic mt-1">{otpMessage}</p>}
               </div>
 

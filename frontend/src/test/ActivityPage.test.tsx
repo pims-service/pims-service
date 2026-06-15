@@ -229,12 +229,21 @@ describe('ActivityPage', () => {
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith('/activities/daily/submit/', {
+      expect(api.post).toHaveBeenCalledWith('/activities/daily/submit/', expect.objectContaining({
         activity: 12,
         entry_1: validText,
         entry_2: validText,
         entry_3: validText,
-      });
+        entry_1_duration_sec: 0,
+        entry_2_duration_sec: 0,
+        entry_3_duration_sec: 0,
+        entry_1_focus_ts: expect.any(String),
+        entry_2_focus_ts: expect.any(String),
+        entry_3_focus_ts: expect.any(String),
+        entry_1_submit_ts: expect.any(String),
+        entry_2_submit_ts: expect.any(String),
+        entry_3_submit_ts: expect.any(String),
+      }));
       expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
     }, { timeout: 2500 });
   });
@@ -383,12 +392,21 @@ describe('ActivityPage', () => {
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith('/activities/daily/submit/', {
+      expect(api.post).toHaveBeenCalledWith('/activities/daily/submit/', expect.objectContaining({
         activity: 12,
         entry_1: validText,
         entry_2: validText,
         entry_3: validText,
-      });
+        entry_1_duration_sec: 0,
+        entry_2_duration_sec: 0,
+        entry_3_duration_sec: 0,
+        entry_1_focus_ts: expect.any(String),
+        entry_2_focus_ts: expect.any(String),
+        entry_3_focus_ts: expect.any(String),
+        entry_1_submit_ts: expect.any(String),
+        entry_2_submit_ts: expect.any(String),
+        entry_3_submit_ts: expect.any(String),
+      }));
       expect(api.get).toHaveBeenCalledWith('/users/profile/');
       expect(mockQuestionnairesApi.list).toHaveBeenCalled();
       expect(mockNavigate).toHaveBeenCalledWith('/questionnaire/q-psych-id?milestone=7_DAYS', { replace: true });

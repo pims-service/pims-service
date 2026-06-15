@@ -71,21 +71,21 @@ const App: React.FC = () => {
                 <Route path="/questionnaire/:id" element={<QuestionnairePage />} />
                 <Route path="/sociodemographic" element={<SociodemographicRedirect />} />
               </Route>
-              
+
               {/* Admin Hub - Nested Routes with Sidebar Layout */}
               <Route element={<AuthOnboardingGuard requireAdmin={true}><AdminLayout /></AuthOnboardingGuard>}>
-                  <Route path="/admin" element={<AdminDashboardPage />} />
-                  <Route path="/admin/groups" element={<GroupsManagementPage />} />
-                  <Route path="/admin/groups/:id" element={<GroupDetailPage />} />
-                 <Route path="/admin/t0-data" element={<AdminT0ResultsPage />} />
-                 <Route path="/admin/t1-data" element={<AdminT1ResultsPage />} />
-                 <Route path="/admin/t-first-month-data" element={<AdminTFirstMonthResultsPage />} />
-                 <Route path="/admin/t2-data" element={<AdminT2ResultsPage />} />
-                 <Route path="/admin/t3-data" element={<AdminT3ResultsPage />} />
-                 <Route path="/admin/t4-data" element={<AdminT4ResultsPage />} />
-                 <Route path="/admin/support-queries" element={<AdminSupportQueriesPage />} />
-                 <Route path="/admin/follow-ups" element={<AdminFollowUpsPage />} />
-                 <Route path="/admin/safety-risk" element={<AdminSuicideRiskPage />} />
+                <Route path="/admin" element={<AdminDashboardPage />} />
+                <Route path="/admin/groups" element={<GroupsManagementPage />} />
+                <Route path="/admin/groups/:id" element={<GroupDetailPage />} />
+                <Route path="/admin/t0-data" element={<AdminT0ResultsPage />} />
+                <Route path="/admin/t1-data" element={<AdminT1ResultsPage />} />
+                <Route path="/admin/t-first-month-data" element={<AdminTFirstMonthResultsPage />} />
+                <Route path="/admin/t2-data" element={<AdminT2ResultsPage />} />
+                <Route path="/admin/t3-data" element={<AdminT3ResultsPage />} />
+                <Route path="/admin/t4-data" element={<AdminT4ResultsPage />} />
+                <Route path="/admin/support-queries" element={<AdminSupportQueriesPage />} />
+                <Route path="/admin/follow-ups" element={<AdminFollowUpsPage />} />
+                <Route path="/admin/safety-risk" element={<AdminSuicideRiskPage />} />
               </Route>
 
               {/* Fallback */}

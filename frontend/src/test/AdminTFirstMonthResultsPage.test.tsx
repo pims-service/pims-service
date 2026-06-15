@@ -72,7 +72,7 @@ describe.sequential('AdminTFirstMonthResultsPage', () => {
       expect(screen.getByText('1-Month Assessment Results')).toBeInTheDocument();
     });
 
-    const exportBtn = screen.getByRole('button', { name: /Export CSV/i });
+    const exportBtn = screen.getByRole('button', { name: /Export Assessments CSV/i });
     fireEvent.click(exportBtn);
 
     expect(questionnairesApi.triggerAdminTFirstMonthExport).toHaveBeenCalledWith('All');

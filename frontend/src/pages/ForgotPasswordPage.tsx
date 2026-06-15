@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import { useTranslation } from 'react-i18next';
 import { Mail, Key, Lock, Loader2, ArrowRight, ArrowLeft, AlertCircle, CheckCircle2 } from 'lucide-react';
+import OtpInput from '../components/Auth/OtpInput';
 
 const ForgotPasswordPage: React.FC = () => {
   const navigate = useNavigate();
@@ -220,24 +221,19 @@ const ForgotPasswordPage: React.FC = () => {
               </div>
 
               <div className="space-y-3">
-                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400" htmlFor="reset-otp">
-                  {t('forgot_password.otp_label')}
-                </label>
-                <div className="relative">
-                  <Key className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                  <input
-                    id="reset-otp"
-                    name="otp"
-                    type="text"
-                    required
-                    maxLength={6}
-                    placeholder="000000"
-                    className="w-full h-12 text-center text-xl font-bold tracking-[0.4em] font-mono border border-zinc-200 rounded-xl focus:ring-1 focus:ring-zinc-950 focus:border-zinc-950 outline-none transition-all !ps-8"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    disabled={loading}
-                  />
+                <div className="flex items-center gap-1.5 text-zinc-400">
+                  <Key className="w-3.5 h-3.5" />
+                  <label className="block text-xs font-bold uppercase tracking-wider" htmlFor="reset-otp">
+                    {t('forgot_password.otp_label')}
+                  </label>
                 </div>
+                <OtpInput
+                  id="reset-otp"
+                  value={otp}
+                  onChange={(val) => setOtp(val)}
+                  disabled={loading}
+                  error={!!error}
+                />
               </div>
 
               <button

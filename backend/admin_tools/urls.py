@@ -9,6 +9,7 @@ from .views import (
     ExportT3DataCSVView,
     ExportT4DataCSVView,
     ExportLongitudinalDataCSVView,
+    ExportDailyEntriesDataCSVView,
     ExportTaskStatusView
 )
 
@@ -21,6 +22,7 @@ urlpatterns = [
     path('export/t3/csv/', ExportT3DataCSVView.as_view(), name='export_t3_csv'),
     path('export/t4/csv/', ExportT4DataCSVView.as_view(), name='export_t4_csv'),
     path('export/longitudinal/csv/', ExportLongitudinalDataCSVView.as_view(), name='export_longitudinal_csv'),
+    path('export/daily-entries/csv/', ExportDailyEntriesDataCSVView.as_view(), name='export_daily_entries_csv'),
     path('export/status/<uuid:task_id>/', ExportTaskStatusView.as_view(), name='export_task_status'),
     path('dashboard-analytics/', AdminDashboardAnalyticsView.as_view(), name='dashboard_analytics'),
 ]
