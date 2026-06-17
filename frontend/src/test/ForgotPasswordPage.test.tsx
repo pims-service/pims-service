@@ -60,7 +60,7 @@ describe('ForgotPasswordPage', () => {
 
     expect(screen.getByText('Reset password')).toBeInTheDocument();
     expect(screen.getByText('Enter your email address to receive a reset code')).toBeInTheDocument();
-    expect(screen.getByLabelText('Email Address')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Email Address/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Send Reset Code/i })).toBeInTheDocument();
   });
 
@@ -78,7 +78,7 @@ describe('ForgotPasswordPage', () => {
     );
 
     // 1. Submit email (Phase 'request')
-    const emailInput = screen.getByLabelText('Email Address');
+    const emailInput = screen.getByLabelText(/Email Address/i);
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     fireEvent.click(screen.getByRole('button', { name: /Send Reset Code/i }));
 
@@ -90,14 +90,14 @@ describe('ForgotPasswordPage', () => {
     }, { timeout: 2000 });
 
     expect(screen.getByText('We sent a 6-digit code to test@example.com')).toBeInTheDocument();
-    expect(screen.getByLabelText('Verification Code')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Verification Code/i)).toBeInTheDocument();
     
     // Check that password fields are NOT visible yet
-    expect(screen.queryByLabelText('New Password')).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('Confirm New Password')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^New Password/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Confirm New Password/i)).not.toBeInTheDocument();
 
     // 2. Submit OTP (Phase 'verify')
-    const otpInput = screen.getByLabelText('Verification Code');
+    const otpInput = screen.getByLabelText(/Verification Code/i);
     fireEvent.change(otpInput, { target: { value: '123456' } });
     fireEvent.click(screen.getByRole('button', { name: /Verify Code/i }));
 
@@ -108,13 +108,13 @@ describe('ForgotPasswordPage', () => {
       expect(screen.getByText('Set new password')).toBeInTheDocument();
     }, { timeout: 2000 });
 
-    expect(screen.getByLabelText('New Password')).toBeInTheDocument();
-    expect(screen.getByLabelText('Confirm New Password')).toBeInTheDocument();
-    expect(screen.queryByLabelText('Verification Code')).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^New Password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Confirm New Password/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Verification Code/i)).not.toBeInTheDocument();
 
     // 3. Submit Passwords (Phase 'reset')
-    fireEvent.change(screen.getByLabelText('New Password'), { target: { value: 'Password123!' } });
-    fireEvent.change(screen.getByLabelText('Confirm New Password'), { target: { value: 'Password123!' } });
+    fireEvent.change(screen.getByLabelText(/^New Password/i), { target: { value: 'Password123!' } });
+    fireEvent.change(screen.getByLabelText(/^Confirm New Password/i), { target: { value: 'Password123!' } });
     fireEvent.click(screen.getByRole('button', { name: /Reset Password/i }));
 
     await waitFor(() => {
@@ -145,27 +145,27 @@ describe('ForgotPasswordPage', () => {
     );
 
     // Transition to Phase 'verify'
-    fireEvent.change(screen.getByLabelText('Email Address'), { target: { value: 'test@example.com' } });
+    fireEvent.change(screen.getByLabelText(/Email Address/i), { target: { value: 'test@example.com' } });
     fireEvent.click(screen.getByRole('button', { name: /Send Reset Code/i }));
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Verification Code')).toBeInTheDocument();
+      expect(screen.getByLabelText(/Verification Code/i)).toBeInTheDocument();
     }, { timeout: 2000 });
 
     // Transition to Phase 'reset'
-    fireEvent.change(screen.getByLabelText('Verification Code'), { target: { value: '123456' } });
+    fireEvent.change(screen.getByLabelText(/Verification Code/i), { target: { value: '123456' } });
     fireEvent.click(screen.getByRole('button', { name: /Verify Code/i }));
 
     await waitFor(() => {
-      expect(screen.getByLabelText('New Password')).toBeInTheDocument();
+      expect(screen.getByLabelText(/^New Password/i)).toBeInTheDocument();
     }, { timeout: 2000 });
 
     // Fill details with mismatching passwords
-    fireEvent.change(screen.getByLabelText('New Password'), { target: { value: 'Password123!' } });
-    fireEvent.change(screen.getByLabelText('Confirm New Password'), { target: { value: 'DifferentPass123!' } });
+    fireEvent.change(screen.getByLabelText(/^New Password/i), { target: { value: 'Password123!' } });
+    fireEvent.change(screen.getByLabelText(/^Confirm New Password/i), { target: { value: 'DifferentPass123!' } });
     fireEvent.click(screen.getByRole('button', { name: /Reset Password/i }));
 
-    expect(screen.getByText('Passwords do not match.')).toBeInTheDocument();
+    expect(screen.getByText(/Passwords don't match/i)).toBeInTheDocument();
     expect(api.post).toHaveBeenCalledTimes(2); // Request + Verify only
   });
 });

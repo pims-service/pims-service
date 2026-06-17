@@ -81,8 +81,16 @@ const ForgotPasswordPage: React.FC = () => {
 
   const handleResetSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!password || password.length < 8) {
+      setError('Password must be at least 8 characters. / پاس ورڈ کم از کم 8 حروف کا ہونا چاہیے۔');
+      return;
+    }
+    if (/^\d+$/.test(password)) {
+      setError('Password cannot be entirely numeric. / پاس ورڈ صرف نمبروں پر مشتمل نہیں ہو سکتا۔');
+      return;
+    }
     if (password !== confirmPassword) {
-      setError(t('forgot_password.password_mismatch'));
+      setError("Passwords don't match. / پاس ورڈ مماثل نہیں ہیں۔");
       return;
     }
 
@@ -128,7 +136,7 @@ const ForgotPasswordPage: React.FC = () => {
         <div className="card-minimal max-w-md w-full p-8 space-y-8">
           
           {/* Header */}
-          <div className="space-y-2 text-center">
+          <div className="space-y-1 text-center">
             <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
               {phase === 'request'
                 ? t('forgot_password.request_title')
@@ -136,12 +144,19 @@ const ForgotPasswordPage: React.FC = () => {
                   ? t('forgot_password.reset_title')
                   : t('forgot_password.set_password_title')}
             </h1>
-            <p className="text-zinc-500">
-              {phase === 'request' 
-                ? t('forgot_password.request_subtitle') 
+            <p className="text-zinc-500 text-sm">
+              {phase === 'request'
+                ? t('forgot_password.request_subtitle')
                 : phase === 'verify'
                   ? t('forgot_password.reset_subtitle', { email })
                   : t('forgot_password.set_password_subtitle')}
+            </p>
+            <p className="font-urdu text-zinc-400 text-xs">
+              {phase === 'request'
+                ? 'پاس ورڈ بھول گئے؟ ای میل درج کریں۔'
+                : phase === 'verify'
+                  ? 'ای میل پر بھیجا گیا کوڈ درج کریں۔'
+                  : 'نیا پاس ورڈ درج کریں۔'}
             </p>
           </div>
 
@@ -162,19 +177,16 @@ const ForgotPasswordPage: React.FC = () => {
           )}
 
           {phase === 'request' && (
-            /* Phase 1: Request Password Reset Form */
             <form onSubmit={handleRequestSubmit} className="space-y-4">
-              <div className="space-y-3">
+              <div className="space-y-1.5">
                 <label className="block text-sm font-medium text-zinc-700" htmlFor="reset-email">
-                  {t('forgot_password.email_label')}
+                  {t('forgot_password.email_label')}{' '}
+                  <span className="font-urdu text-zinc-400 font-normal text-xs">/ ای میل</span>
                 </label>
                 <div className="relative">
                   <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                   <input
-                    id="reset-email"
-                    name="email"
-                    type="email"
-                    required
+                    id="reset-email" name="email" type="email" required
                     placeholder={t('forgot_password.email_placeholder')}
                     className="input-minimal !ps-10"
                     value={email}
@@ -184,16 +196,12 @@ const ForgotPasswordPage: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn-minimal w-full flex items-center justify-center gap-2 py-2.5 mt-2 group"
-              >
-                {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
-                ) : (
+              <button type="submit" disabled={loading}
+                className="btn-minimal w-full flex items-center justify-center gap-2 py-2.5 mt-2 group">
+                {loading ? <Loader2 className="w-5 h-5 animate-spin text-zinc-400" /> : (
                   <>
-                    {t('forgot_password.send_code_btn')}
+                    {t('forgot_password.send_code_btn')}{' '}
+                    <span className="font-urdu font-normal text-xs opacity-80">/ کوڈ بھیجیں</span>
                     <ArrowRight className="w-4 h-4 rtl:rotate-180 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 transition-transform" />
                   </>
                 )}
@@ -209,62 +217,52 @@ const ForgotPasswordPage: React.FC = () => {
           )}
 
           {phase === 'verify' && (
-            /* Phase 2: OTP Verification Form */
             <form onSubmit={handleVerifySubmit} className="space-y-6">
               <div className="p-5 bg-zinc-50/50 border border-zinc-150 rounded-2xl text-center space-y-3">
                 <div className="w-12 h-12 bg-zinc-100/60 rounded-full flex items-center justify-center mx-auto text-zinc-900 shadow-sm border border-zinc-200/40">
                   <Mail className="w-5 h-5 text-zinc-800" />
                 </div>
-                <p className="text-xs text-zinc-500 leading-relaxed max-w-xs mx-auto">
-                  We've sent a 6-digit verification code to <span className="text-zinc-900 font-semibold">{email}</span>. Please check your inbox.
-                </p>
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-zinc-900">
+                    Check your inbox <span className="font-urdu font-normal text-zinc-500">/ ان باکس چیک کریں</span>
+                  </h3>
+                  <p className="text-xs text-zinc-500 leading-relaxed max-w-xs mx-auto">
+                    We've sent a 6-digit code to{' '}
+                    <span className="text-zinc-900 font-semibold">{email}</span>.
+                    <span className="block font-urdu mt-0.5">آپ کی ای میل پر 6 ہندسوں کا کوڈ بھیجا گیا ہے۔</span>
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-3">
                 <div className="flex items-center gap-1.5 text-zinc-400">
                   <Key className="w-3.5 h-3.5" />
                   <label className="block text-xs font-bold uppercase tracking-wider" htmlFor="reset-otp">
-                    {t('forgot_password.otp_label')}
+                    {t('forgot_password.otp_label')}{' '}
+                    <span className="font-urdu normal-case font-normal">/ تصدیقی کوڈ</span>
                   </label>
                 </div>
-                <OtpInput
-                  id="reset-otp"
-                  value={otp}
-                  onChange={(val) => setOtp(val)}
-                  disabled={loading}
-                  error={!!error}
-                />
+                <OtpInput id="reset-otp" value={otp} onChange={(val) => setOtp(val)} disabled={loading} error={!!error} />
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn-minimal w-full flex items-center justify-center gap-2 py-2.5 mt-2 group"
-              >
-                {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-zinc-450" />
-                ) : (
+              <button type="submit" disabled={loading}
+                className="btn-minimal w-full flex items-center justify-center gap-2 py-2.5 mt-2 group">
+                {loading ? <Loader2 className="w-5 h-5 animate-spin text-zinc-450" /> : (
                   <>
-                    {t('forgot_password.verify_code_btn')}
+                    {t('forgot_password.verify_code_btn')}{' '}
+                    <span className="font-urdu font-normal text-xs opacity-80">/ تصدیق کریں</span>
                     <ArrowRight className="w-4 h-4 rtl:rotate-180 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 transition-transform" />
                   </>
                 )}
               </button>
 
               <div className="flex justify-between items-center pt-2 border-t border-zinc-100">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPhase('request');
-                    setError(null);
-                    setSuccess(null);
-                  }}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-900 transition-colors"
-                >
+                <button type="button"
+                  onClick={() => { setPhase('request'); setError(null); setSuccess(null); }}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-900 transition-colors">
                   <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
                   {t('forgot_password.back_to_email')}
                 </button>
-                
                 <Link to="/login" className="text-xs font-semibold text-zinc-500 hover:text-zinc-900 transition-colors">
                   {t('forgot_password.cancel')}
                 </Link>
@@ -273,21 +271,17 @@ const ForgotPasswordPage: React.FC = () => {
           )}
 
           {phase === 'reset' && (
-            /* Phase 3: New Password Reset Form */
             <form onSubmit={handleResetSubmit} className="space-y-4">
               <div className="space-y-4">
-                {/* Password */}
-                <div className="space-y-3">
+                <div className="space-y-1.5">
                   <label className="block text-sm font-medium text-zinc-700" htmlFor="reset-password">
-                    {t('forgot_password.new_password_label')}
+                    {t('forgot_password.new_password_label')}{' '}
+                    <span className="font-urdu text-zinc-400 font-normal text-xs">/ نیا پاس ورڈ</span>
                   </label>
                   <div className="relative">
                     <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                     <input
-                      id="reset-password"
-                      name="password"
-                      type="password"
-                      required
+                      id="reset-password" name="password" type="password" required
                       placeholder={t('forgot_password.new_password_placeholder')}
                       className="input-minimal !ps-10"
                       value={password}
@@ -297,18 +291,15 @@ const ForgotPasswordPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Confirm Password */}
-                <div className="space-y-3">
+                <div className="space-y-1.5">
                   <label className="block text-sm font-medium text-zinc-700" htmlFor="reset-confirm-password">
-                    {t('forgot_password.confirm_password_label')}
+                    {t('forgot_password.confirm_password_label')}{' '}
+                    <span className="font-urdu text-zinc-400 font-normal text-xs">/ تصدیق پاس ورڈ</span>
                   </label>
                   <div className="relative">
                     <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                     <input
-                      id="reset-confirm-password"
-                      name="confirm_password"
-                      type="password"
-                      required
+                      id="reset-confirm-password" name="confirm_password" type="password" required
                       placeholder={t('forgot_password.confirm_password_placeholder')}
                       className="input-minimal !ps-10"
                       value={confirmPassword}
@@ -317,37 +308,34 @@ const ForgotPasswordPage: React.FC = () => {
                     />
                   </div>
                 </div>
+
+                <div className="flex items-start gap-2 bg-zinc-50 rounded-lg p-3 border border-zinc-100">
+                  <Lock className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />
+                  <p className="text-xs text-zinc-500 leading-relaxed">
+                    At least 8 characters, not all numbers.
+                    <span className="font-urdu text-zinc-400 block">کم از کم 8 حروف، صرف نمبر نہیں۔</span>
+                  </p>
+                </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn-minimal w-full flex items-center justify-center gap-2 py-2.5 mt-2 group"
-              >
-                {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
-                ) : (
+              <button type="submit" disabled={loading}
+                className="btn-minimal w-full flex items-center justify-center gap-2 py-2.5 mt-2 group">
+                {loading ? <Loader2 className="w-5 h-5 animate-spin text-zinc-400" /> : (
                   <>
-                    {t('forgot_password.reset_password_btn')}
+                    {t('forgot_password.reset_password_btn')}{' '}
+                    <span className="font-urdu font-normal text-xs opacity-80">/ پاس ورڈ بدلیں</span>
                     <ArrowRight className="w-4 h-4 rtl:rotate-180 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 transition-transform" />
                   </>
                 )}
               </button>
 
               <div className="flex justify-between items-center pt-2 border-t border-zinc-100">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPhase('verify');
-                    setError(null);
-                    setSuccess(null);
-                  }}
-                  className="inline-flex items-center gap-1 text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
-                >
+                <button type="button"
+                  onClick={() => { setPhase('verify'); setError(null); setSuccess(null); }}
+                  className="inline-flex items-center gap-1 text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors">
                   <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
                   {t('forgot_password.back_to_otp', 'Back to code entry')}
                 </button>
-                
                 <Link to="/login" className="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors">
                   {t('forgot_password.cancel')}
                 </Link>

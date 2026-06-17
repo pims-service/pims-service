@@ -238,8 +238,25 @@ const DashboardPage: React.FC = () => {
                 <Link
                   to={`/activity/${activity.id}`}
                   key={activity.id}
-                  className="bg-white border border-zinc-200 rounded-lg p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-zinc-400 hover:shadow-md transition-all cursor-pointer group block"
+                  className={`bg-white border rounded-lg p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:shadow-md transition-all cursor-pointer group block${!activity.submitted_today ? ' activity-pending-ring border-transparent' : ' border-zinc-200'}`}
                 >
+                  {/* Marching-ants SVG border — only shown when activity is pending */}
+                  {!activity.submitted_today && (
+                    <svg
+                      className="activity-border-svg"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
+                      <rect
+                        x="1"
+                        y="1"
+                        width="calc(100% - 2px)"
+                        height="calc(100% - 2px)"
+                        rx="7"
+                        ry="7"
+                      />
+                    </svg>
+                  )}
                   <div className="flex items-center gap-4 flex-1 min-w-0 w-full">
                     <div className="w-10 h-10 shrink-0 rounded-lg bg-zinc-800 flex items-center justify-center text-white">
                       <Brain size={20} />
