@@ -1,6 +1,29 @@
-# Psychological Experiment Platform
+# Psycheversity
+A monolith, clinical level longitudinal psychology study platform designed to run multi week experiments. Built to handle complex, phase based participant tracking, real time safety interventions for high risk responses, and a full administrative data reporting suite.
 
-A comprehensive, full-stack platform designed to facilitate phased psychological experiments. The system is engineered to securely manage participant data, orchestrate daily longitudinal activities, and provide robust administrative oversight for large-scale studies.
+### Backend Core
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Django](https://img.shields.io/badge/Django-5.1-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
+[![DRF](https://img.shields.io/badge/DRF-3.15-red?style=for-the-badge&logo=django&logoColor=white)](https://www.django-rest-framework.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+
+### Real Time & Async Architecture
+[![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
+[![Celery](https://img.shields.io/badge/Celery-5.4-37814A?style=for-the-badge&logo=celery&logoColor=white)](https://docs.celeryq.dev/)
+[![WebSockets](https://img.shields.io/badge/WebSockets-Channels-orange?style=for-the-badge&logo=scrimba&logoColor=white)](https://channels.readthedocs.io/)
+[![ASGI Daphne](https://img.shields.io/badge/ASGI-Daphne-blue?style=for-the-badge)](https://github.com/django/daphne)
+
+### Frontend Engine
+[![React 19](https://img.shields.io/badge/React-19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite 8](https://img.shields.io/badge/Vite-8-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev/)
+[![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![React Query](https://img.shields.io/badge/React_Query-v5-FF4154?style=for-the-badge&logo=react-query&logoColor=white)](https://tanstack.com/query/latest)
+
+### DevOps & Infrastructure
+[![Docker Compose](https://img.shields.io/badge/Docker_Compose-7_Services-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Nginx](https://img.shields.io/badge/Nginx-Reverse_Proxy-009639?style=for-the-badge&logo=nginx&logoColor=white)](https://nginx.org/)
+[![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/features/actions)
 
 ## Core Features & Technical Highlights
 
@@ -10,26 +33,6 @@ A comprehensive, full-stack platform designed to facilitate phased psychological
 - **Multilingual UI (i18n)**: Fully integrated localization (English and Urdu) via `react-i18next` with logic for Right-to-Left (RTL) styling and logical CSS properties.
 - **Asynchronous Task Processing**: Celery-backed architecture for non-blocking operations, including CSV data exports (baseline/post-test analytics) and batch notifications.
 - **Support Ticketing System**: Two-way communication channel with real-time polling logic for unread notification badges.
-
-## Technology Stack
-
-### Backend
-- **Framework**: Django 5.x, Django REST Framework
-- **Database**: PostgreSQL
-- **Caching & Message Broker**: Redis
-- **Task Queue**: Celery
-- **Authentication**: JWT (djangorestframework-simplejwt)
-
-### Frontend
-- **Framework**: React 18 (Vite), TypeScript
-- **Styling**: Tailwind CSS
-- **State Management & Routing**: React Router DOM, React Hooks
-- **Visualization**: Chart.js / react-chartjs-2
-
-### Infrastructure
-- **Containerization**: Docker & Docker Compose
-- **Web Server / Reverse Proxy**: Nginx
-- **WSGI Server**: Gunicorn
 
 ## Project Structure
 
