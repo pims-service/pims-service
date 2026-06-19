@@ -43,18 +43,21 @@ def admin_user(db):
 @pytest.mark.django_db
 def test_phq9_seeding(seeded_db):
     battery = Questionnaire.objects.get(title="Longitudinal Psychometric Scales")
-    phq_questions = Question.objects.filter(questionnaire=battery, content__icontains="[PHQ-9]").order_by('order')
+    # Filter only SCALE questions (skip TEXT header)
+    phq_questions = Question.objects.filter(
+        questionnaire=battery, content__icontains="[PHQ-9]", type="SCALE"
+    ).order_by('order')
     
     assert phq_questions.count() == 9
     
-    # Check order is 24 to 32
+    # Check order is 25 to 33  (header TEXT is at 24)
     orders = [q.order for q in phq_questions]
-    assert orders == list(range(24, 33))
+    assert orders == list(range(25, 34))
     
     # Check the 9th item contains thoughts of suicide/death text and has bilingual option labels
     item_9 = phq_questions[8]
     assert "Thoughts that you would be better off dead" in item_9.content
-    assert "یہ خیال کہ زندہ رہنے سے مرنا بہتر ہے" in item_9.content
+    assert "ذہن میں اس خیال کا بار بار آنا کہ زندہ رہنے سے مر جانا بہتر ہے" in item_9.content
     
     options = item_9.options.all().order_by('numeric_value')
     assert options.count() == 4
@@ -195,6 +198,9 @@ def test_battery_scoring_and_sidas_risk_triggers(seeded_db, participant_user, ad
     # Scenario A: Answers that do not trigger risk protocol, with SIDAS item 1 = 0
     responses_payload = []
     for q in questions:
+        # Skip TEXT-type header questions (no options)
+        if q.type == 'TEXT':
+            continue
         # Determine numeric value based on question order
         val = 0
         if 1 <= q.order <= 23:
@@ -202,24 +208,24 @@ def test_battery_scoring_and_sidas_risk_triggers(seeded_db, participant_user, ad
                 val = 2
             else:
                 val = 5
-        elif 24 <= q.order <= 32:
-            if q.order == 32:
+        elif 25 <= q.order <= 33:
+            if q.order == 33:
                 val = 0 # PHQ-9 Item 9 must be 0 to not trigger safety protocol
             else:
                 val = 1 # PHQ-9
-        elif 33 <= q.order <= 39:
+        elif 35 <= q.order <= 41:
             val = 2 # GAD-7
-        elif q.order in [42, 43, 46, 48]:
+        elif q.order in [45, 46, 49, 51]:
             val = 3 # PANAS PA
-        elif q.order in [40, 41, 44, 45, 47]:
+        elif q.order in [43, 44, 47, 48, 50]:
             val = 1 # PANAS NA
-        elif 49 <= q.order <= 62:
+        elif 52 <= q.order <= 65:
             val = 2 # Gratitude GtO
-        elif 63 <= q.order <= 74:
+        elif 66 <= q.order <= 77:
             val = 3 # Gratitude GtA
-        elif q.order == 75:
+        elif q.order == 78:
             val = 0 # SIDAS Item 1
-        elif 76 <= q.order <= 79:
+        elif 79 <= q.order <= 82:
             val = 0 # rest of SIDAS
             
         opt = Option.objects.filter(question=q, numeric_value=val).first()
@@ -271,18 +277,21 @@ def test_battery_scoring_and_sidas_risk_triggers(seeded_db, participant_user, ad
     
     responses_payload_2 = []
     for q in questions:
+        # Skip TEXT-type header questions (no options)
+        if q.type == 'TEXT':
+            continue
         val = 0
-        if 1 <= q.order <= 74:
+        if 1 <= q.order <= 77:
             val = 0
-        elif q.order == 75:
-            val = 2 # SIDAS Item 1
-        elif q.order == 76:
-            val = 3 # SIDAS Item 2 (control) -> reverse scored to 7
-        elif q.order == 77:
-            val = 0 # SIDAS Item 3 (closeness to attempt) -> 0 means no trigger
         elif q.order == 78:
-            val = 1 # SIDAS Item 4
+            val = 2 # SIDAS Item 1
         elif q.order == 79:
+            val = 3 # SIDAS Item 2 (control) -> reverse scored to 7
+        elif q.order == 80:
+            val = 0 # SIDAS Item 3 (closeness to attempt) -> 0 means no trigger
+        elif q.order == 81:
+            val = 1 # SIDAS Item 4
+        elif q.order == 82:
             val = 2 # SIDAS Item 5
             
         opt = Option.objects.filter(question=q, numeric_value=val).first()
@@ -309,10 +318,13 @@ def test_battery_scoring_and_sidas_risk_triggers(seeded_db, participant_user, ad
     )
     responses_payload_3 = []
     for q in questions:
+        # Skip TEXT-type header questions (no options)
+        if q.type == 'TEXT':
+            continue
         val = 0
-        if q.order == 75:
+        if q.order == 78:
             val = 2
-        elif q.order == 77:
+        elif q.order == 80:
             val = 1 # Closeness to suicide attempt > 0
             
         opt = Option.objects.filter(question=q, numeric_value=val).first()
@@ -342,16 +354,19 @@ def test_battery_scoring_and_sidas_risk_triggers(seeded_db, participant_user, ad
     )
     responses_payload_4 = []
     for q in questions:
+        # Skip TEXT-type header questions (no options)
+        if q.type == 'TEXT':
+            continue
         val = 0
-        if q.order == 75:
+        if q.order == 78:
             val = 5 # Item 1
-        elif q.order == 76:
-            val = 2 # Item 2 -> reverse scored to 8
-        elif q.order == 77:
-            val = 0 # Item 3
-        elif q.order == 78:
-            val = 5 # Item 4
         elif q.order == 79:
+            val = 2 # Item 2 -> reverse scored to 8
+        elif q.order == 80:
+            val = 0 # Item 3
+        elif q.order == 81:
+            val = 5 # Item 4
+        elif q.order == 82:
             val = 5 # Item 5
             
         # Total = 5 + 8 + 0 + 5 + 5 = 23 >= 21

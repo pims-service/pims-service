@@ -15,12 +15,19 @@ def build_psych_item_headers_and_columns(psy_questions, milestone_suffix):
     """
     Build item-level CSV headers and question-id column mapping for psychometric exports.
     Returns (headers, question_ids).
+
+    TEXT-type questions (section instruction headers) are excluded — they carry
+    no participant response and would produce empty columns in the export.
     """
     headers = []
     question_ids = []
     tag_counters = {}
 
     for question in psy_questions:
+        # Skip non-scoreable section headers
+        if question.type == "TEXT":
+            continue
+
         match = re.match(r"^\[([^\]]+)\]", question.content)
         tag = re.sub(r"[^a-zA-Z0-9]", "", match.group(1)).upper() if match else "PSYCH"
         tag_counters[tag] = tag_counters.get(tag, 0) + 1

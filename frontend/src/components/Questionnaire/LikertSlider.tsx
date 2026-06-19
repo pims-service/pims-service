@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 
 interface Option {
   id: string;
@@ -15,7 +14,6 @@ interface LikertSliderProps {
 }
 
 const LikertSlider: React.FC<LikertSliderProps> = ({ options, value, onChange }) => {
-  const { i18n } = useTranslation();
   const sortedOptions = [...options].sort((a, b) => a.numeric_value - b.numeric_value);
   const min = sortedOptions[0]?.numeric_value || 0;
   const max = sortedOptions[sortedOptions.length - 1]?.numeric_value || 10;
@@ -96,24 +94,43 @@ const LikertSlider: React.FC<LikertSliderProps> = ({ options, value, onChange })
           )}
         </div>
 
-        {/* Labels at extremes */}
-        <div className="absolute top-6 w-full flex justify-between text-xs text-zinc-500 font-medium">
-          <span>{(() => {
-            const lbl = sortedOptions[0]?.label || '';
-            if (lbl.includes('|')) {
-              const parts = lbl.split('|').map(p => p.trim());
-              return i18n.language === 'ur' ? parts[1] : parts[0];
-            }
-            return lbl;
-          })()} [{min}]</span>
-          <span>{(() => {
-            const lbl = sortedOptions[sortedOptions.length - 1]?.label || '';
-            if (lbl.includes('|')) {
-              const parts = lbl.split('|').map(p => p.trim());
-              return i18n.language === 'ur' ? parts[1] : parts[0];
-            }
-            return lbl;
-          })()} [{max}]</span>
+        {/* Labels at extremes — bilingual inline display */}
+        <div className="absolute top-5 w-full flex justify-between gap-2 text-xs text-zinc-500 font-medium pointer-events-none">
+          {/* Left / Min label */}
+          <span className="flex flex-wrap items-baseline gap-x-1.5 leading-snug max-w-[45%]">
+            {(() => {
+              const lbl = sortedOptions[0]?.label || '';
+              if (lbl.includes('|')) {
+                const [en, ur] = lbl.split('|').map(p => p.trim());
+                return (
+                  <>
+                    <span className="whitespace-nowrap">{en} [{min}]</span>
+                    <span className="text-zinc-400">·</span>
+                    <span className="font-urdu text-[11px]" dir="rtl">{ur}</span>
+                  </>
+                );
+              }
+              return <span>{lbl} [{min}]</span>;
+            })()}
+          </span>
+
+          {/* Right / Max label */}
+          <span className="flex flex-wrap-reverse items-baseline justify-end gap-x-1.5 leading-snug max-w-[45%] text-right">
+            {(() => {
+              const lbl = sortedOptions[sortedOptions.length - 1]?.label || '';
+              if (lbl.includes('|')) {
+                const [en, ur] = lbl.split('|').map(p => p.trim());
+                return (
+                  <>
+                    <span className="font-urdu text-[11px]" dir="rtl">{ur}</span>
+                    <span className="text-zinc-400">·</span>
+                    <span className="whitespace-nowrap">{en} [{max}]</span>
+                  </>
+                );
+              }
+              return <span>{lbl} [{max}]</span>;
+            })()}
+          </span>
         </div>
       </div>
 

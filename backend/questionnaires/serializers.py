@@ -22,10 +22,10 @@ def check_and_trigger_risk_protocol(response_set, *, notify_participant=True):
     triggered = False
     reasons = []
 
-    # 1. PHQ-9 Item 9 >= 1
+    # 1. PHQ-9 Item 9 >= 1  (order 33 after section-header insertion)
     item_9_response = Response.objects.filter(
         response_set=response_set,
-        question__order=32
+        question__order=33
     ).first()
     if not item_9_response:
         item_9_response = Response.objects.filter(
@@ -41,10 +41,10 @@ def check_and_trigger_risk_protocol(response_set, *, notify_participant=True):
             triggered = True
             reasons.append(f"PHQ-9 Item 9 with score {val} (Suicidal Ideation/Self-Harm)")
 
-    # 2. SIDAS Item 3 > 0 (closeness to attempt)
+    # 2. SIDAS Item 3 > 0 (closeness to attempt, order 80 after section-header insertion)
     sidas_3_response = Response.objects.filter(
         response_set=response_set,
-        question__order=77
+        question__order=80
     ).first()
     if sidas_3_response and sidas_3_response.selected_option:
         val_sidas_3 = sidas_3_response.selected_option.numeric_value
@@ -343,9 +343,11 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
                 user.onboarding_completed_at = timezone.now()
                 user.save(update_fields=['onboarding_completed_at'])
 
-            # 5. Mark post-test completed if milestone is '7_DAYS' or is_legacy_posttest
-            is_legacy_posttest = instance.questionnaire.is_posttest
-            if instance.milestone == '7_DAYS' or is_legacy_posttest:
+            # 5. Mark post-test completed only when the explicit '7_DAYS' milestone is submitted.
+            # NOTE: Do NOT use questionnaire.is_posttest here — that legacy flag caused every
+            # user who submitted the baseline PSYCHOMETRIC questionnaire (SIGNUP milestone) to be
+            # incorrectly marked as posttest-complete, skipping their entire PRE_T1 activity block.
+            if instance.milestone == '7_DAYS':
                 user.has_completed_posttest = True
                 user.posttest_completed_at = timezone.now()
                 user.save(update_fields=['has_completed_posttest', 'posttest_completed_at'])

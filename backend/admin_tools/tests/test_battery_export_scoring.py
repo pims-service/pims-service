@@ -34,9 +34,12 @@ def _make_option(question, value):
 
 @pytest.mark.django_db
 def test_calculate_scores_all_battery_scales():
-    val_map = {order: 1 for order in range(1, 80)}
-    val_map[11] = 2  # PERMA loneliness
-    val_map[76] = 3  # SIDAS item 2 (reverse-scored)
+    # Build a val_map using the new order scheme:
+    # PERMA: 1-23, PHQ-9: 25-33, GAD-7: 35-41, PANAS: 43-51,
+    # Gratitude: 52-77, SIDAS: 78-82  (TEXT headers at 24, 34, 42 are excluded)
+    val_map = {order: 1 for order in range(1, 83)}
+    val_map[11] = 2   # PERMA loneliness
+    val_map[79] = 3   # SIDAS item 2 (reverse-scored), new order 79
 
     scores = calculate_scores(val_map)
 
@@ -53,7 +56,8 @@ def test_calculate_scores_all_battery_scales():
 
 @pytest.mark.django_db
 def test_calculate_scores_sidas_zero_when_no_ideation():
-    val_map = {75: 0, 76: 5, 77: 3, 78: 2, 79: 1}
+    # SIDAS item 1 (order 78) = 0 → total forced to 0 regardless of other items
+    val_map = {78: 0, 79: 5, 80: 3, 81: 2, 82: 1}
     scores = calculate_scores(val_map)
     assert scores["SIDAS_TOTAL"] == 0
 
@@ -64,24 +68,41 @@ def test_posttest_export_includes_all_battery_scores(admin_user, test_group):
         title="Battery", assessment_type="PSYCHOMETRIC", is_active=True
     )
 
+    # New order scheme: PERMA 1-23, TEXT header @24, PHQ-9 25-33,
+    # TEXT header @34, GAD-7 35-41, TEXT header @42, PANAS 43-51,
+    # Gratitude 52-77, SIDAS 78-82
+    TEXT_HEADER_ORDERS = {24, 34, 42}
     questions = {}
     options = {}
-    for order in range(1, 80):
+    for order in range(1, 83):
+        if order in TEXT_HEADER_ORDERS:
+            tag = "PHQ-9" if order == 24 else ("GAD-7" if order == 34 else "PANAS")
+            questions[order] = Question.objects.create(
+                questionnaire=psy_q,
+                content=f"[{tag}] Section Header",
+                type="TEXT",
+                order=order,
+                required=False,
+            )
+            # TEXT questions have no options — skip option creation
+            continue
+
         if order <= 23:
             tag = "PERMA"
-        elif order <= 32:
+        elif order <= 33:
             tag = "PHQ-9"
-        elif order <= 39:
+        elif order <= 41:
             tag = "GAD-7"
-        elif order <= 48:
+        elif order <= 51:
             tag = "PANAS"
-        elif order <= 74:
+        elif order <= 77:
             tag = "Gratitude"
         else:
             tag = "SIDAS"
 
         questions[order] = _make_question(psy_q, order, tag)
-        value = 2 if order == 11 else (3 if order == 76 else 1)
+        # PERMA loneliness=2, SIDAS item2 (order 79)=3, everything else=1
+        value = 2 if order == 11 else (3 if order == 79 else 1)
         options[order] = _make_option(questions[order], value)
 
     user = User.objects.create_user(
@@ -97,10 +118,13 @@ def test_posttest_export_includes_all_battery_scores(admin_user, test_group):
         status="COMPLETED",
         milestone="SIGNUP",
     )
-    for order in range(1, 80):
+    # Only create responses for SCALE questions (TEXT headers have no options)
+    for order, question in questions.items():
+        if question.type == "TEXT":
+            continue
         Response.objects.create(
             response_set=rs,
-            question=questions[order],
+            question=question,
             selected_option=options[order],
         )
 

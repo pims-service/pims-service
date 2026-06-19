@@ -36,7 +36,7 @@ def _create_signup_battery_with_risk_trigger():
         questionnaire=battery,
         content='[PHQ-9] Thoughts that you would be better off dead, or of hurting yourself',
         type='SCALE',
-        order=32,
+        order=33,
     )
     opt_safe = Option.objects.create(question=q_phq9, label='0 - Not at all', numeric_value=0, order=0)
     opt_risk = Option.objects.create(question=q_phq9, label='2 - More than half the days', numeric_value=2, order=2)

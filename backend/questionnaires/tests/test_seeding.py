@@ -25,11 +25,12 @@ def test_seed_longitudinal_scales_command_success(db):
     battery = Questionnaire.objects.get(title="Longitudinal Psychometric Scales")
     assert battery.assessment_type == 'PSYCHOMETRIC'
     assert battery.is_active is True
-    assert Question.objects.filter(questionnaire=battery).count() == 79
+    assert Question.objects.filter(questionnaire=battery).count() == 82
 
-    # Verify options are correctly created for questions
+    # Verify options are correctly created for scored questions (skip TEXT headers)
     for question in Question.objects.filter(questionnaire=battery):
-        assert Option.objects.filter(question=question).count() > 0
+        if question.type != 'TEXT':
+            assert Option.objects.filter(question=question).count() > 0
 
     # Verify sequence order of scales in the battery
     questions = Question.objects.filter(questionnaire=battery).order_by('order')

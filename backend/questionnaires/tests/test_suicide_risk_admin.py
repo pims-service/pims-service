@@ -21,7 +21,7 @@ def test_refresh_cache_stores_flagged_and_opt_in_cases(test_user, test_group):
         title="Battery", assessment_type="PSYCHOMETRIC", is_active=True
     )
     q = Question.objects.create(
-        questionnaire=psy_q, content="[PHQ-9] Test", type="SCALE", order=32
+        questionnaire=psy_q, content="[PHQ-9] Test", type="SCALE", order=33
     )
     opt = Option.objects.create(question=q, label="2", numeric_value=2, order=2)
 

@@ -54,3 +54,12 @@ celerybeat-schedule
 # Local temporary/scratch files
 scratch/
 questions/
+
+# Client reference documents and assets (root-level, not committed)
+*.docx
+*.jpeg
+*.jpg
+*.png
+
+# Deployment secrets (never commit)
+deploy_configs/env.production

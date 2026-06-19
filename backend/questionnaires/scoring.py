@@ -98,37 +98,44 @@ def calculate_scores(val_map):
         scores["PERMA_LON"] = float(val_map.get(perma_lon_order, 0.0))
         scores["PERMA_OVERALL"] = get_mean(perma_overall_orders)
 
-    phq_orders = list(range(24, 33))
+    # PHQ-9: items at orders 25-33 (order 24 is the section header, TEXT type, not scored)
+    phq_orders = list(range(25, 34))
     if any(o in val_map for o in phq_orders):
         scores["PHQ9_TOTAL"] = sum(val_map[o] for o in phq_orders if o in val_map)
 
-    gad_orders = list(range(33, 40))
+    # GAD-7: items at orders 35-41 (order 34 is the section header, TEXT type, not scored)
+    gad_orders = list(range(35, 42))
     if any(o in val_map for o in gad_orders):
         scores["GAD7_TOTAL"] = sum(val_map[o] for o in gad_orders if o in val_map)
 
-    panas_pa_orders = [42, 43, 46, 48]
-    panas_na_orders = [40, 41, 44, 45, 47]
-    if any(o in val_map for o in range(40, 49)):
+    # PANAS: items at orders 43-51 (order 42 is the section header, TEXT type, not scored)
+    # PA items: Enthusiastic(45), Alert(46), Determined(49), Excited(51)
+    # NA items: Distressed(43), Scared(44), Distressed-tormented(47), Nervous(48), Afraid(50)
+    panas_pa_orders = [45, 46, 49, 51]
+    panas_na_orders = [43, 44, 47, 48, 50]
+    if any(o in val_map for o in range(43, 52)):
         scores["PANAS_PA"] = sum(val_map[o] for o in panas_pa_orders if o in val_map)
         scores["PANAS_NA"] = sum(val_map[o] for o in panas_na_orders if o in val_map)
 
-    grat_gto_orders = list(range(49, 63))
-    grat_gta_orders = list(range(63, 75))
-    grat_all_orders = list(range(49, 75))
+    # Gratitude: items at orders 52-77 (shifted +3 due to three new section headers)
+    grat_gto_orders = list(range(52, 66))
+    grat_gta_orders = list(range(66, 78))
+    grat_all_orders = list(range(52, 78))
     if any(o in val_map for o in grat_all_orders):
         scores["GRAT_GTO"] = sum(val_map[o] for o in grat_gto_orders if o in val_map)
         scores["GRAT_GTA"] = sum(val_map[o] for o in grat_gta_orders if o in val_map)
         scores["GRAT_TOTAL"] = sum(val_map[o] for o in grat_all_orders if o in val_map)
 
-    if any(o in val_map for o in range(75, 80)):
-        sidas_item1 = val_map.get(75, 0)
+    # SIDAS: items at orders 78-82 (shifted +3 due to three new section headers)
+    if any(o in val_map for o in range(78, 83)):
+        sidas_item1 = val_map.get(78, 0)
         if sidas_item1 == 0:
             scores["SIDAS_TOTAL"] = 0
         else:
-            sidas_item2 = val_map.get(76, 0)
-            sidas_item3 = val_map.get(77, 0)
-            sidas_item4 = val_map.get(78, 0)
-            sidas_item5 = val_map.get(79, 0)
+            sidas_item2 = val_map.get(79, 0)
+            sidas_item3 = val_map.get(80, 0)
+            sidas_item4 = val_map.get(81, 0)
+            sidas_item5 = val_map.get(82, 0)
             scores["SIDAS_TOTAL"] = sidas_item1 + (10 - sidas_item2) + sidas_item3 + sidas_item4 + sidas_item5
 
     return scores
