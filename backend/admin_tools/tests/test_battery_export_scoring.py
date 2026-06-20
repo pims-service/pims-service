@@ -143,11 +143,11 @@ def test_posttest_export_includes_all_battery_scores(admin_user, test_group):
     score_start = headers.index("PERMA_PositiveEmotion_SIGNUP")
     exported_scores = data_row[score_start : score_start + len(BATTERY_EXPORT_SCORES)]
 
-    assert exported_scores[9] == "9"    # PHQ9_TOTAL
-    assert exported_scores[10] == "7"   # GAD7_TOTAL
-    assert exported_scores[11] == "4"   # PANAS_PA
-    assert exported_scores[12] == "5"   # PANAS_NA
-    assert exported_scores[13] == "14"  # GRAT_GTO
-    assert exported_scores[14] == "12"  # GRAT_GTA
-    assert exported_scores[15] == "26"  # GRAT_TOTAL
-    assert exported_scores[16] == "11"  # SIDAS_TOTAL
+    assert exported_scores[10] == "9"    # PHQ9_TOTAL  (PERMA_HAP now at index 8, PERMA_OVERALL at 9)
+    assert exported_scores[11] == "7"   # GAD7_TOTAL
+    assert exported_scores[12] == "4"   # PANAS_PA
+    assert exported_scores[13] == "5"   # PANAS_NA
+    assert exported_scores[14] == "14"  # GRAT_GTO
+    assert exported_scores[15] == "12"  # GRAT_GTA
+    assert exported_scores[16] == "26"  # GRAT_TOTAL
+    assert exported_scores[17] == "11"  # SIDAS_TOTAL

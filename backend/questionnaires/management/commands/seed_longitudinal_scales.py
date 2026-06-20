@@ -763,6 +763,7 @@ class Command(BaseCommand):
 
                 # ── Pass 3: upsert options by numeric_value ──────────────────
                 existing_opts = {opt.numeric_value: opt for opt in q_obj.options.all()}
+                desired_vals = {opt_val for _, opt_val in options}
                 for opt_label, opt_val in options:
                     if opt_val in existing_opts:
                         opt = existing_opts[opt_val]
@@ -776,6 +777,15 @@ class Command(BaseCommand):
                             numeric_value=opt_val,
                             order=opt_val,
                         )
+
+                # ── Pass 3b: prune stale options not in the desired set ───────
+                # Stale options arise when a question's scale changes (e.g. 0-10
+                # → 0-4 due to order reassignment). Response rows use SET_NULL +
+                # cached selected_option_value so scoring survives the deletion.
+                for stale_val, stale_opt in existing_opts.items():
+                    if stale_val not in desired_vals:
+                        stale_opt.delete()
+
 
             # Any remaining questions parked at high temp orders are orphans
             # (orders no longer in the desired layout). We leave them rather than

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PERMA Profiler Wellbeing Report</title>
+<style>
+@page {
+    size: A4 portrait;
+    margin: 14mm 14mm 12mm 14mm;
+}
+
+@font-face {
+    font-family: 'JameelNastaleeq';
+    src: url('file://{{ font_path }}');
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: #18181b;
+    margin: 0;
+    padding: 0;
+    line-height: 1.45;
+    background: #ffffff;
+    font-size: 9pt;
+}
+
+/* ── Header ── */
+.header {
+    border-bottom: 2.5px solid #C8A951;
+    padding-bottom: 7px;
+    margin-bottom: 10px;
+}
+.header-inner {
+    width: 100%;
+    border-collapse: collapse;
+}
+.header-logo-cell {
+    vertical-align: middle;
+    width: 55%;
+}
+.header-logo-cell img {
+    height: 42px;
+    width: auto;
+    display: block;
+}
+.header-wordmark {
+    font-size: 18pt;
+    font-weight: bold;
+    color: #2E4E90;
+    letter-spacing: 1px;
+}
+.header-meta {
+    text-align: right;
+    vertical-align: middle;
+    font-size: 8pt;
+    color: #71717a;
+}
+.header-meta .report-title {
+    font-size: 10pt;
+    font-weight: bold;
+    color: #2E4E90;
+    display: block;
+    margin-bottom: 2px;
+}
+.header-meta .report-title-ur {
+    font-family: 'JameelNastaleeq', serif;
+    font-size: 13pt;
+    color: #2E4E90;
+    display: block;
+    direction: rtl;
+    margin-bottom: 3px;
+}
+
+/* ── Intro strip ── */
+.intro-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8px;
+    border: 1px solid #e4e4e7;
+    border-radius: 4px;
+}
+.intro-en {
+    width: 50%;
+    padding: 7px 10px;
+    vertical-align: top;
+    border-right: 1px solid #e4e4e7;
+    font-size: 8.5pt;
+    color: #3f3f46;
+}
+.intro-ur {
+    width: 50%;
+    padding: 7px 10px;
+    vertical-align: top;
+    direction: rtl;
+    text-align: right;
+    font-family: 'JameelNastaleeq', serif;
+    font-size: 12pt;
+    color: #3f3f46;
+    line-height: 1.7;
+}
+
+/* ── Chart ── */
+.chart-wrap {
+    text-align: center;
+    margin: 6px 0 8px 0;
+    padding: 6px;
+    border: 1px solid #e4e4e7;
+    background: #fcfcfc;
+}
+.chart-wrap img {
+    width: 100%;
+    max-width: 520px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+/* ── Chart group labels ── */
+.chart-groups {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 4px 0;
+    table-layout: fixed;
+}
+.chart-groups td {
+    text-align: center;
+    padding: 2px 4px;
+    font-size: 8pt;
+    color: #2E4E90;
+    font-weight: bold;
+}
+.chart-groups .grp-ur {
+    font-family: 'JameelNastaleeq', serif;
+    font-size: 11pt;
+    direction: rtl;
+    display: block;
+    color: #2E4E90;
+    margin-top: 1px;
+}
+.chart-groups .grp-sep {
+    border-left: 1px solid #e0e0e0;
+    border-right: 1px solid #e0e0e0;
+}
+
+/* ── Legend table ── */
+.legend-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7.8pt;
+    margin-bottom: 8px;
+}
+.legend-table th, .legend-table td {
+    border: 1px solid #e4e4e7;
+    padding: 3px 6px;
+    vertical-align: middle;
+}
+.legend-table th {
+    background: #f4f4f5;
+    color: #2E4E90;
+    font-weight: bold;
+}
+.legend-ur {
+    font-family: 'JameelNastaleeq', serif;
+    font-size: 11pt;
+    direction: rtl;
+}
+.legend-grey {
+    color: #7A7A7A;
+}
+.code-col {
+    width: 8%;
+    font-weight: bold;
+    color: #2E4E90;
+}
+.code-col.grey {
+    color: #7A7A7A;
+}
+.desc-col {
+    width: 42%;
+}
+
+/* ── Support footer ── */
+.support-box {
+    border: 1px solid #C8A951;
+    border-radius: 3px;
+    padding: 6px 10px;
+    background: #fffdf5;
+    margin-bottom: 7px;
+}
+.support-box p {
+    margin: 0 0 3px 0;
+    font-size: 8pt;
+    color: #3f3f46;
+}
+.support-box .sup-ur {
+    font-family: 'JameelNastaleeq', serif;
+    font-size: 11.5pt;
+    direction: rtl;
+    text-align: right;
+    color: #3f3f46;
+    display: block;
+    margin-top: 3px;
+}
+
+/* ── Branding footer ── */
+.footer {
+    border-top: 1px solid #e4e4e7;
+    padding-top: 5px;
+    font-size: 7pt;
+    color: #a1a1aa;
+}
+.footer-inner {
+    width: 100%;
+    border-collapse: collapse;
+}
+.footer-left { text-align: left; }
+.footer-right {
+    text-align: right;
+    font-family: 'JameelNastaleeq', serif;
+    font-size: 10pt;
+    direction: rtl;
+    color: #a1a1aa;
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────────────────── -->
+<div class="header">
+  <table class="header-inner">
+    <tr>
+      <td class="header-logo-cell">
+        {% if logo_image %}
+          <img src="data:image/png;base64,{{ logo_image }}" alt="PIMS Logo">
+        {% else %}
+          <span class="header-wordmark">PIMS</span>
+        {% endif %}
+      </td>
+      <td class="header-meta">
+        <span class="report-title">PERMA Profiler Report &mdash; {{ label_en }}</span>
+        <span class="report-title-ur">PERMA پروفائلر رپورٹ &mdash; {{ label_ur }}</span>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<!-- ── Intro strip ────────────────────────────────────────────────────── -->
+<table class="intro-table">
+  <tr>
+    <td class="intro-en">
+      This report shows your personal PERMA Profiler scores from your
+      <strong>{{ label_en }}</strong> assessment. Scores reflect your own responses
+      and are presented on a 0&ndash;10 scale. Higher scores on P, E, R, M, A, Health,
+      and Happiness indicate greater well-being. Higher scores on Negative Emotion (N)
+      and Loneliness indicate more of those experiences.
+    </td>
+    <td class="intro-ur">
+      یہ رپورٹ آپ کے <strong>{{ label_ur }}</strong> جائزے سے آپ کے ذاتی PERMA پروفائلر
+      اسکور دکھاتی ہے۔ اسکور 0 تا 10 پیمانے پر ہیں۔ P، E، R، M، A، صحت اور خوشی
+      پر زیادہ اسکور زیادہ فلاح ظاہر کرتے ہیں۔ منفی جذبات (N) اور تنہائی پر زیادہ
+      اسکور ان تجربات کی زیادتی ظاہر کرتے ہیں۔
+    </td>
+  </tr>
+</table>
+
+<!-- ── Bar chart ──────────────────────────────────────────────────────── -->
+<div class="chart-wrap">
+  <img src="data:image/png;base64,{{ chart_image }}" alt="PERMA Bar Charts">
+</div>
+
+<!-- ── Chart group labels (bilingual) ────────────────────────────────── -->
+<table class="chart-groups">
+  <tr>
+    <td style="width:12%;">
+      Overall<br><span class="grp-ur">مجموعی</span>
+    </td>
+    <td class="grp-sep" style="width:46%;">
+      Five Pillars<br><span class="grp-ur">پانچ ستون</span>
+    </td>
+    <td style="width:42%;">
+      Additional Measures<br><span class="grp-ur">اضافی پیمائش</span>
+    </td>
+  </tr>
+</table>
+
+<!-- ── Bilingual legend ───────────────────────────────────────────────── -->
+<table class="legend-table">
+  <tr>
+    <th class="code-col">Code</th>
+    <th class="desc-col">Factor / عامل</th>
+    <th class="code-col">Code</th>
+    <th class="desc-col">Factor / عامل</th>
+  </tr>
+  <tr>
+    <td class="code-col">P</td>
+    <td>Positive Emotion &nbsp;/&nbsp; <span class="legend-ur">مثبت جذبات</span></td>
+    <td class="code-col grey">N</td>
+    <td class="legend-grey">Negative Emotion &nbsp;/&nbsp; <span class="legend-ur">منفی جذبات</span></td>
+  </tr>
+  <tr>
+    <td class="code-col">E</td>
+    <td>Engagement &nbsp;/&nbsp; <span class="legend-ur">مشغولیت</span></td>
+    <td class="code-col">H</td>
+    <td>Health &nbsp;/&nbsp; <span class="legend-ur">صحت</span></td>
+  </tr>
+  <tr>
+    <td class="code-col">R</td>
+    <td>Relationships &nbsp;/&nbsp; <span class="legend-ur">تعلقات</span></td>
+    <td class="code-col grey">Lon</td>
+    <td class="legend-grey">Loneliness &nbsp;/&nbsp; <span class="legend-ur">تنہائی</span></td>
+  </tr>
+  <tr>
+    <td class="code-col">M</td>
+    <td>Meaning &nbsp;/&nbsp; <span class="legend-ur">مقصدِ زندگی</span></td>
+    <td class="code-col">Hap</td>
+    <td>Happiness &nbsp;/&nbsp; <span class="legend-ur">خوشی</span></td>
+  </tr>
+  <tr>
+    <td class="code-col">A</td>
+    <td>Accomplishment &nbsp;/&nbsp; <span class="legend-ur">کامیابی</span></td>
+    <td class="code-col">Overall</td>
+    <td>Overall Well-being &nbsp;/&nbsp; <span class="legend-ur">مجموعی فلاح</span></td>
+  </tr>
+</table>
+
+<!-- ── Support footer (MANDATORY – do not remove) ────────────────────── -->
+<div class="support-box">
+  <p>
+    <strong>Support:</strong> If you feel distressed, please reach out to your research team
+    at <strong>support@psycheversity.com</strong> &nbsp;|&nbsp;
+    Pakistan helpline: <strong>Umang 0317-4288665</strong>
+  </p>
+  <span class="sup-ur">
+    <strong>مدد:</strong> اگر آپ پریشانی محسوس کریں تو براہ کرم اپنی تحقیقاتی ٹیم سے رابطہ کریں:
+    <strong>support@psycheversity.com</strong> &nbsp;|&nbsp;
+    پاکستان ہیلپ لائن: <strong>امنگ 0317-4288665</strong>
+  </span>
+</div>
+
+<!-- ── Branding footer ────────────────────────────────────────────────── -->
+<div class="footer">
+  <table class="footer-inner">
+    <tr>
+      <td class="footer-left">
+        Pakistan Institute of Mind Sciences (PIMS) &nbsp;&bull;&nbsp;
+        Est. 2018 &nbsp;&bull;&nbsp; www.pimscourse.com
+      </td>
+      <td class="footer-right">
+        پاکستان انسٹیٹیوٹ آف مائنڈ سائنسز
+      </td>
+    </tr>
+  </table>
+</div>
+
+</body>
+</html>

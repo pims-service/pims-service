@@ -73,10 +73,12 @@ def test_signup_risk_sends_support_and_welcome_not_disqualified(fresh_client, fr
     assert fresh_user.is_disqualified is False
     assert fresh_user.onboarding_completed_at is not None
 
-    assert len(mail.outbox) == 2
+    # Support email + welcome email + PERMA baseline report = 3
+    assert len(mail.outbox) == 3
     subjects = [message.subject for message in mail.outbox]
     assert any('Support resources are available' in subject for subject in subjects)
     assert any('Welcome to Psycheversity' in subject for subject in subjects)
+    assert any('baseline' in subject.lower() for subject in subjects)
     assert Notification.objects.filter(user=fresh_user, n_type='email').count() == 0
 
 
@@ -148,8 +150,9 @@ def test_signup_draft_to_submit_sends_participant_email(fresh_client, fresh_user
     )
     assert response.status_code == status.HTTP_200_OK
     
-    # Verify both the support and welcome email are sent
-    assert len(mail.outbox) == 2
+    # Support email + welcome email + PERMA baseline report = 3
+    assert len(mail.outbox) == 3
     subjects = [message.subject for message in mail.outbox]
     assert any('Support resources are available' in subject for subject in subjects)
     assert any('Welcome to Psycheversity' in subject for subject in subjects)
+    assert any('baseline' in subject.lower() for subject in subjects)

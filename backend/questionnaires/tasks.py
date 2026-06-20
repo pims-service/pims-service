@@ -1,8 +1,268 @@
 import logging
+import io
+import os
+import base64
 
 from celery import shared_task
 
 logger = logging.getLogger(__name__)
+
+NAVY = '#2E4E90'
+GREY = '#7A7A7A'
+
+MILESTONE_SUBJECT = {
+    'SIGNUP':    'Your baseline wellbeing report / آپ کی بیس لائن فلاح رپورٹ',
+    '3_MONTHS':  'Your month-3 wellbeing report / آپ کی تین ماہ فلاح رپورٹ',
+    '1_YEAR':    'Your month-12 wellbeing report / آپ کی بارہ ماہ فلاح رپورٹ',
+}
+
+MILESTONE_FILENAME = {
+    'SIGNUP':   'pims_baseline_report.pdf',
+    '3_MONTHS': 'pims_month3_report.pdf',
+    '1_YEAR':   'pims_month12_report.pdf',
+}
+
+
+def _build_bar_chart(scores):
+    """
+    Generate a single vertical bar chart in PERMA Profiler style.
+    Three groups of bars separated by whitespace:
+      Group 1 – Overall (1 bar, navy)
+      Group 2 – P, E, R, M, A (5 bars, navy)
+      Group 3 – H, Hap, N, Lon (H/Hap navy; N/Lon grey)
+    Y-axis fixed 0–10. Score value printed above every bar.
+    English-only labels on the chart — Urdu lives in the HTML legend
+    (matplotlib cannot shape Arabic/Urdu script correctly).
+    Returns a base64-encoded PNG string.
+    """
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    def _score(key):
+        try:
+            return round(float(scores.get(key, 0.0)), 1)
+        except (TypeError, ValueError):
+            return 0.0
+
+    # All bars in display order, with gaps between groups (None = gap slot)
+    bars_def = [
+        ('Overall', _score('PERMA_OVERALL'), NAVY),
+        (None, None, None),
+        ('P',   _score('PERMA_P'),   NAVY),
+        ('E',   _score('PERMA_E'),   NAVY),
+        ('R',   _score('PERMA_R'),   NAVY),
+        ('M',   _score('PERMA_M'),   NAVY),
+        ('A',   _score('PERMA_A'),   NAVY),
+        (None, None, None),
+        ('H',   _score('PERMA_H'),   NAVY),
+        ('Hap', _score('PERMA_HAP'), NAVY),
+        ('N',   _score('PERMA_N'),   GREY),
+        ('Lon', _score('PERMA_LON'), GREY),
+    ]
+
+    labels = [b[0] if b[0] else '' for b in bars_def]
+    vals   = [b[1] if b[1] is not None else 0.0 for b in bars_def]
+    colors = [b[2] if b[2] else 'none' for b in bars_def]
+    x      = np.arange(len(bars_def))
+
+    fig, ax = plt.subplots(figsize=(8, 4.5), dpi=150)
+
+    for i, (label, val, color) in enumerate(bars_def):
+        if label is None:
+            continue
+        bar = ax.bar(i, val, color=color, width=0.6, edgecolor='none', zorder=3)
+        # Value label above bar
+        ax.text(i, val + 0.18, f'{val}', ha='center', va='bottom',
+                color=color, fontsize=8.5, fontweight='bold')
+
+    ax.set_ylim(0, 10)
+    ax.set_xlim(-0.6, len(bars_def) - 0.4)
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, fontsize=10, color=NAVY, fontweight='bold')
+    ax.set_ylabel('Score (0 – 10)', fontsize=8, color='#555555', labelpad=4)
+    ax.yaxis.set_tick_params(labelsize=9, colors=NAVY)
+
+    # Gridlines on y-axis only
+    ax.yaxis.grid(True, linestyle='--', alpha=0.4, color='#cccccc', zorder=0)
+    ax.set_axisbelow(True)
+
+    # Clean spines
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_color('#cccccc')
+    ax.spines['bottom'].set_color(NAVY)
+    ax.tick_params(axis='x', bottom=False)
+
+    # Group separator lines
+    ax.axvline(x=1.5, color='#e0e0e0', linewidth=1, linestyle='-', zorder=1)
+    ax.axvline(x=7.5, color='#e0e0e0', linewidth=1, linestyle='-', zorder=1)
+
+    plt.tight_layout()
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight', dpi=150, facecolor='white')
+    plt.close(fig)
+    buf.seek(0)
+    return base64.b64encode(buf.read()).decode('utf-8')
+
+
+def _load_logo_base64():
+    """Try common locations for the PIMS logo; return base64 string or empty string."""
+    from django.conf import settings as djsettings
+    candidates = [
+        os.path.join(djsettings.BASE_DIR, 'static', 'pims_logo-removebg.png'),
+        os.path.join(djsettings.BASE_DIR, 'static', 'pims_logo.png'),
+        os.path.join(djsettings.BASE_DIR, 'pims_logo-removebg.png'),
+        os.path.join(os.path.dirname(djsettings.BASE_DIR), 'pims_logo-removebg.png'),
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            try:
+                with open(path, 'rb') as f:
+                    return base64.b64encode(f.read()).decode('utf-8')
+            except OSError:
+                continue
+    return ''
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=300)
+def send_perma_snapshot_report_task(self, response_set_id, milestone):
+    """
+    Generate and email a PERMA snapshot PDF report for a completed assessment.
+    Spec: horizontal bar charts, 3 blocks, bilingual, mandatory support footer.
+    Idempotent: will not send twice for the same user+milestone.
+    """
+    from django.conf import settings as djsettings
+    from django.template.loader import render_to_string
+    from weasyprint import HTML
+    from questionnaires.models import ResponseSet, PermaReportLog
+    from emails.tasks import _send_participant_email
+
+    logger.info("PERMA report: starting for ResponseSet %s milestone=%s", response_set_id, milestone)
+
+    try:
+        response_set = ResponseSet.objects.select_related('user').get(id=response_set_id)
+        user = response_set.user
+
+        if not user.email:
+            logger.error("PERMA report: user %s has no email. Skipping.", user.username)
+            return {'status': 'skipped', 'reason': 'missing_email'}
+
+        # ── Idempotency: skip if already sent ─────────────────────────────────
+        if PermaReportLog.objects.filter(user=user, milestone=milestone).exists():
+            logger.info("PERMA report: already sent for user %s milestone=%s. Skipping.", user.username, milestone)
+            return {'status': 'skipped', 'reason': 'already_sent'}
+
+        scores = response_set.scores or {}
+        if not scores:
+            logger.error("PERMA report: no scores on ResponseSet %s. Skipping.", response_set_id)
+            PermaReportLog.objects.create(user=user, milestone=milestone, status='skipped',
+                                          error_detail='No scores on ResponseSet.')
+            return {'status': 'skipped', 'reason': 'no_scores'}
+
+        # ── Build chart ───────────────────────────────────────────────────────
+        chart_b64 = _build_bar_chart(scores)
+
+        # ── Load logo ─────────────────────────────────────────────────────────
+        logo_b64 = _load_logo_base64()
+
+        # ── Font path for WeasyPrint ──────────────────────────────────────────
+        font_path = os.path.join(djsettings.BASE_DIR, 'static', 'fonts', 'JameelNooriNastaleeq.ttf')
+
+        # ── Milestone display label ───────────────────────────────────────────
+        milestone_labels = {
+            'SIGNUP':   ('Baseline', 'بیس لائن'),
+            '3_MONTHS': ('Month 3',  'تین ماہ'),
+            '1_YEAR':   ('Month 12', 'بارہ ماہ'),
+        }
+        label_en, label_ur = milestone_labels.get(milestone, (milestone, milestone))
+
+        # ── Render HTML → PDF ─────────────────────────────────────────────────
+        context = {
+            'chart_image': chart_b64,
+            'logo_image':  logo_b64,
+            'font_path':   font_path,
+            'label_en':    label_en,
+            'label_ur':    label_ur,
+        }
+        html_string = render_to_string('questionnaires/perma_snapshot_report.html', context)
+        pdf_bytes = HTML(string=html_string).write_pdf()
+
+        # ── Send email ────────────────────────────────────────────────────────
+        subject = MILESTONE_SUBJECT.get(milestone, 'Your wellbeing report')
+        filename = MILESTONE_FILENAME.get(milestone, 'pims_report.pdf')
+
+        _send_participant_email(
+            {
+                'subject': subject,
+                'html_content': (
+                    '<p>Dear Participant,</p>'
+                    '<p>Please find your PERMA Profiler wellbeing report attached.</p>'
+                    '<p dir="rtl" style="text-align:right;font-family:Arial,sans-serif;">'
+                    'عزیز شریک،<br>براہ کرم منسلک PERMA پروفائلر فلاح رپورٹ دیکھیں۔</p>'
+                    '<p>Thank you for your participation.</p>'
+                    '<p dir="rtl" style="text-align:right;font-family:Arial,sans-serif;">'
+                    'آپ کی شرکت کا شکریہ۔</p>'
+                ),
+                'text_content': (
+                    'Dear Participant,\n\n'
+                    'Please find your PERMA Profiler wellbeing report attached.\n\n'
+                    'Thank you for your participation.'
+                ),
+            },
+            user.email,
+            attachments=[(filename, pdf_bytes, 'application/pdf')],
+        )
+
+        # ── Audit log ─────────────────────────────────────────────────────────
+        PermaReportLog.objects.create(user=user, milestone=milestone, status='sent')
+        logger.info("PERMA report: sent to %s for milestone=%s", user.email, milestone)
+        return {'status': 'sent', 'recipient': user.email, 'milestone': milestone}
+
+    except Exception as exc:
+        logger.exception("PERMA report: failed for ResponseSet %s milestone=%s", response_set_id, milestone)
+        try:
+            from questionnaires.models import PermaReportLog, ResponseSet as RS
+            rs = RS.objects.select_related('user').get(id=response_set_id)
+            PermaReportLog.objects.update_or_create(
+                user=rs.user, milestone=milestone,
+                defaults={'status': 'error', 'error_detail': str(exc)},
+            )
+        except Exception:
+            pass
+        raise self.retry(exc=exc)
+
+
+@shared_task
+def check_and_send_perma_reports():
+    """
+    Daily cron: find COMPLETED PSYCHOMETRIC assessments for 3_MONTHS and 1_YEAR
+    that have not yet had a report sent, and fire the report task for each.
+    Acts as a catch-up safety net alongside the event-driven triggers in the serializer.
+    """
+    from questionnaires.models import ResponseSet, PermaReportLog
+
+    report_milestones = ('3_MONTHS', '1_YEAR')
+    qs = ResponseSet.objects.filter(
+        status='COMPLETED',
+        milestone__in=report_milestones,
+        questionnaire__assessment_type='PSYCHOMETRIC',
+    ).select_related('user')
+
+    already_sent_pairs = set(
+        PermaReportLog.objects.filter(milestone__in=report_milestones)
+        .values_list('user_id', 'milestone')
+    )
+
+    dispatched = 0
+    for rs in qs:
+        if (rs.user_id, rs.milestone) not in already_sent_pairs:
+            send_perma_snapshot_report_task.delay(str(rs.id), rs.milestone)
+            dispatched += 1
+
+    logger.info("PERMA report cron: dispatched %d report tasks.", dispatched)
+    return {'dispatched': dispatched}
 
 
 @shared_task
@@ -21,169 +281,3 @@ def refresh_suicide_risk_admin_cache_task():
         "opt_in_count": payload["opt_in_count"],
         "last_refreshed_at": payload["last_refreshed_at"],
     }
-
-
-@shared_task
-def send_month_3_report_task(response_set_id):
-    """
-    Generate and email the Month-3 PERMA trajectory report PDF to the participant.
-    """
-    from questionnaires.models import ResponseSet
-    from django.conf import settings
-    from django.template.loader import render_to_string
-    from django.utils import timezone
-    from weasyprint import HTML
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-    import io
-    import base64
-
-    logger.info("Starting Month-3 report generation for ResponseSet %s", response_set_id)
-    try:
-        response_set = ResponseSet.objects.select_related('user', 'user__group').get(id=response_set_id)
-        user = response_set.user
-        
-        if not user.email:
-            logger.error("User %s has no email address configured. Skipping report email.", user.username)
-            return {"status": "skipped", "reason": "missing_email"}
-
-        # 1. Fetch completed psychometric response sets for the user
-        milestone_order = ['SIGNUP', '7_DAYS', '1_MONTH', '3_MONTHS']
-        completed_sets = ResponseSet.objects.filter(
-            user=user,
-            status='COMPLETED',
-            milestone__in=milestone_order,
-            questionnaire__assessment_type='PSYCHOMETRIC'
-        )
-
-        scores_by_ms = {rs.milestone: rs.scores for rs in completed_sets if rs.scores}
-        
-        x_labels = []
-        subscales = [
-            ('PERMA_P', 'P'),
-            ('PERMA_E', 'E'),
-            ('PERMA_R', 'R'),
-            ('PERMA_M', 'M'),
-            ('PERMA_A', 'A'),
-            ('PERMA_N', 'N'),
-            ('PERMA_H', 'H'),
-            ('PERMA_LON', 'Lon'),
-            ('PERMA_OVERALL', 'Overall')
-        ]
-        
-        y_values = {key: [] for key, _ in subscales}
-        
-        milestone_mapping = [
-            ('SIGNUP', 'T0'),
-            ('7_DAYS', 'T1'),
-            ('1_MONTH', '1-Month'),
-            ('3_MONTHS', 'T2')
-        ]
-        
-        for ms, label in milestone_mapping:
-            if ms in scores_by_ms:
-                x_labels.append(label)
-                for key, _ in subscales:
-                    val = scores_by_ms[ms].get(key, 0.0)
-                    try:
-                        val = float(val)
-                    except (TypeError, ValueError):
-                        val = 0.0
-                    y_values[key].append(val)
-
-        if not x_labels:
-            logger.error("No PERMA scores found for user %s. Skipping report email.", user.username)
-            return {"status": "skipped", "reason": "no_scores"}
-
-        # 2. Render Matplotlib 3x3 Grid of Line Charts
-        fig, axes = plt.subplots(3, 3, figsize=(9, 9), dpi=300)
-        fig.subplots_adjust(hspace=0.4, wspace=0.3)
-        
-        for idx, (key, label) in enumerate(subscales):
-            row = idx // 3
-            col = idx % 3
-            ax = axes[row, col]
-            
-            ax.plot(
-                x_labels, 
-                y_values[key], 
-                color='#2E4E90', 
-                marker='o', 
-                markersize=5, 
-                linewidth=2.0, 
-                markerfacecolor='#C8A951', 
-                markeredgecolor='#2E4E90'
-            )
-            
-            ax.set_ylim(0, 10.5)
-            ax.spines['top'].set_visible(False)
-            ax.spines['right'].set_visible(False)
-            ax.spines['left'].set_color('#2E4E90')
-            ax.spines['bottom'].set_color('#2E4E90')
-            ax.tick_params(colors='#2E4E90', labelsize=8)
-            ax.grid(axis='y', linestyle='--', alpha=0.5, color='#ccc')
-            ax.set_title(label, color='#2E4E90', fontweight='bold', fontsize=10, pad=6)
-            
-        plt.tight_layout()
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png', bbox_inches='tight', dpi=300)
-        plt.close(fig)
-        buf.seek(0)
-        chart_image_base64 = base64.b64encode(buf.read()).decode('utf-8')
-
-        # Load logo image if exists (try multiple directories and names)
-        import os
-        logo_base64 = ""
-        possible_dirs = [
-            os.path.join(settings.BASE_DIR, 'static'),
-            settings.BASE_DIR,
-            os.path.dirname(settings.BASE_DIR)
-        ]
-        logo_filenames = ['pims_logo.png', 'pims_logo-removebg.png', 'pims_logo.jpg', 'pims_logo.jpeg']
-        found_logo = False
-        for directory in possible_dirs:
-            for filename in logo_filenames:
-                logo_path = os.path.join(directory, filename)
-                if os.path.exists(logo_path):
-                    try:
-                        with open(logo_path, "rb") as f:
-                            logo_base64 = base64.b64encode(f.read()).decode('utf-8')
-                        found_logo = True
-                        logger.info("Found logo at: %s", logo_path)
-                        break
-                    except Exception as logo_err:
-                        logger.warning("Failed to read logo at %s: %s", logo_path, logo_err)
-            if found_logo:
-                break
-
-        # 3. Render HTML template
-        context = {
-            'user_id': user.user_id,
-            'group_name': user.group.name if user.group else 'N/A',
-            'date': timezone.now().strftime('%Y-%m-%d'),
-            'chart_image': chart_image_base64,
-            'logo_image': logo_base64,
-        }
-        html_string = render_to_string('questionnaires/month3_report.html', context)
-
-        # 4. Generate PDF via WeasyPrint
-        pdf_bytes = HTML(string=html_string).write_pdf()
-
-        # 5. Email PDF Attachment using doc-style E8 bilingual template
-        from emails.builder import build_phase_complete_email, get_first_name
-        from emails.tasks import _send_participant_email
-
-        first_name = get_first_name(user)
-        email_content = build_phase_complete_email(first_name, 'phase_3_report')
-        _send_participant_email(
-            email_content,
-            user.email,
-            attachments=[('pims_month3_report.pdf', pdf_bytes, 'application/pdf')],
-        )
-        
-        logger.info("Successfully sent Month-3 report email to user %s (%s)", user.username, user.email)
-        return {"status": "sent", "recipient": user.email}
-    except Exception as e:
-        logger.exception("Failed to generate and send Month-3 report email:")
-        return {"status": "error", "error": str(e)}

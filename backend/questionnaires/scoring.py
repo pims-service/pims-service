@@ -24,6 +24,7 @@ PERMA_EXPORT_SCORES = [
     ("PERMA_N", "PERMA_NegativeEmotion"),
     ("PERMA_H", "PERMA_Health"),
     ("PERMA_LON", "PERMA_Loneliness"),
+    ("PERMA_HAP", "PERMA_Happiness"),
     ("PERMA_OVERALL", "PERMA_Overall"),
 ]
 
@@ -96,6 +97,7 @@ def calculate_scores(val_map):
         scores["PERMA_N"] = get_mean(perma_n_orders)
         scores["PERMA_H"] = get_mean(perma_h_orders)
         scores["PERMA_LON"] = float(val_map.get(perma_lon_order, 0.0))
+        scores["PERMA_HAP"] = float(val_map.get(23, 0.0))
         scores["PERMA_OVERALL"] = get_mean(perma_overall_orders)
 
     # PHQ-9: items at orders 25-33 (order 24 is the section header, TEXT type, not scored)

@@ -374,6 +374,11 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
                 transaction.on_commit(
                     lambda user_id=user.user_id: send_welcome_email_task.delay(user_id)
                 )
+                # T0 PERMA snapshot report — fire immediately after baseline assessment
+                from questionnaires.tasks import send_perma_snapshot_report_task
+                transaction.on_commit(
+                    lambda rs_id=str(instance.id): send_perma_snapshot_report_task.delay(rs_id, 'SIGNUP')
+                )
 
             if (
                 instance.questionnaire.assessment_type == 'PSYCHOMETRIC'
@@ -389,10 +394,16 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
                     )
                 )
 
-            # Trigger Month-3 PERMA report task if 3_MONTHS milestone of PSYCHOMETRIC questionnaire is completed
-            if instance.milestone == '3_MONTHS' and instance.questionnaire.assessment_type == 'PSYCHOMETRIC':
-                from questionnaires.tasks import send_month_3_report_task
-                transaction.on_commit(lambda: send_month_3_report_task.delay(instance.id))
+            # Trigger PERMA snapshot report for 3_MONTHS and 1_YEAR milestones
+            if (
+                instance.questionnaire.assessment_type == 'PSYCHOMETRIC'
+                and instance.milestone in ('3_MONTHS', '1_YEAR')
+            ):
+                from questionnaires.tasks import send_perma_snapshot_report_task
+                transaction.on_commit(
+                    lambda rs_id=str(instance.id), ms=instance.milestone:
+                        send_perma_snapshot_report_task.delay(rs_id, ms)
+                )
 
         return instance
 

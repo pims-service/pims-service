@@ -43,6 +43,57 @@ def test_seed_longitudinal_scales_command_success(db):
                 scale_order.append(group)
     assert scale_order == ['PERMA', 'PHQ-9', 'GAD-7', 'PANAS', 'Gratitude', 'SIDAS']
 
+    # Verify exact option counts — guards against stale options from scale reassignment
+    # PERMA (0-10): 11 options each; PHQ-9 / GAD-7 (0-3): 4 each;
+    # PANAS (0-4): 5 each; Gratitude (0-4): 5 each; SIDAS (0-10): 11 each
+    scale_expected_options = {
+        'PERMA': 11, 'PHQ-9': 4, 'GAD-7': 4, 'PANAS': 5, 'Gratitude': 5, 'SIDAS': 11,
+    }
+    for q in questions:
+        if q.type == 'TEXT':
+            continue
+        if q.content.startswith('[') and ']' in q.content:
+            group = q.content[1:q.content.index(']')]
+            expected = scale_expected_options.get(group)
+            if expected is not None:
+                actual = Option.objects.filter(question=q).count()
+                assert actual == expected, (
+                    f"Question order={q.order} [{group}] has {actual} options, expected {expected}. "
+                    "Stale options from a prior scale reassignment may not have been pruned."
+                )
+
+@pytest.mark.django_db
+def test_seed_prunes_stale_options_on_reseed(db):
+    """
+    Regression: Gratitude items 24-26 (orders 75-77) previously inherited 0-10
+    SIDAS options after an order-shift migration. Re-seeding must prune the extra
+    options so each Gratitude question ends up with exactly 5 options (0-4).
+    """
+    from questionnaires.models import Option as Opt
+
+    call_command('seed_longitudinal_scales')
+
+    battery = Questionnaire.objects.get(title="Longitudinal Psychometric Scales")
+
+    # Manually inject stale 0-10 SIDAS-style options onto Gratitude items 24-26
+    # (orders 75, 76, 77) to reproduce the bug.
+    grat_tail_orders = [75, 76, 77]
+    for order in grat_tail_orders:
+        q = Question.objects.get(questionnaire=battery, order=order)
+        for v in range(5, 11):  # values 5-10 are stale
+            Opt.objects.get_or_create(question=q, numeric_value=v, defaults={"label": str(v), "order": v})
+        assert Opt.objects.filter(question=q).count() == 11  # 0-10 = bug state
+
+    # Re-seeding must prune the stale options back to exactly 5 (0-4)
+    call_command('seed_longitudinal_scales')
+    for order in grat_tail_orders:
+        q = Question.objects.get(questionnaire=battery, order=order)
+        actual = Opt.objects.filter(question=q).count()
+        assert actual == 5, (
+            f"Gratitude order={order} still has {actual} options after reseed; expected 5 (0-4)."
+        )
+
+
 @pytest.mark.django_db
 def test_seed_longitudinal_scales_is_idempotent(db):
     """

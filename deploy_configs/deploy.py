@@ -171,6 +171,11 @@ def main():
         seed_activities_cmd = f"cd {REMOTE_DIR} && docker compose exec -T backend python manage.py seed_daily_tasks"
         run_ssh_command(ssh, seed_activities_cmd)
 
+        # 11. Backfill PERMA baseline reports for pre-feature T0 completions
+        print("\n=== Dispatching missing PERMA baseline reports (pre-feature T0 users) ===")
+        backfill_cmd = f"cd {REMOTE_DIR} && docker compose exec -T backend python manage.py send_missing_signup_reports"
+        run_ssh_command(ssh, backfill_cmd)
+
         print("\n=== DEPLOYMENT COMPLETED SUCCESSFULY ===")
         print(f"Service running at: http://{VM_HOST}:{4756}")
         

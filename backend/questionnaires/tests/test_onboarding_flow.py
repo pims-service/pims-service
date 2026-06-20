@@ -106,9 +106,11 @@ def test_sociodemographic_submission_completes_onboarding(fresh_client, fresh_us
 
     fresh_user.refresh_from_db()
     assert fresh_user.onboarding_completed_at is not None  # Now onboarding is fully complete
-    assert len(mail.outbox) == 1
-    welcome = mail.outbox[0]
-    assert 'Welcome to Psycheversity' in welcome.subject
+    # Welcome email + PERMA baseline report email are both sent on SIGNUP completion
+    assert len(mail.outbox) == 2
+    subjects = [m.subject for m in mail.outbox]
+    assert any('Welcome to Psycheversity' in s for s in subjects)
+    welcome = next(m for m in mail.outbox if 'Welcome to Psycheversity' in m.subject)
     assert 'سائیکیورسٹی میں خوش آمدید' in welcome.subject
     assert welcome.to == [fresh_user.email]
 

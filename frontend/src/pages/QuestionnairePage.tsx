@@ -666,27 +666,7 @@ const QuestionnairePage: React.FC = () => {
           className="space-y-12"
         >
           <div className="space-y-8">
-            {/* PHQ-9 / GAD-7 Response Key — bilingual legend */}
-            {(currentScaleGroup.name === 'PHQ-9' || currentScaleGroup.name === 'GAD-7') && (
-              <div className="border border-zinc-200 rounded-xl p-5 md:p-6 bg-zinc-50/80 shadow-sm">
-                <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">Response Key / جوابات کی کنجی</div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {[
-                    { val: 0, en: 'Not at all', ur: 'بالکل نہیں' },
-                    { val: 1, en: 'Several days', ur: 'کئی دن' },
-                    { val: 2, en: 'More than half the days', ur: 'ایک ہفتے سے زیادہ' },
-                    { val: 3, en: 'Nearly every day', ur: 'تقریباً روزانہ' },
-                  ].map((anchor) => (
-                    <div key={anchor.val} className="flex flex-col items-center text-center border border-zinc-200 rounded-lg bg-white px-2 py-3 gap-1">
-                      <span className="text-lg font-bold text-zinc-700">{anchor.val}</span>
-                      <span className="text-[11px] font-medium text-zinc-600 leading-tight">{anchor.en}</span>
-                      <span className="text-[11px] font-medium text-zinc-500 font-urdu leading-tight" dir="rtl">{anchor.ur}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {/* Gratitude Response Key — stem + bilingual legend */}
+            {/* Gratitude Response Key — stem + bilingual legend (no separate TEXT header in DB) */}
             {currentScaleGroup.name === 'Gratitude' && (
               <div className="border border-zinc-200 rounded-xl p-5 md:p-6 bg-zinc-50/80 shadow-sm space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-3 border-b border-zinc-200">
@@ -711,27 +691,6 @@ const QuestionnairePage: React.FC = () => {
                 </div>
               </div>
             )}
-            {/* PANAS Response Key — bilingual legend */}
-            {currentScaleGroup.name === 'PANAS' && (
-              <div className="border border-zinc-200 rounded-xl p-5 md:p-6 bg-zinc-50/80 shadow-sm">
-                <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">Response Key / جوابات کی کنجی</div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                  {[
-                    { val: 0, en: 'Very slightly or not at all', ur: 'کبھی نہیں' },
-                    { val: 1, en: 'A little', ur: 'بہت کم' },
-                    { val: 2, en: 'Moderately', ur: 'درمیانہ' },
-                    { val: 3, en: 'Quite a bit', ur: 'کافی حد تک' },
-                    { val: 4, en: 'Extremely', ur: 'بہت زیادہ' },
-                  ].map((anchor) => (
-                    <div key={anchor.val} className="flex flex-col items-center text-center border border-zinc-200 rounded-lg bg-white px-2 py-3 gap-1">
-                      <span className="text-lg font-bold text-zinc-700">{anchor.val}</span>
-                      <span className="text-[11px] font-medium text-zinc-600 leading-tight">{anchor.en}</span>
-                      <span className="text-[11px] font-medium text-zinc-500 font-urdu leading-tight" dir="rtl">{anchor.ur}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
             {currentScaleGroup.questions.map((question: any, idx: number) => {
               if (currentScaleGroup.name === 'SIDAS' && idx > 0) {
                 const firstSidasQ = currentScaleGroup.questions[0];
@@ -742,23 +701,68 @@ const QuestionnairePage: React.FC = () => {
 
               const { english, urdu } = splitQuestionContent(question.content);
 
-              // Non-required TEXT questions are section headers / instructions — render as a banner, not a question card
+              // Non-required TEXT questions are section headers / instructions.
+              // Render stem banner first, then the response key directly below it
+              // so the one-liner always sits above the key (not the other way around).
               if (question.type === 'TEXT' && !question.required) {
+                const isPhqGad = currentScaleGroup.name === 'PHQ-9' || currentScaleGroup.name === 'GAD-7';
+                const isPanas = currentScaleGroup.name === 'PANAS';
                 return (
-                  <div key={question.id} className="border border-zinc-200 rounded-xl p-5 md:p-6 bg-gradient-to-br from-zinc-50 to-white shadow-sm">
-                    {urdu ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                        <div className="text-left">
-                          <p className="text-sm md:text-base font-medium text-zinc-700 leading-relaxed">{english}</p>
+                  <React.Fragment key={question.id}>
+                    <div className="border border-zinc-200 rounded-xl p-5 md:p-6 bg-gradient-to-br from-zinc-50 to-white shadow-sm">
+                      {urdu ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                          <div className="text-left">
+                            <p className="text-sm md:text-base font-medium text-zinc-700 leading-relaxed">{english}</p>
+                          </div>
+                          <div className="text-right" dir="rtl">
+                            <p className="text-sm md:text-base font-medium text-zinc-700 leading-relaxed font-urdu">{urdu}</p>
+                          </div>
                         </div>
-                        <div className="text-right" dir="rtl">
-                          <p className="text-sm md:text-base font-medium text-zinc-700 leading-relaxed font-urdu">{urdu}</p>
+                      ) : (
+                        <p className="text-sm md:text-base font-medium text-zinc-700 leading-relaxed">{english}</p>
+                      )}
+                    </div>
+                    {isPhqGad && (
+                      <div className="border border-zinc-200 rounded-xl p-5 md:p-6 bg-zinc-50/80 shadow-sm">
+                        <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">Response Key / جوابات کی کنجی</div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          {[
+                            { val: 0, en: 'Not at all', ur: 'بالکل نہیں' },
+                            { val: 1, en: 'Several days', ur: 'کئی دن' },
+                            { val: 2, en: 'More than half the days', ur: 'ایک ہفتے سے زیادہ' },
+                            { val: 3, en: 'Nearly every day', ur: 'تقریباً روزانہ' },
+                          ].map((anchor) => (
+                            <div key={anchor.val} className="flex flex-col items-center text-center border border-zinc-200 rounded-lg bg-white px-2 py-3 gap-1">
+                              <span className="text-lg font-bold text-zinc-700">{anchor.val}</span>
+                              <span className="text-[11px] font-medium text-zinc-600 leading-tight">{anchor.en}</span>
+                              <span className="text-[11px] font-medium text-zinc-500 font-urdu leading-tight" dir="rtl">{anchor.ur}</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    ) : (
-                      <p className="text-sm md:text-base font-medium text-zinc-700 leading-relaxed">{english}</p>
                     )}
-                  </div>
+                    {isPanas && (
+                      <div className="border border-zinc-200 rounded-xl p-5 md:p-6 bg-zinc-50/80 shadow-sm">
+                        <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">Response Key / جوابات کی کنجی</div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                          {[
+                            { val: 0, en: 'Very slightly or not at all', ur: 'کبھی نہیں' },
+                            { val: 1, en: 'A little', ur: 'بہت کم' },
+                            { val: 2, en: 'Moderately', ur: 'درمیانہ' },
+                            { val: 3, en: 'Quite a bit', ur: 'کافی حد تک' },
+                            { val: 4, en: 'Extremely', ur: 'بہت زیادہ' },
+                          ].map((anchor) => (
+                            <div key={anchor.val} className="flex flex-col items-center text-center border border-zinc-200 rounded-lg bg-white px-2 py-3 gap-1">
+                              <span className="text-lg font-bold text-zinc-700">{anchor.val}</span>
+                              <span className="text-[11px] font-medium text-zinc-600 leading-tight">{anchor.en}</span>
+                              <span className="text-[11px] font-medium text-zinc-500 font-urdu leading-tight" dir="rtl">{anchor.ur}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </React.Fragment>
                 );
               }
 
