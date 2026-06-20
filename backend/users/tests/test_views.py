@@ -206,6 +206,31 @@ def test_signup_duplicate_username(api_client, db):
     assert "taken" in error_msg or "exists" in error_msg
 
 @pytest.mark.django_db
+def test_profile_patch_cannot_change_role_or_group(authenticated_client, test_user):
+    """Mass assignment protection: role and group must be read-only on the profile endpoint."""
+    from users.models import Role
+    from groups.models import Group
+
+    other_role, _ = Role.objects.get_or_create(name='Admin', defaults={'description': 'Admin role'})
+    other_group, _ = Group.objects.get_or_create(name='OtherGroup')
+
+    original_role_id = test_user.role_id
+    original_group_id = test_user.group_id
+
+    url = reverse('profile')
+    response = authenticated_client.patch(
+        url,
+        {'role': other_role.pk, 'group': other_group.pk},
+        format='json',
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    test_user.refresh_from_db()
+    assert test_user.role_id == original_role_id, "role must not be changed via profile PATCH"
+    assert test_user.group_id == original_group_id, "group must not be changed via profile PATCH"
+
+
+@pytest.mark.django_db
 def test_admin_user_list(admin_client, test_user):
     url = reverse('admin_user_list')
     response = admin_client.get(url)

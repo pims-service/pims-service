@@ -143,9 +143,8 @@ class SendOTPView(generics.CreateAPIView):
                 return Response({'email': ['User with this email already exists.']}, status=status.HTTP_400_BAD_REQUEST)
         
         from .models import EmailVerificationOTP
-        import random
-        # Generate 6 digit OTP
-        otp = str(random.randint(100000, 999999))
+        import secrets
+        otp = str(secrets.randbelow(900000) + 100000)
         
         # Save to DB
         EmailVerificationOTP.objects.create(email=email, otp=otp)
@@ -181,8 +180,8 @@ class ForgotPasswordRequestView(generics.CreateAPIView):
         from .models import PasswordResetOTP
         PasswordResetOTP.objects.filter(user=user, is_used=False).update(is_used=True)
         
-        import random
-        otp = str(random.randint(100000, 999999))
+        import secrets
+        otp = str(secrets.randbelow(900000) + 100000)
 
         # Create OTP record
         PasswordResetOTP.objects.create(user=user, otp=otp)

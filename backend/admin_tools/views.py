@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
+from .export_utils import sanitize_csv_cell
 from .models import ExportTask
 from .tasks import (
     generate_posttest_export_csv,
@@ -41,7 +42,7 @@ class ExportDataCSVView(APIView):
                 sub.user.group.name if sub.user.group else 'None',
                 sub.user.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 sub.activity.title,
-                sub.content.replace('\n', ' '), # SPSS friendly: no newlines in text fields
+                sanitize_csv_cell(sub.content.replace('\n', ' ')),
                 sub.submission_date.strftime('%Y-%m-%d %H:%M:%S')
             ])
 

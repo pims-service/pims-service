@@ -3,6 +3,19 @@ Shared helpers for admin CSV export tasks.
 """
 import re
 
+_FORMULA_PREFIXES = ('=', '+', '-', '@', '\t', '\r')
+
+
+def sanitize_csv_cell(value: str) -> str:
+    """
+    Prevent CSV formula injection by prepending an apostrophe to any cell
+    value that starts with a spreadsheet formula trigger character.
+    Excel/Calc treat the apostrophe-prefixed value as plain text.
+    """
+    if value and value[0] in _FORMULA_PREFIXES:
+        return "'" + value
+    return value
+
 from questionnaires.scoring import (
     PERMA_ITEM_CODES,
     battery_score_column_names,
@@ -56,7 +69,7 @@ def append_psych_item_values(row, resp_map, question_ids):
                 value = str(answer.selected_option.numeric_value)
             else:
                 value = answer.text_value or ""
-            row.append(value.replace("\n", " "))
+            row.append(sanitize_csv_cell(value.replace("\n", " ")))
         else:
             row.append("")
 

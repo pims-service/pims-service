@@ -29,7 +29,8 @@ class UserSerializer(serializers.ModelSerializer):
             'has_two_consecutive_missed_waves', 'is_disqualified',
         )
         read_only_fields = (
-            'created_at', 'has_completed_sociodemographic', 'has_completed_posttest',
+            'created_at', 'role', 'group',
+            'has_completed_sociodemographic', 'has_completed_posttest',
             'is_posttest_due', 'due_milestone', 'current_experiment_day', 'current_activity_wave',
             'has_consecutive_misses',
             'consecutive_misses_message', 'has_two_consecutive_missed_waves', 'is_disqualified',

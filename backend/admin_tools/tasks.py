@@ -4,6 +4,7 @@ import logging
 from celery import shared_task
 from django.core.files.base import ContentFile
 from .models import ExportTask
+from .export_utils import sanitize_csv_cell
 
 logger = logging.getLogger(__name__)
 
@@ -277,7 +278,7 @@ def generate_longitudinal_export_csv(task_id):
                     ans = resp_map.get(q.id)
                     if ans:
                         val = ans.selected_option.label if ans.selected_option else (ans.text_value or '')
-                        row.append(val.replace('\n', ' '))
+                        row.append(sanitize_csv_cell(val.replace('\n', ' ')))
                     else:
                         row.append('')
 
@@ -291,7 +292,7 @@ def generate_longitudinal_export_csv(task_id):
                             val = str(ans.selected_option.numeric_value)
                         else:
                             val = ans.text_value or ''
-                        row.append(val.replace('\n', ' '))
+                        row.append(sanitize_csv_cell(val.replace('\n', ' ')))
                     else:
                         row.append('')
 
@@ -909,7 +910,7 @@ def generate_daily_entries_export_csv(task_id):
                         sub.experiment_day or '',
                         entry_num,
                         count_words(text),
-                        text,
+                        sanitize_csv_cell(text.replace('\n', ' ')),
                         focus_str,
                         submit_str,
                         duration or 0,
