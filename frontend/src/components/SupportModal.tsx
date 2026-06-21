@@ -148,8 +148,8 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) => {
                   )}
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-zinc-700 flex justify-between">
-                      <span>Subject (English)</span>
-                      <span className="font-urdu text-zinc-500" dir="rtl">موضوع (اردو)</span>
+                      <span>Subject</span>
+                      <span className="font-urdu text-zinc-500" dir="rtl">موضوع</span>
                     </label>
                     <input
                       type="text"
@@ -163,8 +163,8 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) => {
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-zinc-700 flex justify-between">
-                      <span>Message (English)</span>
-                      <span className="font-urdu text-zinc-500" dir="rtl">پیغام (اردو)</span>
+                      <span>Message</span>
+                      <span className="font-urdu text-zinc-500" dir="rtl">پیغام</span>
                     </label>
                     <textarea
                       required
