@@ -257,6 +257,29 @@ const LandingPage: React.FC = () => {
                   en="Positive Psychology is the scientific study of what makes life most worth living. Researchers in this field design and test simple, evidence-based activities that can help people build wellbeing, gratitude, and a sense of meaning in everyday life. This program has been developed according to that scientific tradition."
                   ur="مثبت نفسیات اس بات کا سائنسی مطالعہ ہے کہ زندگی کو سب سے زیادہ قابلِ قدر کیا چیز بناتی ہے۔ اس شعبے کے محققین سادہ اور شواہد پر مبنی سرگرمیاں تیار اور جانچتے ہیں جو روزمرہ زندگی میں فلاح، شکرگزاری اور بامقصد ہونے کے احساس کو بڑھانے میں مدد دے سکتی ہیں۔ یہ پروگرام اسی سائنسی روایت کے مطابق تیار کیا گیا ہے۔"
                 />
+
+                {/* Introduction Video */}
+                <div className="my-6 border border-zinc-200 bg-zinc-50/50 rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-all duration-300">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+                    <h3 className="text-sm md:text-base font-bold text-[#2E4E90] font-latin">
+                      Introduction Video
+                    </h3>
+                    <h3 className="text-sm md:text-base font-bold text-[#2E4E90] font-urdu text-right dir-rtl leading-normal">
+                      تعارفی ویڈیو
+                    </h3>
+                  </div>
+                  <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-zinc-200 shadow-inner bg-black">
+                    <iframe
+                      src="https://www.youtube.com/embed/SbJs0Dyr8bQ?rel=0&modestbranding=1"
+                      title="Psycheversity Introduction Video"
+                      className="absolute top-0 left-0 w-full h-full border-0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      loading="lazy"
+                    />
+                  </div>
+                </div>
+
                 <BilingualPara
                   en="The program consists of short daily writing activities that you complete from your phone or computer, in English or Urdu, taking about 10–15 minutes a day. Your participation also supports scientific research on wellbeing in Pakistan."
                   ur="اس پروگرام میں مختصر روزانہ تحریری سرگرمیاں شامل ہیں جو آپ اپنے موبائل یا کمپیوٹر سے، انگریزی یا اردو میں، روزانہ تقریباً 10 تا 15 منٹ میں مکمل کر سکتے ہیں۔ آپ کی شرکت پاکستان میں فلاح و بہبود سے متعلق سائنسی تحقیق میں بھی معاون ہوگی۔"
