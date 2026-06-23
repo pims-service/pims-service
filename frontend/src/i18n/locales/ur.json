@@ -81,6 +81,7 @@
     "sign_in": "سائن ان کریں"
   },
   "navbar": {
+    "home": "ہوم",
     "dashboard": "ڈیش بورڈ",
     "admin_dashboard": "ایڈمن ڈیش بورڈ",
     "profile": "پروفائل",

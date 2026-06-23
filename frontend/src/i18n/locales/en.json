@@ -82,6 +82,7 @@
     "sign_in": "Sign in"
   },
   "navbar": {
+    "home": "Home",
     "dashboard": "Dashboard",
     "admin_dashboard": "Admin Dashboard",
     "profile": "Profile",

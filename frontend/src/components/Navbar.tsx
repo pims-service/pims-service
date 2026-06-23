@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LogOut, User, LayoutDashboard, Settings, Menu, X, HelpCircle } from 'lucide-react';
+import { LogOut, User, LayoutDashboard, Settings, Menu, X, HelpCircle, Home } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import SupportModal from './SupportModal';
 import { useTranslation } from 'react-i18next';
@@ -68,9 +68,14 @@ const Navbar: React.FC = () => {
             {isAuthenticated && (
               <>
                 {!isAdmin && (
-                  <Link to="/dashboard" className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors flex items-center gap-2">
-                    <LayoutDashboard size={18} /> {t('navbar.dashboard')}
-                  </Link>
+                  <>
+                    <Link to="/" className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors flex items-center gap-2">
+                      <Home size={18} /> {t('navbar.home')}
+                    </Link>
+                    <Link to="/dashboard" className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors flex items-center gap-2">
+                      <LayoutDashboard size={18} /> {t('navbar.dashboard')}
+                    </Link>
+                  </>
                 )}
                 {isAdmin && (
                   <Link to="/admin" className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors flex items-center gap-2">
@@ -133,13 +138,22 @@ const Navbar: React.FC = () => {
             {isAuthenticated ? (
               <>
                 {!isAdmin && (
-                  <Link
-                    to="/dashboard"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-3 text-sm font-medium text-zinc-600 py-2"
-                  >
-                    <LayoutDashboard size={20} /> {t('navbar.dashboard')}
-                  </Link>
+                  <>
+                    <Link
+                      to="/"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-3 text-sm font-medium text-zinc-600 py-2"
+                    >
+                      <Home size={20} /> {t('navbar.home')}
+                    </Link>
+                    <Link
+                      to="/dashboard"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-3 text-sm font-medium text-zinc-600 py-2"
+                    >
+                      <LayoutDashboard size={20} /> {t('navbar.dashboard')}
+                    </Link>
+                  </>
                 )}
                 {isAdmin && (
                   <Link
