@@ -45,6 +45,13 @@ const Navbar: React.FC = () => {
     }
   }, [isAuthenticated, isAdmin, isSupportOpen]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('support') === 'true') {
+      setIsSupportOpen(true);
+    }
+  }, [location.search]);
+
   const handleLogout = () => {
     localStorage.clear();
     window.location.href = '/login';

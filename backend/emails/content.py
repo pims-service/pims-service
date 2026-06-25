@@ -283,4 +283,43 @@ ASSESSMENT_OVERDUE_EMAIL = {
     'closing_team_ur': 'سائیکیورسٹی ریسرچ ٹیم',
 }
 
+TICKET_CREATED_PARTICIPANT_EMAIL = {
+    'subject_en': 'We have received your support request {ticket_number}',
+    'subject_ur': 'ہمیں آپ کی مدد کی درخواست موصول ہو گئی ہے {ticket_number}',
+    'title_en': 'Support Request Received',
+    'title_ur': 'مدد کی درخواست موصول ہو گئی',
+    'paragraphs_en': [
+        'We have received your support ticket {ticket_number} regarding "{subject}".',
+        'Our team is reviewing your query and we will get back to you as soon as possible.',
+    ],
+    'paragraphs_ur': [
+        'ہمیں "{subject}" کے بارے میں آپ کا سپورٹ ٹکٹ {ticket_number} موصول ہو گیا ہے۔',
+        'ہماری ٹیم آپ کے سوال کا جائزہ لے رہی ہے اور ہم جلد از جلد آپ سے رابطہ کریں گے۔',
+    ],
+    'closing_en': 'Warm regards,',
+    'closing_team_en': 'Psycheversity Support Team',
+    'closing_ur': 'نیک تمناؤں کے ساتھ،',
+    'closing_team_ur': 'سائیکیورسٹی سپورٹ ٹیم',
+}
+
+TICKET_UPDATED_PARTICIPANT_EMAIL = {
+    'subject_en': 'Support Ticket Update: {ticket_number}',
+    'subject_ur': 'سائیکیورسٹی سپورٹ ٹکٹ کی معلومات: {ticket_number}',
+    'title_en': 'Support Ticket Updated',
+    'title_ur': 'سپورٹ ٹکٹ اپ ڈیٹ ہو گیا',
+    'paragraphs_en': [
+        'Your support ticket {ticket_number} has been updated.',
+        'New Status: {status}',
+    ],
+    'paragraphs_ur': [
+        'آپ کے سپورٹ ٹکٹ {ticket_number} کو اپ ڈیٹ کر دیا گیا ہے۔',
+        'نئی صورتحال: {status_ur}',
+    ],
+    'closing_en': 'Warm regards,',
+    'closing_team_en': 'Psycheversity Support Team',
+    'closing_ur': 'نیک تمناؤں کے ساتھ،',
+    'closing_team_ur': 'سائیکیورسٹی سپورٹ ٹیم',
+}
+
+
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Send, Loader2, CheckCircle2, MessageSquare, Clock } from 'lucide-react';
 import api from '../services/api';
+import { useNotifications } from '../hooks/useNotifications';
 
 interface SupportModalProps {
   isOpen: boolean;
@@ -18,9 +19,18 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) => {
   const [loadingTickets, setLoadingTickets] = useState(false);
   const [expandedTicketId, setExpandedTicketId] = useState<number | null>(null);
 
+  const { ticketUpdatedTrigger } = useNotifications();
+
   useEffect(() => {
     if (isOpen) {
       fetchTickets();
+      // Only force tab switch on first open, not on WebSocket reload
+    }
+  }, [isOpen, ticketUpdatedTrigger]);
+
+  // Handle setting activeTab to history on first open
+  useEffect(() => {
+    if (isOpen) {
       setActiveTab('history');
     }
   }, [isOpen]);

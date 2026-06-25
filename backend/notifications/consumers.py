@@ -44,3 +44,10 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             'type': 'ticket_count',
             'count': count
         }))
+
+    async def ticket_updated_event(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'ticket_updated',
+            'message': event.get('message', '')
+        }))
+

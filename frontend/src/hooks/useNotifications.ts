@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 
 interface NotificationMessage {
-  type: 'notification' | 'ticket_count';
+  type: 'notification' | 'ticket_count' | 'ticket_updated';
   message?: string;
   n_type?: string;
   count?: number;
@@ -10,6 +10,7 @@ interface NotificationMessage {
 export const useNotifications = () => {
   const [ticketCount, setTicketCount] = useState<number>(0);
   const [latestNotification, setLatestNotification] = useState<any>(null);
+  const [ticketUpdatedTrigger, setTicketUpdatedTrigger] = useState<number>(0);
   const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -38,6 +39,8 @@ export const useNotifications = () => {
           }
         } else if (data.type === 'ticket_count') {
           setTicketCount(data.count ?? 0);
+        } else if (data.type === 'ticket_updated') {
+          setTicketUpdatedTrigger(prev => prev + 1);
         }
       };
 
@@ -58,5 +61,5 @@ export const useNotifications = () => {
     };
   }, []);
 
-  return { ticketCount, latestNotification };
+  return { ticketCount, latestNotification, ticketUpdatedTrigger };
 };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, AlertCircle, HelpCircle, CheckCircle2, Clock, MessageSquare, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../services/api';
+import { useNotifications } from '../hooks/useNotifications';
 
 const AdminSupportQueriesPage: React.FC = () => {
   const [tickets, setTickets] = useState<any[]>([]);
@@ -16,6 +17,8 @@ const AdminSupportQueriesPage: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [hasNext, setHasNext] = useState(false);
   const [hasPrev, setHasPrev] = useState(false);
+
+  const { ticketUpdatedTrigger } = useNotifications();
 
   const fetchTickets = async (page: number = 1) => {
     try {
@@ -47,8 +50,8 @@ const AdminSupportQueriesPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchTickets(1);
-  }, []);
+    fetchTickets(currentPage);
+  }, [currentPage, ticketUpdatedTrigger]);
 
   const handleUpdateTicket = async (id: number, status: string, notes: string, reply: string) => {
     setStatusUpdating(true);

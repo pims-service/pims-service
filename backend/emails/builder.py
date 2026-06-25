@@ -780,4 +780,162 @@ def build_assessment_due_email(message_en: str, links: dict[str, str] | None = N
     return result
 
 
+def build_ticket_created_participant_email(
+    first_name: str,
+    ticket_number: str,
+    subject: str,
+    links: dict[str, str] | None = None,
+) -> dict[str, str]:
+    from .content import TICKET_CREATED_PARTICIPANT_EMAIL
+
+    formatted_content = {
+        'subject_en': TICKET_CREATED_PARTICIPANT_EMAIL['subject_en'].format(ticket_number=ticket_number),
+        'subject_ur': TICKET_CREATED_PARTICIPANT_EMAIL['subject_ur'].format(ticket_number=ticket_number),
+        'title_en': TICKET_CREATED_PARTICIPANT_EMAIL['title_en'],
+        'title_ur': TICKET_CREATED_PARTICIPANT_EMAIL['title_ur'],
+        'paragraphs_en': [p.format(ticket_number=ticket_number, subject=subject) for p in TICKET_CREATED_PARTICIPANT_EMAIL['paragraphs_en']],
+        'paragraphs_ur': [p.format(ticket_number=ticket_number, subject=subject) for p in TICKET_CREATED_PARTICIPANT_EMAIL['paragraphs_ur']],
+        'closing_en': TICKET_CREATED_PARTICIPANT_EMAIL['closing_en'],
+        'closing_team_en': TICKET_CREATED_PARTICIPANT_EMAIL['closing_team_en'],
+        'closing_ur': TICKET_CREATED_PARTICIPANT_EMAIL['closing_ur'],
+        'closing_team_ur': TICKET_CREATED_PARTICIPANT_EMAIL['closing_team_ur'],
+    }
+
+    return _build_simple_bilingual_email(first_name, formatted_content, links=links)
+
+
+def build_ticket_updated_participant_email(
+    first_name: str,
+    ticket_number: str,
+    status: str,
+    admin_reply: str | None = None,
+    links: dict[str, str] | None = None,
+) -> dict[str, str]:
+    from .content import TICKET_UPDATED_PARTICIPANT_EMAIL
+
+    status_map_ur = {
+        'Open': 'اوپن',
+        'In Progress': 'کام جاری ہے',
+        'Resolved': 'حل شدہ',
+    }
+    status_ur = status_map_ur.get(status, status)
+
+    formatted_content = {
+        'subject_en': TICKET_UPDATED_PARTICIPANT_EMAIL['subject_en'].format(ticket_number=ticket_number),
+        'subject_ur': TICKET_UPDATED_PARTICIPANT_EMAIL['subject_ur'].format(ticket_number=ticket_number),
+        'title_en': TICKET_UPDATED_PARTICIPANT_EMAIL['title_en'],
+        'title_ur': TICKET_UPDATED_PARTICIPANT_EMAIL['title_ur'],
+        'paragraphs_en': [p.format(ticket_number=ticket_number, status=status) for p in TICKET_UPDATED_PARTICIPANT_EMAIL['paragraphs_en']],
+        'paragraphs_ur': [p.format(ticket_number=ticket_number, status_ur=status_ur) for p in TICKET_UPDATED_PARTICIPANT_EMAIL['paragraphs_ur']],
+        'closing_en': TICKET_UPDATED_PARTICIPANT_EMAIL['closing_en'],
+        'closing_team_en': TICKET_UPDATED_PARTICIPANT_EMAIL['closing_team_en'],
+        'closing_ur': TICKET_UPDATED_PARTICIPANT_EMAIL['closing_ur'],
+        'closing_team_ur': TICKET_UPDATED_PARTICIPANT_EMAIL['closing_team_ur'],
+    }
+
+    # Admin reply block
+    reply_en_html = ""
+    reply_ur_html = ""
+    reply_en_text = ""
+    reply_ur_text = ""
+    if admin_reply:
+        reply_en_html = (
+            f'<div style="margin: 18px 0; padding: 16px; background-color: #f0fdf4; '
+            f'border: 1px solid #bbf7d0; border-radius: 8px;">'
+            f'<p style="margin: 0 0 8px; font-size: 14px; font-weight: 600; color: #166534;">'
+            f'Message from Support Team:</p>'
+            f'<p style="margin: 0; font-size: 14px; color: #1f2937; white-space: pre-wrap;">{admin_reply}</p></div>'
+        )
+        reply_ur_html = (
+            f'<div dir="rtl" style="margin: 18px 0; padding: 16px; background-color: #f0fdf4; '
+            f'border: 1px solid #bbf7d0; border-radius: 8px; text-align: right;">'
+            f'<p style="margin: 0 0 8px; font-size: 15px; font-weight: 600; color: #166534;">'
+            f'سپورٹ ٹیم کا پیغام:</p>'
+            f'<p style="margin: 0; font-size: 15px; color: #1f2937; white-space: pre-wrap;">{admin_reply}</p></div>'
+        )
+        reply_en_text = f"\nMessage from Support Team:\n{admin_reply}\n"
+        reply_ur_text = f"\nسپورٹ ٹیم کا پیغام:\n{admin_reply}\n"
+
+    # CTA Button
+    base_url = settings.SITE_BASE_URL.rstrip('/')
+    support_link = f"{base_url}/dashboard?support=true"
+    cta_en, cta_ur, cta_en_text, cta_ur_text = _build_cta_button_html(
+        support_link,
+        "View Support Tickets",
+        "سپورٹ ٹکٹ دیکھیں"
+    )
+
+    return _build_simple_bilingual_email(
+        first_name,
+        formatted_content,
+        links=links,
+        extra_english_html=reply_en_html + cta_en,
+        extra_urdu_html=reply_ur_html + cta_ur,
+        extra_english_text=reply_en_text + "\n" + cta_en_text,
+        extra_urdu_text=reply_ur_text + "\n" + cta_ur_text,
+    )
+
+
+def build_ticket_created_admin_email(
+    ticket_number: str,
+    user_name: str,
+    user_email: str,
+    subject: str,
+    message: str,
+) -> dict[str, str]:
+    admin_link = f"{settings.SITE_BASE_URL.rstrip('/')}/admin/support-queries"
+    subject_line = f"New Support Ticket Raised: {ticket_number}"
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: Arial, sans-serif;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 24px 16px;">
+            <div style="background-color: #ffffff; border: 1px solid #e4e4e7; border-radius: 8px; padding: 24px;">
+                <h1 style="margin: 0 0 18px; font-size: 20px; color: #2E4E90; border-bottom: 2px solid #C8A951; padding-bottom: 10px;">
+                    New Support Ticket Raised
+                </h1>
+                <p style="font-size: 15px; color: #18181b;">A participant has raised a new support ticket.</p>
+                
+                <div style="margin: 20px 0; padding: 15px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
+                    <p style="margin: 0 0 8px; font-size: 14px;"><strong>Ticket Number:</strong> {ticket_number}</p>
+                    <p style="margin: 0 0 8px; font-size: 14px;"><strong>Submitted By:</strong> {user_name} ({user_email})</p>
+                    <p style="margin: 0 0 8px; font-size: 14px;"><strong>Subject:</strong> {subject}</p>
+                    <p style="margin: 0; font-size: 14px;"><strong>Message:</strong><br><span style="white-space: pre-wrap; display: block; margin-top: 5px; color: #3f3f46;">{message}</span></p>
+                </div>
+                
+                <div style="margin: 24px 0; text-align: center;">
+                    <a href="{admin_link}" style="background-color: #2E4E90; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">
+                        View in Admin Dashboard
+                    </a>
+                </div>
+                <hr style="border: 0; border-top: 1px solid #e4e4e7; margin: 24px 0;">
+                <p style="font-size: 12px; color: #71717a; margin: 0;">This is an automated notification. Please do not reply directly to this email.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    text_content = f"""New Support Ticket Raised: {ticket_number}
+
+Submitted By: {user_name} ({user_email})
+Subject: {subject}
+
+Message:
+{message}
+
+View and manage this ticket at: {admin_link}
+"""
+    return {
+        'subject': subject_line,
+        'html_content': html_content,
+        'text_content': text_content,
+    }
+
+
+
 

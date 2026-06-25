@@ -330,6 +330,7 @@ PARTICIPANT_EMAIL_FROM = env(
     default='Psycheversity Research Team <no-reply@psycheversity.com>',
 )
 PARTICIPANT_EMAIL_REPLY_TO = env('PARTICIPANT_EMAIL_REPLY_TO', default='support@psycheversity.com')
+SUPPORT_ADMIN_EMAIL = env('SUPPORT_ADMIN_EMAIL', default='support@psycheversity.com')
 PARTICIPANT_WITHDRAW_URL = env('PARTICIPANT_WITHDRAW_URL', default='')
 PARTICIPANT_SUPPORT_URL = env('PARTICIPANT_SUPPORT_URL', default='')
 
