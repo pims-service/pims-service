@@ -63,17 +63,25 @@ async def test_support_ticket_count_push():
         message="Issue"
     )
     
-    # Receive initial count (created)
-    response = await communicator.receive_json_from()
-    assert response["type"] == "ticket_count"
-    assert "count" in response
+    # Receive initial messages (created triggers both count and updated event)
+    response1 = await communicator.receive_json_from()
+    response2 = await communicator.receive_json_from()
+    
+    types = {response1["type"], response2["type"]}
+    assert "ticket_count" in types
+    assert "ticket_updated" in types
     
     # Update ticket (admin reply)
     ticket.admin_reply = "Resolved"
     ticket.is_read_by_user = False
     await sync_to_async(ticket.save)()
     
-    response = await communicator.receive_json_from()
-    assert response["type"] == "ticket_count"
+    # Receive update messages
+    response3 = await communicator.receive_json_from()
+    response4 = await communicator.receive_json_from()
+    
+    types_update = {response3["type"], response4["type"]}
+    assert "ticket_count" in types_update
+    assert "ticket_updated" in types_update
     
     await communicator.disconnect()
