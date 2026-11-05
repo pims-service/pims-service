@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../services/api';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +17,32 @@ const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const successMessage = location.state?.message;
   const { t } = useTranslation();
+
+  // Tracking: this is the page that opens right after a successful signup (HTTP 201).
+  // Fire conversion events ONCE per new account; the dedup key survives refresh /
+  // back-navigation, which would otherwise replay location.state.
+  useEffect(() => {
+    if (!location.state?.registered) return;
+    const dedupKey = `psy_reg_fired_${location.state.username ?? ''}`;
+    try {
+      if (sessionStorage.getItem(dedupKey)) return;
+      sessionStorage.setItem(dedupKey, '1');
+    } catch { /* storage unavailable — fall through and fire once */ }
+
+    const w = window as any;
+
+    // Meta Pixel — CompleteRegistration
+    if (typeof w.fbq === 'function') {
+      w.fbq('track', 'CompleteRegistration');
+    }
+
+    // Google Ads — Registration conversion
+    // TODO: Replace CONVERSION_LABEL with the exact label from Google Ads
+    //       once Sarah supplies it. Do NOT invent or guess the label.
+    // if (typeof w.gtag === 'function') {
+    //   w.gtag('event', 'conversion', { send_to: 'AW-877024611/CONVERSION_LABEL' });
+    // }
+  }, [location.state]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

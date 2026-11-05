@@ -177,9 +177,12 @@ const RegisterPage: React.FC = () => {
     try {
       const response = await api.post('/register/', formData);
       if (response.status === 201) {
+        // Tracking (Meta CompleteRegistration / Google Ads conversion) fires on the
+        // page that opens right after signup — see LoginPage.tsx (`registered` flag).
         setSuccess(true);
-        setTimeout(() => navigate('/login', { state: { message: 'Account created successfully. Please log in.' } }), 2000);
+        setTimeout(() => navigate('/login', { state: { message: 'Account created successfully. Please log in.', registered: true, username: formData.username } }), 2000);
       }
+
     } catch (err: any) {
       if (err.response?.data) {
         const data = err.response.data;
