@@ -12,15 +12,66 @@ GREY = '#7A7A7A'
 
 MILESTONE_SUBJECT = {
     'SIGNUP':    'Your baseline wellbeing report / آپ کی بیس لائن فلاح رپورٹ',
-    '3_MONTHS':  'Your month-3 wellbeing report / آپ کی تین ماہ فلاح رپورٹ',
+    '1_MONTH':   'Your month-1 wellbeing report / آپ کی ایک ماہ فلاح رپورٹ',
+    '3_MONTHS':  'Your month-3 wellbeing report & certificate / آپ کی تین ماہ فلاح رپورٹ اور سرٹیفکیٹ',
     '1_YEAR':    'Your month-12 wellbeing report / آپ کی بارہ ماہ فلاح رپورٹ',
 }
 
 MILESTONE_FILENAME = {
-    'SIGNUP':   'pims_baseline_report.pdf',
-    '3_MONTHS': 'pims_month3_report.pdf',
-    '1_YEAR':   'pims_month12_report.pdf',
+    'SIGNUP':   'psycheversity_baseline_report.pdf',
+    '1_MONTH':  'psycheversity_month1_report.pdf',
+    '3_MONTHS': 'psycheversity_month3_report.pdf',
+    '1_YEAR':   'psycheversity_month12_report.pdf',
 }
+
+
+def _load_signature_base64():
+    """Try common locations for the signature image; return base64 string or empty string."""
+    from django.conf import settings as djsettings
+    candidates = [
+        os.path.join(djsettings.BASE_DIR, 'static', 'signature.jpeg'),
+        os.path.join(djsettings.BASE_DIR, 'static', 'signature.png'),
+        os.path.join(djsettings.BASE_DIR, 'signature.jpeg'),
+        os.path.join(os.path.dirname(djsettings.BASE_DIR), 'signature.jpeg'),
+        os.path.join(os.path.dirname(djsettings.BASE_DIR), 'signature.png'),
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            try:
+                with open(path, 'rb') as f:
+                    return base64.b64encode(f.read()).decode('utf-8')
+            except OSError:
+                continue
+    return ''
+
+
+def _build_certificate_pdf(user):
+    """
+    Generate an official landscape Certificate of Completion PDF using WeasyPrint.
+    """
+    from django.conf import settings as djsettings
+    from django.template.loader import render_to_string
+    from django.utils import timezone
+    from weasyprint import HTML
+
+    logo_b64 = _load_logo_base64()
+    signature_b64 = _load_signature_base64()
+    font_path = os.path.join(djsettings.BASE_DIR, 'static', 'fonts', 'JameelNooriNastaleeq.ttf')
+    recipient_name = user.full_name or user.display_name or user.username
+    issue_date = timezone.localdate().strftime('%d %B %Y')
+
+    context = {
+        'logo_image': logo_b64,
+        'signature_image': signature_b64,
+        'font_path': font_path,
+        'recipient_name': recipient_name,
+        'issue_date': issue_date,
+        'user_id': user.username or str(user.id),
+    }
+
+    html_string = render_to_string('questionnaires/certificate_of_completion.html', context)
+    return HTML(string=html_string).write_pdf()
+
 
 
 def _build_bar_chart(scores):
@@ -173,6 +224,7 @@ def send_perma_snapshot_report_task(self, response_set_id, milestone):
         # ── Milestone display label ───────────────────────────────────────────
         milestone_labels = {
             'SIGNUP':   ('Baseline', 'بیس لائن'),
+            '1_MONTH':  ('Month 1',  'ایک ماہ'),
             '3_MONTHS': ('Month 3',  'تین ماہ'),
             '1_YEAR':   ('Month 12', 'بارہ ماہ'),
         }
@@ -189,35 +241,51 @@ def send_perma_snapshot_report_task(self, response_set_id, milestone):
         html_string = render_to_string('questionnaires/perma_snapshot_report.html', context)
         pdf_bytes = HTML(string=html_string).write_pdf()
 
-        # ── Send email ────────────────────────────────────────────────────────
+        # ── Prepare attachments ───────────────────────────────────────────────
         subject = MILESTONE_SUBJECT.get(milestone, 'Your wellbeing report')
-        filename = MILESTONE_FILENAME.get(milestone, 'pims_report.pdf')
+        filename = MILESTONE_FILENAME.get(milestone, 'psycheversity_report.pdf')
+        attachments = [(filename, pdf_bytes, 'application/pdf')]
 
+        # Attach Certificate of Completion for 3_MONTHS (and 1_YEAR)
+        if milestone in ('3_MONTHS', '1_YEAR'):
+            try:
+                cert_pdf_bytes = _build_certificate_pdf(user)
+                attachments.append(('psycheversity_certificate_of_completion.pdf', cert_pdf_bytes, 'application/pdf'))
+            except Exception as cert_err:
+                logger.error("Failed to generate Certificate of Completion PDF for user %s: %s", user.username, cert_err)
+
+        # ── Send email ────────────────────────────────────────────────────────
         _send_participant_email(
             {
                 'subject': subject,
                 'html_content': (
                     '<p>Dear Participant,</p>'
-                    '<p>Please find your PERMA Profiler wellbeing report attached.</p>'
+                    '<p>Please find your PERMA Profiler wellbeing report '
+                    + ('and official Certificate of Completion ' if milestone == '3_MONTHS' else '')
+                    + 'attached.</p>'
                     '<p dir="rtl" style="text-align:right;font-family:Arial,sans-serif;">'
-                    'عزیز شریک،<br>براہ کرم منسلک PERMA پروفائلر فلاح رپورٹ دیکھیں۔</p>'
+                    'عزیز شریک،<br>براہ کرم منسلک PERMA پروفائلر فلاح رپورٹ '
+                    + ('اور تکمیل کا سرٹیفکیٹ ' if milestone == '3_MONTHS' else '')
+                    + 'دیکھیں۔</p>'
                     '<p>Thank you for your participation.</p>'
                     '<p dir="rtl" style="text-align:right;font-family:Arial,sans-serif;">'
                     'آپ کی شرکت کا شکریہ۔</p>'
                 ),
                 'text_content': (
                     'Dear Participant,\n\n'
-                    'Please find your PERMA Profiler wellbeing report attached.\n\n'
+                    'Please find your PERMA Profiler wellbeing report '
+                    + ('and official Certificate of Completion ' if milestone == '3_MONTHS' else '')
+                    + 'attached.\n\n'
                     'Thank you for your participation.'
                 ),
             },
             user.email,
-            attachments=[(filename, pdf_bytes, 'application/pdf')],
+            attachments=attachments,
         )
 
         # ── Audit log ─────────────────────────────────────────────────────────
         PermaReportLog.objects.create(user=user, milestone=milestone, status='sent')
-        logger.info("PERMA report: sent to %s for milestone=%s", user.email, milestone)
+        logger.info("PERMA report: sent to %s for milestone=%s (attachments=%d)", user.email, milestone, len(attachments))
         return {'status': 'sent', 'recipient': user.email, 'milestone': milestone}
 
     except Exception as exc:
@@ -237,13 +305,13 @@ def send_perma_snapshot_report_task(self, response_set_id, milestone):
 @shared_task
 def check_and_send_perma_reports():
     """
-    Daily cron: find COMPLETED PSYCHOMETRIC assessments for 3_MONTHS and 1_YEAR
+    Daily cron: find COMPLETED PSYCHOMETRIC assessments for 1_MONTH, 3_MONTHS, and 1_YEAR
     that have not yet had a report sent, and fire the report task for each.
     Acts as a catch-up safety net alongside the event-driven triggers in the serializer.
     """
     from questionnaires.models import ResponseSet, PermaReportLog
 
-    report_milestones = ('3_MONTHS', '1_YEAR')
+    report_milestones = ('1_MONTH', '3_MONTHS', '1_YEAR')
     qs = ResponseSet.objects.filter(
         status='COMPLETED',
         milestone__in=report_milestones,

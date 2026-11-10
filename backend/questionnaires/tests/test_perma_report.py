@@ -176,9 +176,9 @@ class TestSendPermaSnapshotReportTask:
     # ── Happy path per milestone ──────────────────────────────────────────────
 
     @pytest.mark.parametrize('milestone,expected_filename,expected_subject_part', [
-        ('SIGNUP',    'pims_baseline_report.pdf',  'baseline'),
-        ('3_MONTHS',  'pims_month3_report.pdf',    'month-3'),
-        ('1_YEAR',    'pims_month12_report.pdf',   'month-12'),
+        ('SIGNUP',    'psycheversity_baseline_report.pdf',  'baseline'),
+        ('1_MONTH',   'psycheversity_month1_report.pdf',    'month-1'),
+        ('1_YEAR',    'psycheversity_month12_report.pdf',   'month-12'),
     ])
     def test_sends_email_with_pdf_for_each_milestone(
         self, user, psych_q, milestone, expected_filename, expected_subject_part
@@ -197,11 +197,36 @@ class TestSendPermaSnapshotReportTask:
         assert sent.to == [user.email]
         assert expected_subject_part.lower() in sent.subject.lower()
 
-        assert len(sent.attachments) == 1
+        assert len(sent.attachments) >= 1
         fname, pdf_data, mime = sent.attachments[0]
         assert fname == expected_filename
         assert mime == 'application/pdf'
         assert len(pdf_data) > 0
+
+    def test_3months_milestone_sends_report_and_certificate(self, user, psych_q):
+        """3_MONTHS milestone must send BOTH the PERMA report PDF and the Certificate of Completion PDF."""
+        rs = _make_rs(user, psych_q, '3_MONTHS')
+        mail.outbox.clear()
+
+        result = send_perma_snapshot_report_task.apply(args=[str(rs.id), '3_MONTHS']).get()
+
+        assert result['status'] == 'sent'
+        assert result['milestone'] == '3_MONTHS'
+        assert len(mail.outbox) == 1
+
+        sent = mail.outbox[0]
+        assert sent.to == [user.email]
+        assert 'month-3' in sent.subject.lower()
+
+        # Must have 2 attachments
+        assert len(sent.attachments) == 2
+        filenames = [att[0] for att in sent.attachments]
+        assert 'psycheversity_month3_report.pdf' in filenames
+        assert 'psycheversity_certificate_of_completion.pdf' in filenames
+
+        for fname, data, mime in sent.attachments:
+            assert mime == 'application/pdf'
+            assert data[:4] == b'%PDF'
 
     def test_audit_log_created_on_success(self, user, psych_q):
         rs = _make_rs(user, psych_q, 'SIGNUP')

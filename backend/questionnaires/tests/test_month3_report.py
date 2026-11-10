@@ -68,9 +68,12 @@ class TestMonth3Report:
         email = mail.outbox[0]
         assert email.to == ['participant@test.com']
         assert 'month-3' in email.subject.lower()
-        assert len(email.attachments) == 1
+        # Month-3 email carries the report plus the certificate of completion.
+        assert [a[0] for a in email.attachments] == [
+            'psycheversity_month3_report.pdf', 'psycheversity_certificate_of_completion.pdf',
+        ]
         fname, pdf_data, mime = email.attachments[0]
-        assert fname == 'pims_month3_report.pdf'
+        assert fname == 'psycheversity_month3_report.pdf'
         assert mime == 'application/pdf'
         assert len(pdf_data) > 0
 

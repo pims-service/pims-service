@@ -307,6 +307,10 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'questionnaires.tasks.check_and_send_perma_reports',
         'schedule': crontab(hour=8, minute=0),
     },
+    'assign-unassigned-participants': {
+        'task': 'groups.tasks.assign_unassigned_participants',
+        'schedule': crontab(minute=5),
+    },
 }
 # Spectacular Settings
 SPECTACULAR_SETTINGS = {
@@ -325,6 +329,11 @@ EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='no-reply@psycheversity.com')
 SITE_BASE_URL = env('SITE_BASE_URL', default='https://psycheversity.com')
+
+# Signups from this moment on must tick the email-consent box before receiving manual
+# (admin-sent) emails; earlier participants receive them unless they unsubscribe.
+import datetime as _dt
+EMAIL_CONSENT_REQUIRED_FROM = _dt.datetime(2026, 11, 9, tzinfo=_dt.timezone(_dt.timedelta(hours=5)))  # 9 Nov, Pakistan time
 PARTICIPANT_EMAIL_FROM = env(
     'PARTICIPANT_EMAIL_FROM',
     default='Psycheversity Research Team <no-reply@psycheversity.com>',

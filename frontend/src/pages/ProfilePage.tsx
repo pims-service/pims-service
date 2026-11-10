@@ -13,6 +13,21 @@ const ProfilePage: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [emailPrefSaving, setEmailPrefSaving] = useState(false);
+  const [emailPrefError, setEmailPrefError] = useState<string | null>(null);
+
+  const handleEmailPreference = async (receive: boolean) => {
+    setEmailPrefSaving(true);
+    setEmailPrefError(null);
+    try {
+      const { data } = await api.patch('/users/profile/', { receive_study_emails: receive });
+      setUser(data);
+    } catch {
+      setEmailPrefError('Could not save your email preference. Please try again.');
+    } finally {
+      setEmailPrefSaving(false);
+    }
+  };
 
   React.useEffect(() => {
     const fetchUser = async () => {
@@ -121,6 +136,28 @@ const ProfilePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {!isAdmin && (
+      <div className="bg-white border border-zinc-200 rounded-xl shadow-sm p-6">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            className="h-4 w-4 mt-1 shrink-0 rounded border-2 border-black text-black focus:ring-black cursor-pointer"
+            checked={!!user?.receive_study_emails}
+            disabled={emailPrefSaving}
+            onChange={e => handleEmailPreference(e.target.checked)}
+          />
+          <span>
+            <span className="block text-sm font-bold text-zinc-900">I agree to receive emails about this study.</span>
+            <span className="block font-urdu text-sm text-zinc-500 mt-1">میں اس تحقیق کے بارے میں ای میلز موصول کرنے سے اتفاق کرتا/کرتی ہوں۔</span>
+            <span className="block text-xs text-zinc-500 mt-1">
+              Study reminders for your assessments are still sent. / آپ کی اسیسمنٹس کی یاد دہانیاں پھر بھی بھیجی جائیں گی۔
+            </span>
+          </span>
+        </label>
+        {emailPrefError && <p className="text-xs text-red-600 mt-2">{emailPrefError}</p>}
+      </div>
+      )}
 
       {!isAdmin && (
       <div className="bg-white border border-red-200 rounded-xl shadow-sm p-6 space-y-4">

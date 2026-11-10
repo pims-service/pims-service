@@ -33,7 +33,7 @@ const LoginPage: React.FC = () => {
 
     // Meta Pixel — CompleteRegistration
     if (typeof w.fbq === 'function') {
-      w.fbq('track', 'CompleteRegistration');
+      w.fbq('track', 'CompleteRegistration', {}, { eventID: `reg_${location.state.userId ?? ''}` });
     }
 
     // Google Ads — Registration conversion

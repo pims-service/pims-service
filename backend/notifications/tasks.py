@@ -188,7 +188,7 @@ def send_longitudinal_milestone_reminders():
         label = milestone_labels.get(due_milestone, 'follow-up')
         
         if user.has_two_consecutive_missed_waves:
-            msg = f"PIMS Final Re-engagement: We noticed you missed your previous follow-ups. This is our final attempt to re-engage you for the {label} assessment. Please complete it to stay active in the study."
+            msg = f"Psycheversity Final Re-engagement: We noticed you missed your previous follow-ups. This is our final attempt to re-engage you for the {label} assessment. Please complete it to stay active in the study."
         else:
             msg = f"Hello! Your {label} assessment is now due. Please complete it today!"
 
@@ -340,7 +340,7 @@ def run_assessment_graduated_reminders():
             message = f"Hello! Your {label} assessment is 3 days overdue. Please click the link on your dashboard to complete it."
         elif overdue_days == 7:
             n_type = 'sms'
-            message = f"PIMS Alert: Your {label} assessment is now 7 days overdue. Please complete it soon to continue in the study."
+            message = f"Psycheversity Alert: Your {label} assessment is now 7 days overdue. Please complete it soon to continue in the study."
         elif overdue_days >= 10:
             # Create a Call ticket
             exists = SupportTicket.objects.filter(
@@ -371,3 +371,94 @@ def run_assessment_graduated_reminders():
                 reminders_sent += 1
                 
     return f"Graduated reminders sent: {reminders_sent}. Support call tickets created: {tickets_created}."
+
+
+# ── Manual (admin-sent) emails ───────────────────────────────────────────────
+
+# Sent in small batches so the mail server does not throttle or block us.
+MANUAL_EMAILS_PER_MINUTE = 20
+
+
+@shared_task
+def send_manual_campaign_task(campaign_id, user_ids=None):
+    """
+    Resolves recipients at send time (so later unsubscribes are honoured), logs one
+    Notification per recipient and schedules the sends MANUAL_EMAILS_PER_MINUTE a minute.
+    """
+    from django.contrib.auth import get_user_model
+    from django.utils import timezone
+    from notifications.models import ManualEmailCampaign, Notification
+    from notifications.manual_email import segment_recipients
+
+    campaign = ManualEmailCampaign.objects.get(pk=campaign_id)
+    if campaign.status != 'queued':
+        return {'status': 'skipped', 'reason': f'campaign already {campaign.status}'}
+
+    if campaign.segment == 'test':
+        recipients = list(get_user_model().objects.filter(pk__in=user_ids or []))
+    else:
+        recipients = segment_recipients(campaign.segment, user_ids)
+
+    now = timezone.now()
+    notifications = [
+        Notification.objects.create(
+            user=user, n_type='email', message=f"Manual email: {campaign.subject}",
+            scheduled_time=now, status='pending', campaign=campaign,
+        )
+        for user in recipients
+    ]
+    campaign.recipient_count = len(notifications)
+    campaign.status = 'sending' if notifications else 'done'
+    campaign.save(update_fields=['recipient_count', 'status'])
+
+    for i, n in enumerate(notifications):
+        send_manual_email_task.apply_async(args=[n.pk], countdown=(i // MANUAL_EMAILS_PER_MINUTE) * 60)
+    return {'status': 'scheduled', 'recipients': len(notifications)}
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=120)
+def send_manual_email_task(self, notification_id):
+    from django.conf import settings
+    from django.core.mail import EmailMultiAlternatives
+    from notifications.models import Notification
+    from notifications.manual_email import build_manual_email
+
+    n = Notification.objects.select_related('user', 'campaign').filter(pk=notification_id).first()
+    if n is None or n.status != 'pending':
+        return {'status': 'skipped'}  # already handled (e.g. task redelivered)
+
+    user, campaign = n.user, n.campaign
+    # Re-check right before sending: the participant may have unsubscribed meanwhile.
+    if campaign.segment != 'test' and not user.accepts_manual_emails:
+        n.status = 'failed'
+        n.message = f"{n.message} (skipped: unsubscribed)"
+        n.save(update_fields=['status', 'message'])
+    else:
+        content = build_manual_email(user, campaign.subject, campaign.body)
+        # Test sends go to the team inbox, not the admin account's own address.
+        recipient = settings.SUPPORT_ADMIN_EMAIL if campaign.segment == 'test' else user.email
+        msg = EmailMultiAlternatives(
+            subject=content['subject'],
+            body=content['text_content'],
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[recipient],
+            headers={
+                'List-Unsubscribe': f"<{content['unsubscribe_url']}>",
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
+        )
+        msg.attach_alternative(content['html_content'], 'text/html')
+        try:
+            msg.send(fail_silently=False)
+            n.status = 'sent'
+            n.save(update_fields=['status'])
+        except Exception as exc:
+            logger.error("Manual email %s to user %s failed: %s", notification_id, user.pk, exc)
+            if self.request.retries < self.max_retries:
+                raise self.retry(exc=exc)
+            n.status = 'failed'
+            n.save(update_fields=['status'])
+
+    if not campaign.notifications.filter(status='pending').exists():
+        type(campaign).objects.filter(pk=campaign.pk).update(status='done')
+    return {'status': n.status}

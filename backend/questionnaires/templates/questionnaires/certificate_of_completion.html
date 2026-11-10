@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Certificate of Completion</title>
+<style>
+@page {
+    size: A4 landscape;
+    margin: 0;
+}
+
+@font-face {
+    font-family: 'JameelNastaleeq';
+    src: url('file://{{ font_path }}');
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 12mm;
+    background: #ffffff;
+    color: #18181b;
+    height: 100vh;
+}
+
+/* ── Certificate Outer Border Frame ── */
+.certificate-frame {
+    border: 4px double #2E4E90;
+    outline: 2px solid #C8A951;
+    outline-offset: -12px;
+    padding: 24px 32px;
+    height: 100%;
+    position: relative;
+    background: #ffffff;
+}
+
+.inner-border {
+    border: 1px solid #e2e8f0;
+    height: 100%;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: center;
+}
+
+/* ── Header & Logo ── */
+.header-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+}
+.logo-cell {
+    text-align: center;
+    vertical-align: middle;
+}
+.logo-img {
+    height: 55px;
+    width: auto;
+}
+.org-title {
+    font-size: 11pt;
+    font-weight: bold;
+    color: #2E4E90;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+/* ── Certificate Titles ── */
+.cert-main-title {
+    font-size: 26pt;
+    font-weight: bold;
+    color: #2E4E90;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin: 8px 0 2px 0;
+}
+.cert-ur-title {
+    font-family: 'JameelNastaleeq', serif;
+    font-size: 20pt;
+    color: #C8A951;
+    direction: rtl;
+    margin-bottom: 12px;
+}
+
+/* ── Recipient Section ── */
+.presentation-text {
+    font-size: 10pt;
+    color: #52525b;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.recipient-name {
+    font-size: 22pt;
+    font-weight: bold;
+    color: #18181b;
+    border-bottom: 2px solid #C8A951;
+    display: inline-block;
+    padding: 0 30px 4px 30px;
+    margin-bottom: 12px;
+}
+
+/* ── Completion Text ── */
+.completion-desc-en {
+    font-size: 10.5pt;
+    color: #3f3f46;
+    line-height: 1.5;
+    max-width: 680px;
+    margin: 0 auto 6px auto;
+}
+
+.completion-desc-ur {
+    font-family: 'JameelNastaleeq', serif;
+    font-size: 13.5pt;
+    color: #3f3f46;
+    direction: rtl;
+    line-height: 1.7;
+    max-width: 680px;
+    margin: 0 auto 16px auto;
+}
+
+/* ── Footer Metadata & Signatures ── */
+.footer-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+.footer-cell {
+    width: 33.33%;
+    vertical-align: bottom;
+    text-align: center;
+    font-size: 8.5pt;
+    color: #71717a;
+}
+.signature-line {
+    border-top: 1px solid #a1a1aa;
+    width: 160px;
+    margin: 0 auto 4px auto;
+}
+.sig-name {
+    font-weight: bold;
+    color: #2E4E90;
+    font-size: 9pt;
+}
+.sig-title {
+    font-size: 7.5pt;
+    color: #71717a;
+}
+.meta-label {
+    font-weight: bold;
+    color: #2E4E90;
+}
+</style>
+</head>
+<body>
+
+<div class="certificate-frame">
+  <div class="inner-border">
+
+    <!-- Header -->
+    <table class="header-table">
+      <tr>
+        <td class="logo-cell">
+          {% if logo_image %}
+            <img class="logo-img" src="data:image/png;base64,{{ logo_image }}" alt="Pakistan Institute of Mind Sciences logo">
+          {% else %}
+            <div class="org-title">Pakistan Institute of Mind Sciences</div>
+          {% endif %}
+          <div class="org-title">Psycheversity Wellbeing Study</div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Certificate Title -->
+    <div>
+      <div class="cert-main-title">Certificate of Completion</div>
+      <div class="cert-ur-title">تکمیل کا سرٹیفکیٹ</div>
+    </div>
+
+    <!-- Presentation & Recipient Name -->
+    <div>
+      <div class="presentation-text">This certificate is proudly presented to</div>
+      <div class="recipient-name">{{ recipient_name }}</div>
+    </div>
+
+    <!-- Award Description -->
+    <div>
+      <div class="completion-desc-en">
+        For successfully completing the <strong>3-Month Psychological Wellbeing Program</strong>, 
+        including all initial assessment modules and longitudinal reflection exercises.
+      </div>
+      <div class="completion-desc-ur">
+        3 ماہ کا نفسیاتی فلاح و بہبود پروگرام، بشمول تمام ابتدائی جائزے اور معلوماتی تحریری مشقیں، کامیابی سے مکمل کرنے پر یہ سرٹیفکیٹ پیش کیا جاتا ہے۔
+      </div>
+    </div>
+
+    <!-- Footer: Issue Date, Verification, Signatures -->
+    <table class="footer-table">
+      <tr>
+        <td class="footer-cell" style="text-align: left;">
+          <div><span class="meta-label">Date of Issue:</span> {{ issue_date }}</div>
+          <div><span class="meta-label">Participant ID:</span> {{ user_id }}</div>
+        </td>
+        <td class="footer-cell">
+          <div style="font-size: 7.5pt; color: #a1a1aa;">
+            Verified Document &bull; Psycheversity Research Office<br>
+            www.psycheversity.com
+          </div>
+        </td>
+        <td class="footer-cell" style="text-align: right; vertical-align: bottom;">
+          <div style="display: inline-block; text-align: center; width: 190px;">
+            {% if signature_image %}
+              <img src="data:image/png;base64,{{ signature_image }}" style="height: 50px; max-width: 180px; width: auto; display: block; margin: 0 auto -6px auto; mix-blend-mode: multiply;" alt="Signature">
+            {% endif %}
+            <div class="signature-line"></div>
+            <div class="sig-name">Psycheversity Research Team</div>
+            <div class="sig-title">Pakistan Institute of Mind Sciences</div>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+  </div>
+</div>
+
+</body>
+</html>

@@ -239,6 +239,41 @@ def send_ticket_created_admin_email_task(self, ticket_id: int):
     max_retries=3,
     default_retry_delay=60,
 )
+def send_safety_alert_admin_email_task(self, message: str, notification_ids: list[int] | None = None):
+    """
+    Emails a suicide-risk protocol alert to the team inbox (SUPPORT_ADMIN_EMAIL), once,
+    and marks the matching in-app admin notifications sent/failed.
+    """
+    from django.core.mail import EmailMultiAlternatives
+    from notifications.models import Notification
+
+    recipient = settings.SUPPORT_ADMIN_EMAIL
+    review_link = f"{settings.SITE_BASE_URL.rstrip('/')}/admin/safety-risk"
+    msg = EmailMultiAlternatives(
+        subject='[Psycheversity] CRITICAL SAFETY ALERT: immediate follow-up required',
+        body=f"{message}\n\nReview in the admin Safety Risk page: {review_link}",
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[recipient],
+    )
+    notifications = Notification.objects.filter(pk__in=notification_ids or [])
+    try:
+        msg.send(fail_silently=False)
+    except Exception as exc:
+        logger.error('Error sending safety alert email to %s: %s', recipient, exc)
+        if self.request.retries < self.max_retries:
+            raise self.retry(exc=exc) from exc
+        notifications.update(status='failed')
+        raise
+    notifications.update(status='sent')
+    logger.info('Sent safety alert email to %s', recipient)
+    return {'status': 'sent', 'recipient': recipient}
+
+
+@shared_task(
+    bind=True,
+    max_retries=3,
+    default_retry_delay=60,
+)
 def send_ticket_updated_participant_email_task(self, ticket_id: int):
     from support.models import SupportTicket
     from .builder import build_ticket_updated_participant_email, get_first_name

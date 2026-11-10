@@ -59,6 +59,11 @@ class User(AbstractUser):
     has_completed_t2 = models.BooleanField(default=False)
     t2_completed_at = models.DateTimeField(null=True, blank=True)  # Original consents (migrated/supported for now)
     email_consent = models.BooleanField(default=False)
+    # When email_consent was last given (signup checkbox or profile). Null for participants
+    # who signed up before the checkbox existed (see settings.EMAIL_CONSENT_REQUIRED_FROM).
+    email_consent_at = models.DateTimeField(null=True, blank=True)
+    # Set by the unsubscribe link or the profile toggle; blocks all manual (admin) emails.
+    email_unsubscribed_at = models.DateTimeField(null=True, blank=True)
     whatsapp_consent = models.BooleanField(default=False)
     
     # Disqualification state
@@ -69,6 +74,31 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+    @property
+    def accepts_manual_emails(self):
+        """
+        Whether admin-sent (manual) emails may go to this user's inbox.
+        Signups from EMAIL_CONSENT_REQUIRED_FROM onward need explicit consent; earlier
+        participants are included unless they unsubscribed.
+        """
+        if self.email_unsubscribed_at is not None:
+            return False
+        from django.conf import settings
+        if self.created_at and self.created_at >= settings.EMAIL_CONSENT_REQUIRED_FROM:
+            return self.email_consent
+        return True
+
+    def set_email_consent(self, value: bool):
+        """Records an opt-in or opt-out (profile toggle or unsubscribe link)."""
+        now = timezone.now()
+        self.email_consent = bool(value)
+        if value:
+            self.email_consent_at = now
+            self.email_unsubscribed_at = None
+        else:
+            self.email_unsubscribed_at = now
+        self.save(update_fields=['email_consent', 'email_consent_at', 'email_unsubscribed_at'])
 
     @property
     def current_activity_state(self):

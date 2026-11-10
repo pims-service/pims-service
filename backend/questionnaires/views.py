@@ -143,17 +143,51 @@ class ResponseSetSubmitView(generics.UpdateAPIView):
         # Users can only submit their own response sets
         return super().get_queryset().filter(user=self.request.user, status__in=['DRAFT', 'COMPLETED'])
 
+    @staticmethod
+    def _is_first_completed(instance, **filters):
+        """True when instance is completed, matches filters, and no other completed set does."""
+        return (
+            instance.status == 'COMPLETED'
+            and ResponseSet.objects.filter(pk=instance.pk, **filters).exists()
+            and not ResponseSet.objects.filter(
+                user_id=instance.user_id, status='COMPLETED', **filters
+            ).exclude(pk=instance.pk).exists()
+        )
+
+    def _with_marketing_signal(self, instance, data):
+        # Marketing signals (neutral, no personal data) for Meta pixel events. Computed from
+        # stored state, so a retried submit (reply lost in transit) reports the same answer as
+        # the original; the client dedupes each event with a once-per-user flag.
+        data = dict(data)
+        # ParticipantActive: first completed baseline (SIGNUP psychometric) assessment.
+        data['first_active_submission'] = self._is_first_completed(
+            instance, milestone='SIGNUP', questionnaire__assessment_type='PSYCHOMETRIC',
+        )
+        # EligibleSignup: passed the screener and finished the sociodemographic form.
+        user = type(instance.user).objects.only(
+            'has_completed_sociodemographic', 'is_disqualified'
+        ).get(pk=instance.user_id)
+        data['eligible_signup'] = bool(
+            user.has_completed_sociodemographic
+            and not user.is_disqualified
+            and self._is_first_completed(instance, questionnaire__assessment_type='SOCIODEMOGRAPHIC')
+        )
+        # Completed7Day: the 7-day check (7_DAYS milestone) is completed.
+        data['completed_7day'] = self._is_first_completed(instance, milestone='7_DAYS')
+        data['user_id'] = instance.user_id
+        return data
+
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         if instance.status == 'COMPLETED':
             serializer = self.get_serializer(instance)
-            return DRFResponse(serializer.data, status=status.HTTP_200_OK)
-        
+            return DRFResponse(self._with_marketing_signal(instance, serializer.data), status=status.HTTP_200_OK)
+
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        return DRFResponse(serializer.data)
+        return DRFResponse(self._with_marketing_signal(instance, serializer.data))
 
     def post(self, request, *args, **kwargs):
         # Alias POST to perform the update
