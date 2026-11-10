@@ -720,16 +720,16 @@ def build_assessment_due_email(message_en: str, links: dict[str, str] | None = N
             "السلام علیکم! آپ کا 1 سال کا فالو اپ اسیسمنٹ اب دستیاب ہے۔ براہِ کرم اسے آج ہی مکمل کریں۔",
 
         # Final Re-engagement
-        "PIMS Final Re-engagement: We noticed you missed your previous follow-ups. This is our final attempt to re-engage you for the 7-day post-test assessment. Please complete it to stay active in the study.":
-            "پی آئی ایم ایس فائنل دوبارہ شمولیت: ہم نے دیکھا کہ آپ پچھلے فالو اپس مکمل نہیں کر پائے۔ یہ آپ کو 7 روزہ پوسٹ ٹیسٹ اسیسمنٹ کے لیے شامل کرنے کی ہماری آخری کوشش ہے۔ مطالعہ میں فعال رہنے کے لیے براہِ کرم اسے مکمل کریں۔",
-        "PIMS Final Re-engagement: We noticed you missed your previous follow-ups. This is our final attempt to re-engage you for the 1-month follow-up assessment. Please complete it to stay active in the study.":
-            "پی آئی ایم ایس فائنل دوبارہ شمولیت: ہم نے دیکھا کہ آپ پچھلے فالو اپس مکمل نہیں کر پائے۔ یہ آپ کو 1 ماہ کے فالو اپ اسیسمنٹ کے لیے شامل کرنے کی ہماری آخری کوشش ہے۔ مطالعہ میں فعال رہنے کے لیے براہِ کرم اسے مکمل کریں۔",
-        "PIMS Final Re-engagement: We noticed you missed your previous follow-ups. This is our final attempt to re-engage you for the 3-month follow-up assessment. Please complete it to stay active in the study.":
-            "پی آئی ایم ایس فائنل دوبارہ شمولیت: ہم نے دیکھا کہ آپ پچھلے فالو اپس مکمل نہیں کر پائے۔ یہ آپ کو 3 ماہ کے فالو اپ اسیسمنٹ کے لیے شامل کرنے کی ہماری آخری کوشش ہے۔ مطالعہ میں فعال رہنے کے لیے براہِ کرم اسے مکمل کریں۔",
-        "PIMS Final Re-engagement: We noticed you missed your previous follow-ups. This is our final attempt to re-engage you for the 6-month follow-up assessment. Please complete it to stay active in the study.":
-            "پی آئی ایم ایس فائنل دوبارہ شمولیت: ہم نے دیکھا کہ آپ پچھلے فالو اپس مکمل نہیں کر پائے۔ یہ آپ کو 6 ماہ کے فالو اپ اسیسمنٹ کے لیے شامل کرنے کی ہماری آخری کوشش ہے۔ مطالعہ میں فعال رہنے کے لیے براہِ کرم اسے مکمل کریں۔",
-        "PIMS Final Re-engagement: We noticed you missed your previous follow-ups. This is our final attempt to re-engage you for the 1-year follow-up assessment. Please complete it to stay active in the study.":
-            "پی آئی ایم ایس فائنل دوبارہ شمولیت: ہم نے دیکھا کہ آپ پچھلے فالو اپس مکمل نہیں کر پائے۔ یہ آپ کو 1 سال کے فالو اپ اسیسمنٹ کے لیے شامل کرنے کی ہماری آخری کوشش ہے۔ مطالعہ میں فعال رہنے کے لیے براہِ کرم اسے مکمل کریں۔",
+        "Psycheversity Final Re-engagement: We noticed you missed your previous follow-ups. This is our final attempt to re-engage you for the 7-day post-test assessment. Please complete it to stay active in the study.":
+            "سائیکیورسٹی فائنل دوبارہ شمولیت: ہم نے دیکھا کہ آپ پچھلے فالو اپس مکمل نہیں کر پائے۔ یہ آپ کو 7 روزہ پوسٹ ٹیسٹ اسیسمنٹ کے لیے شامل کرنے کی ہماری آخری کوشش ہے۔ مطالعہ میں فعال رہنے کے لیے براہِ کرم اسے مکمل کریں۔",
+        "Psycheversity Final Re-engagement: We noticed you missed your previous follow-ups. This is our final attempt to re-engage you for the 1-month follow-up assessment. Please complete it to stay active in the study.":
+            "سائیکیورسٹی فائنل دوبارہ شمولیت: ہم نے دیکھا کہ آپ پچھلے فالو اپس مکمل نہیں کر پائے۔ یہ آپ کو 1 ماہ کے فالو اپ اسیسمنٹ کے لیے شامل کرنے کی ہماری آخری کوشش ہے۔ مطالعہ میں فعال رہنے کے لیے براہِ کرم اسے مکمل کریں۔",
+        "Psycheversity Final Re-engagement: We noticed you missed your previous follow-ups. This is our final attempt to re-engage you for the 3-month follow-up assessment. Please complete it to stay active in the study.":
+            "سائیکیورسٹی فائنل دوبارہ شمولیت: ہم نے دیکھا کہ آپ پچھلے فالو اپس مکمل نہیں کر پائے۔ یہ آپ کو 3 ماہ کے فالو اپ اسیسمنٹ کے لیے شامل کرنے کی ہماری آخری کوشش ہے۔ مطالعہ میں فعال رہنے کے لیے براہِ کرم اسے مکمل کریں۔",
+        "Psycheversity Final Re-engagement: We noticed you missed your previous follow-ups. This is our final attempt to re-engage you for the 6-month follow-up assessment. Please complete it to stay active in the study.":
+            "سائیکیورسٹی فائنل دوبارہ شمولیت: ہم نے دیکھا کہ آپ پچھلے فالو اپس مکمل نہیں کر پائے۔ یہ آپ کو 6 ماہ کے فالو اپ اسیسمنٹ کے لیے شامل کرنے کی ہماری آخری کوشش ہے۔ مطالعہ میں فعال رہنے کے لیے براہِ کرم اسے مکمل کریں۔",
+        "Psycheversity Final Re-engagement: We noticed you missed your previous follow-ups. This is our final attempt to re-engage you for the 1-year follow-up assessment. Please complete it to stay active in the study.":
+            "سائیکیورسٹی فائنل دوبارہ شمولیت: ہم نے دیکھا کہ آپ پچھلے فالو اپس مکمل نہیں کر پائے۔ یہ آپ کو 1 سال کے فالو اپ اسیسمنٹ کے لیے شامل کرنے کی ہماری آخری کوشش ہے۔ مطالعہ میں فعال رہنے کے لیے براہِ کرم اسے مکمل کریں۔",
 
         # Overdue (1 Day Overdue)
         "Reminder: Your 7-day post-test assessment is overdue. Please complete it at your earliest convenience.":

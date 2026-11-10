@@ -243,7 +243,7 @@ OTP_EMAIL = {
 
 
 PASSWORD_RESET_EMAIL = {
-    'subject_en': 'PIMS Password Reset Request',
+    'subject_en': 'Psycheversity Password Reset Request',
     'subject_ur': 'پاس ورڈ دوبارہ ترتیب دینے کی درخواست',
     'title_en': 'Password Reset Verification',
     'title_ur': 'پاس ورڈ دوبارہ ترتیب دینے کی تصدیق',

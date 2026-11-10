@@ -31,7 +31,7 @@ def test_build_password_reset_email_is_bilingual():
     content = build_password_reset_email('Sara', '987654')
 
     # Subject checks
-    assert 'PIMS Password Reset Request' in content['subject']
+    assert 'Psycheversity Password Reset Request' in content['subject']
     assert 'پاس ورڈ دوبارہ ترتیب دینے کی درخواست' in content['subject']
 
     # HTML body checks
@@ -45,7 +45,7 @@ def test_build_password_reset_email_is_bilingual():
 
     # Text body checks
     assert '987654' in content['text_content']
-    assert 'PIMS Password Reset Request' in content['text_content']
+    assert 'Psycheversity Password Reset Request' in content['text_content']
     assert 'پاس ورڈ دوبارہ ترتیب دینے کی درخواست' in content['text_content']
 
 
@@ -80,7 +80,7 @@ def test_send_password_reset_email_task_sends_bilingual_email():
     
     message = mail.outbox[0]
     assert message.to == ['reset_recipient@example.com']
-    assert 'PIMS Password Reset Request' in message.subject
+    assert 'Psycheversity Password Reset Request' in message.subject
     assert 'پاس ورڈ دوبارہ ترتیب دینے کی درخواست' in message.subject
     
     # HTML alternative check

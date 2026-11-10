@@ -27,6 +27,14 @@ const getNumericValueForResponse = (question: any, responseValue: any): number |
   return undefined;
 };
 
+/** A Meta pixel custom event confirmed by the server, waiting to fire once per user. */
+interface PendingPixelEvent {
+  name: 'EligibleSignup' | 'ParticipantActive' | 'Completed7Day';
+  idPrefix: string;
+  flagPrefix: string;
+  userId: number | string;
+}
+
 const QuestionnairePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -43,6 +51,7 @@ const QuestionnairePage: React.FC = () => {
   const [transitioning, setTransitioning] = useState(false);
   const submittingRef = useRef(false);
   const transitioningRef = useRef(false);
+  const pendingPixelEventsRef = useRef<PendingPixelEvent[]>([]);
 
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -389,6 +398,23 @@ const QuestionnairePage: React.FC = () => {
     }
   };
   const completeSubmissionWorkflow = () => {
+    // Meta pixel custom events: once per user, ever; only after the server confirmed the save.
+    // No parameters (ethics: JEP-2024-262).
+    const pendingEvents = pendingPixelEventsRef.current;
+    pendingPixelEventsRef.current = [];
+    pendingEvents.forEach(({ name, idPrefix, flagPrefix, userId }) => {
+      try {
+        const flagKey = `${flagPrefix}${userId}`;
+        if (!localStorage.getItem(flagKey)) {
+          localStorage.setItem(flagKey, '1');
+          const fbq = (window as any).fbq;
+          if (typeof fbq === 'function') {
+            fbq('trackCustom', name, {}, { eventID: `${idPrefix}${userId}` });
+          }
+        }
+      } catch { /* never let tracking break submission */ }
+    });
+
     if (questionnaire?.assessment_type === 'SOCIODEMOGRAPHIC') {
       const fetchProfileWithRetry = (retries: number, delay: number) => {
         api.get('/users/profile/')
@@ -516,6 +542,22 @@ const QuestionnairePage: React.FC = () => {
         new Promise(resolve => setTimeout(resolve, isTest ? 0 : 1500))
       ]);
       
+      // Remember (don't fire yet) — fired in completeSubmissionWorkflow, after any safety panel.
+      const pixelUserId = res.data?.user_id;
+      if (pixelUserId != null) {
+        const queued: PendingPixelEvent[] = [];
+        if (res.data.eligible_signup) {
+          queued.push({ name: 'EligibleSignup', idPrefix: 'elig_', flagPrefix: 'psy_elig_fired_', userId: pixelUserId });
+        }
+        if (res.data.first_active_submission) {
+          queued.push({ name: 'ParticipantActive', idPrefix: 'act_', flagPrefix: 'psy_active_fired_', userId: pixelUserId });
+        }
+        if (res.data.completed_7day) {
+          queued.push({ name: 'Completed7Day', idPrefix: 'd7_', flagPrefix: 'psy_d7_fired_', userId: pixelUserId });
+        }
+        pendingPixelEventsRef.current = queued;
+      }
+
       const isSuicideTriggered = res.data?.suicide_risk_triggered;
       if (isSuicideTriggered && !hasShownSafetyPanel) {
         setHasShownSafetyPanel(true);

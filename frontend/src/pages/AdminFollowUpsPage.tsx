@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, AlertCircle, HelpCircle, CheckCircle2, Clock, PhoneCall, X, Mail, Phone, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../services/api';
+import ManualEmailPanel from '../components/Admin/ManualEmailPanel';
 
 const AdminFollowUpsPage: React.FC = () => {
+  const [tab, setTab] = useState<'calls' | 'email'>('calls');
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -107,7 +109,7 @@ const AdminFollowUpsPage: React.FC = () => {
             Clinical outreach tasks for participants flagged under Tier 3 (high activity miss rate) and Tier 4 (overdue assessments).
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        {tab === 'calls' && <div className="flex items-center gap-2">
           <label htmlFor="status-filter" className="text-sm font-semibold text-zinc-700">Status:</label>
           <select
             id="status-filter"
@@ -120,9 +122,27 @@ const AdminFollowUpsPage: React.FC = () => {
             <option value="In Progress">In Progress</option>
             <option value="Resolved">Resolved</option>
           </select>
-        </div>
+        </div>}
       </header>
 
+      <div className="flex gap-2 border-b border-zinc-200" role="tablist">
+        {([['calls', 'Call follow-ups', PhoneCall], ['email', 'Send email', Mail]] as const).map(([key, label, Icon]) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={tab === key}
+            onClick={() => setTab(key)}
+            className={`flex items-center gap-2 px-4 py-2.5 -mb-px text-sm font-semibold border-b-2 transition-colors ${
+              tab === key ? 'border-zinc-900 text-zinc-900' : 'border-transparent text-zinc-500 hover:text-zinc-800'
+            }`}
+          >
+            <Icon size={16} /> {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'email' ? <ManualEmailPanel /> : (<>
       {error && (
         <div className="p-4 bg-red-50 text-red-600 rounded-xl border border-red-100 flex items-center gap-2">
           <AlertCircle size={20} /> {error}
@@ -229,6 +249,7 @@ const AdminFollowUpsPage: React.FC = () => {
           )}
         </div>
       )}
+      </>)}
 
       {/* Outreach Ticket Detail / Modal */}
       {selectedTicket && (

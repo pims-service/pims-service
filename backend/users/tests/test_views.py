@@ -46,6 +46,25 @@ def test_signup_success(api_client, db):
     assert user.group is None
     assert response.data.get('group') is None
     assert response.data.get('group_name') is None
+    # Email consent checkbox starts unticked: not sent means no consent.
+    assert user.email_consent is False and user.email_consent_at is None
+    assert response.data.get('id') == user.pk
+
+@pytest.mark.django_db
+def test_signup_records_email_consent(api_client, db):
+    Role.objects.get_or_create(name='Participant')
+    payload = {
+        "username": "consentuser", "full_name": "Consent User", "email": "consent@example.com",
+        "password": "password123!", "confirm_password": "password123!", "whatsapp_number": "+1234567891",
+        "date_of_birth": "1990-01-01", "consent_agreed": True, "consent_version": "1.0", "otp": "123456",
+        "email_consent": True,
+    }
+    create_valid_otp("consent@example.com")
+    response = api_client.post(reverse('register'), payload)
+    assert response.status_code == status.HTTP_201_CREATED
+    user = User.objects.get(username="consentuser")
+    assert user.email_consent is True and user.email_consent_at is not None
+    assert user.accepts_manual_emails is True
 
 @pytest.mark.django_db
 def test_signup_without_otp(api_client, db):

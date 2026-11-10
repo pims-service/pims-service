@@ -51,6 +51,7 @@ const RegisterPage: React.FC = () => {
     consent_agreed: false,
     consent_version: '1.0',
     otp: '',
+    email_consent: false,
   });
 
   const [countryCode, setCountryCode] = useState('+92');
@@ -177,9 +178,25 @@ const RegisterPage: React.FC = () => {
     try {
       const response = await api.post('/register/', formData);
       if (response.status === 201) {
+        // Tracking: fire CompleteRegistration as soon as the server confirms (201), so a
+        // closed tab during the redirect wait cannot lose it. No parameters (ethics:
+        // JEP-2024-262). The same sessionStorage key makes LoginPage.tsx skip a second fire.
+        const userId = response.data?.id;
+        const dedupKey = `psy_reg_fired_${formData.username}`;
+        try {
+          if (!sessionStorage.getItem(dedupKey)) {
+            sessionStorage.setItem(dedupKey, '1');
+            const fbq = (window as any).fbq;
+            if (typeof fbq === 'function') {
+              fbq('track', 'CompleteRegistration', {}, { eventID: `reg_${userId ?? ''}` });
+            }
+          }
+        } catch { /* never let tracking break signup */ }
+
         setSuccess(true);
-        setTimeout(() => navigate('/login', { state: { message: 'Account created successfully. Please log in.' } }), 2000);
+        setTimeout(() => navigate('/login', { state: { message: 'Account created successfully. Please log in.', registered: true, username: formData.username, userId } }), 2000);
       }
+
     } catch (err: any) {
       if (err.response?.data) {
         const data = err.response.data;
@@ -399,6 +416,20 @@ const RegisterPage: React.FC = () => {
                   </label>
                 </div>
                 <FieldError msg={errors.consent_agreed?.[0]} />
+
+                {/* Optional email consent (unticked by default) */}
+                <div className="flex items-start gap-3 py-2">
+                  <input
+                    id="email_consent" name="email_consent" type="checkbox"
+                    className="h-4 w-4 mt-0.5 shrink-0 rounded border-2 border-black text-black focus:ring-black cursor-pointer"
+                    checked={formData.email_consent}
+                    onChange={handleChange}
+                  />
+                  <label htmlFor="email_consent" className="text-xs text-zinc-700 leading-relaxed font-medium select-none">
+                    I agree to receive emails about this study.
+                    <span className="font-urdu text-zinc-400 block text-xs mt-0.5">میں اس تحقیق کے بارے میں ای میلز موصول کرنے سے اتفاق کرتا/کرتی ہوں۔</span>
+                  </label>
+                </div>
               </>
             ) : (
               /* ── OTP Phase ───────────────────────────────────────────────── */

@@ -15,6 +15,8 @@ class UserSerializer(serializers.ModelSerializer):
     due_milestone = serializers.CharField(source='get_due_milestone', read_only=True)
     current_experiment_day = serializers.IntegerField(read_only=True, allow_null=True)
     current_activity_wave = serializers.CharField(read_only=True, allow_null=True)
+    # Profile toggle for manual (admin) study emails; writes go through User.set_email_consent.
+    receive_study_emails = serializers.BooleanField(source='accepts_manual_emails', required=False)
 
     class Meta:
         model = User
@@ -27,6 +29,7 @@ class UserSerializer(serializers.ModelSerializer):
             'current_experiment_day', 'current_activity_wave',
             'has_consecutive_misses', 'consecutive_misses_message',
             'has_two_consecutive_missed_waves', 'is_disqualified',
+            'receive_study_emails',
         )
         read_only_fields = (
             'created_at', 'role', 'group',
@@ -35,6 +38,12 @@ class UserSerializer(serializers.ModelSerializer):
             'has_consecutive_misses',
             'consecutive_misses_message', 'has_two_consecutive_missed_waves', 'is_disqualified',
         )
+
+    def update(self, instance, validated_data):
+        receive = validated_data.pop('accepts_manual_emails', None)
+        if receive is not None and receive != instance.accepts_manual_emails:
+            instance.set_email_consent(receive)
+        return super().update(instance, validated_data)
 
 class SignupSerializer(serializers.ModelSerializer):
     """
@@ -45,6 +54,8 @@ class SignupSerializer(serializers.ModelSerializer):
     consent_agreed = serializers.BooleanField(write_only=True, required=True)
     consent_version = serializers.CharField(write_only=True, required=True)
     otp = serializers.CharField(write_only=True, required=False, allow_blank=True, max_length=6)
+    # Optional "I agree to receive emails about this study." checkbox (unticked by default).
+    email_consent = serializers.BooleanField(write_only=True, required=False, default=False)
 
     group = serializers.PrimaryKeyRelatedField(read_only=True)
     group_name = serializers.ReadOnlyField(source='group.name')
@@ -52,9 +63,9 @@ class SignupSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'username', 'full_name', 'email', 'password', 
+            'id', 'username', 'full_name', 'email', 'password',
             'confirm_password', 'whatsapp_number', 'date_of_birth',
-            'consent_agreed', 'consent_version', 'otp',
+            'consent_agreed', 'consent_version', 'otp', 'email_consent',
             'group', 'group_name',
         )
 
@@ -133,7 +144,8 @@ class SignupSerializer(serializers.ModelSerializer):
         consent_agreed = validated_data.pop('consent_agreed')
         consent_version = validated_data.pop('consent_version')
         otp = validated_data.pop('otp', None)
-        
+        email_consent = validated_data.pop('email_consent', False)
+
         # Mark OTP as verified
         if otp:
             from .models import EmailVerificationOTP
@@ -157,6 +169,8 @@ class SignupSerializer(serializers.ModelSerializer):
             whatsapp_number=validated_data.get('whatsapp_number', ''),
             date_of_birth=validated_data.get('date_of_birth'),
             role=role,
+            email_consent=email_consent,
+            email_consent_at=timezone.now() if email_consent else None,
         )
         
         # Create consent record

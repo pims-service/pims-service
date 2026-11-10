@@ -142,6 +142,35 @@ def test_phq9_item9_risk_triggers_alert(seeded_db, participant_user, admin_user,
     assert "CRITICAL SAFETY ALERT" in notifications[0].message
     assert "participant" in notifications[0].message
 
+@pytest.mark.django_db(transaction=True)
+def test_phq9_risk_alert_email_goes_to_team_inbox(seeded_db, participant_user, admin_user):
+    from django.conf import settings
+
+    battery = Questionnaire.objects.get(title="Longitudinal Psychometric Scales")
+    item_9 = Question.objects.filter(questionnaire=battery, content__icontains="dead").first()
+    risk_option = Option.objects.get(question=item_9, numeric_value=2)
+    response_set = ResponseSet.objects.create(user=participant_user, questionnaire=battery, status='DRAFT')
+    responses_payload = []
+    for question in battery.questions.all():
+        if question == item_9:
+            responses_payload.append({"question_id": str(question.id), "selected_option_id": str(risk_option.id)})
+        elif question.type == 'SCALE':
+            responses_payload.append({"question_id": str(question.id), "selected_option_id": str(question.options.first().id)})
+
+    mail.outbox.clear()
+    serializer = ResponseSetSubmitSerializer(instance=response_set, data={"responses_data": responses_payload})
+    assert serializer.is_valid(), serializer.errors
+    serializer.save()
+
+    alerts = [m for m in mail.outbox if 'CRITICAL SAFETY ALERT' in m.subject]
+    assert len(alerts) == 1
+    assert alerts[0].to == [settings.SUPPORT_ADMIN_EMAIL]
+    assert 'participant' in alerts[0].body
+    # Never to the staff account's own address, and not dressed up as an assessment reminder.
+    assert not any(admin_user.email in m.to for m in mail.outbox)
+    assert not any('Assessment Due' in m.subject and 'CRITICAL' in m.body for m in mail.outbox)
+    assert Notification.objects.get(user=admin_user).status == 'sent'
+
 @pytest.mark.django_db
 def test_phq9_item9_spam_prevention(seeded_db, participant_user, admin_user):
     battery = Questionnaire.objects.get(title="Longitudinal Psychometric Scales")

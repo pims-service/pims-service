@@ -78,24 +78,29 @@ def check_and_trigger_risk_protocol(response_set, *, notify_participant=True):
                 user.username, user.id, user.email, reasons_str
             )
             
-            # Notify admins
+            # Notify admins: an in-app notification per staff account, and one email to the
+            # team inbox (SUPPORT_ADMIN_EMAIL). Staff accounts' own addresses may not be
+            # monitored mailboxes, so the alert email never goes to them.
+            alert_message = (
+                f"CRITICAL SAFETY ALERT: Participant '{user.username}' (ID: {user.id}) "
+                f"has triggered suicidal risk protocols. Reasons: {reasons_str}. "
+                f"Immediate clinical follow-up required."
+            )
             User = get_user_model()
-            admins = User.objects.filter(is_staff=True)
-            for admin in admins:
-                admin_notif = Notification.objects.create(
+            admin_notif_ids = [
+                Notification.objects.create(
                     user=admin,
                     n_type='email',
-                    message=(
-                        f"CRITICAL SAFETY ALERT: Participant '{user.username}' (ID: {user.id}) "
-                        f"has triggered suicidal risk protocols. Reasons: {reasons_str}. "
-                        f"Immediate clinical follow-up required."
-                    ),
+                    message=alert_message,
                     scheduled_time=timezone.now(),
                     status='pending'
-                )
-                transaction.on_commit(
-                    lambda admin_notif_id=admin_notif.id: send_notification.delay(admin_notif_id)
-                )
+                ).id
+                for admin in User.objects.filter(is_staff=True)
+            ]
+            from emails.tasks import send_safety_alert_admin_email_task
+            transaction.on_commit(
+                lambda: send_safety_alert_admin_email_task.delay(alert_message, admin_notif_ids)
+            )
 
             from .tasks import refresh_suicide_risk_admin_cache_task
             transaction.on_commit(lambda: refresh_suicide_risk_admin_cache_task.delay())
@@ -278,7 +283,7 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         from django.db import transaction
         from django.utils import timezone
-        from groups.services import assign_user_to_group
+        from groups.services import try_assign_user_to_group
 
         responses_data = validated_data.pop('responses_data')
         
@@ -332,13 +337,18 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
                     user.save(update_fields=['is_disqualified', 'disqualification_reason'])
                     socio_disqualified = True
                 else:
-                    assign_user_to_group(user)
+                    # Never fail the submission when all groups are full: the user stays
+                    # unassigned and is picked up later (groups.tasks.assign_unassigned_participants).
+                    try_assign_user_to_group(user)
                     user.has_completed_sociodemographic = True
                     user.save(update_fields=['has_completed_sociodemographic'])
 
             # 4.5. Set onboarding_completed_at when SIGNUP milestone of PSYCHOMETRIC questionnaire is completed
             is_new_onboarding = False
             if instance.milestone == 'SIGNUP' and instance.questionnaire.assessment_type == 'PSYCHOMETRIC':
+                # Retry assignment for anyone left unassigned at the screener.
+                if user.group_id is None and not user.is_disqualified:
+                    try_assign_user_to_group(user)
                 is_new_onboarding = user.onboarding_completed_at is None
                 user.onboarding_completed_at = timezone.now()
                 user.save(update_fields=['onboarding_completed_at'])
@@ -394,10 +404,10 @@ class ResponseSetSubmitSerializer(serializers.ModelSerializer):
                     )
                 )
 
-            # Trigger PERMA snapshot report for 3_MONTHS and 1_YEAR milestones
+            # Trigger PERMA snapshot report for 1_MONTH, 3_MONTHS, and 1_YEAR milestones
             if (
                 instance.questionnaire.assessment_type == 'PSYCHOMETRIC'
-                and instance.milestone in ('3_MONTHS', '1_YEAR')
+                and instance.milestone in ('1_MONTH', '3_MONTHS', '1_YEAR')
             ):
                 from questionnaires.tasks import send_perma_snapshot_report_task
                 transaction.on_commit(

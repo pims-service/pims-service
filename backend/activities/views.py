@@ -46,6 +46,11 @@ class DailyActivityViewSet(viewsets.ModelViewSet):
         current_day = activity_state.day_in_block
         activity_wave = activity_state.wave
 
+        # Participants left unassigned while all groups were full get a group as soon as one frees up.
+        if user.group_id is None and not user.is_disqualified:
+            from groups.services import try_assign_user_to_group
+            try_assign_user_to_group(user)
+
         activity = None
         if user.group:
             activity = Activity.objects.filter(group=user.group, day_number=current_day).first()
